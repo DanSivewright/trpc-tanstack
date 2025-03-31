@@ -1,10 +1,12 @@
 import { cache } from "react"
 import { tryCatch } from "@/utils/try-catch"
+import { TRPCError } from "@trpc/server"
 import qs from "qs"
 import { z } from "zod"
 
 import type { TRPCContext } from "./trpc/init"
-import { EnrolmentsAllSchema } from "./trpc/routers/enrolments/schemas/enrolment-all-schema"
+import { EnrolmentsAllSchema } from "./trpc/routers/enrolments/schemas/enrolments-all-schema"
+import { EnrolmentsDetailSchema } from "./trpc/routers/enrolments/schemas/enrolments-detail-schema"
 
 export const queryConfig = {
   "enrolments:all": {
@@ -38,7 +40,7 @@ export const queryConfig = {
         })
         .optional(),
     }),
-    as: z.any(),
+    as: EnrolmentsDetailSchema,
   },
 } as const
 
@@ -51,20 +53,23 @@ export const fetcher = cache(
     key: K
     ctx: TRPCContext
     input: z.infer<(typeof queryConfig)[K]["input"]>
-  }) => {
+  }): Promise<z.infer<(typeof queryConfig)[K]["as"]>> => {
     const c = queryConfig[key]
 
     let path = c.path as string
 
-    if (input && "params" in c.input && c.input.params) {
-      Object.entries(c.input.params).forEach(([key, value]) => {
+    console.log("input:::", input)
+
+    if (input && "params" in input && input.params) {
+      Object.entries(input.params).forEach(([key, value]) => {
         path = path.replace(`:${key}`, String(value))
       })
     }
+    console.log("path:::", path)
 
     const queryString =
-      input && "query" in c.input && c.input.query
-        ? qs.stringify(c.input.query, { addQueryPrefix: true })
+      input && "query" in input && input.query
+        ? qs.stringify(input.query, { addQueryPrefix: true })
         : ""
 
     const url = new URL(path + queryString, import.meta.env.VITE_API_URL)
@@ -76,13 +81,20 @@ export const fetcher = cache(
       },
     })
 
-    // const data = await response.json();
     const { data, error, success } = await tryCatch(response.json())
-    console.log("stuff:::", {
-      data,
-      error,
-      success,
-    })
+    if (error || !success) {
+      if (error.message.includes("401")) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Unauthorized",
+        })
+      }
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: error.message,
+        cause: error,
+      })
+    }
 
     return data?.data as z.infer<typeof c.as>
   }

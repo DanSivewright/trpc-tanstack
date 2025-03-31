@@ -1,14 +1,15 @@
-import { useForm } from "@tanstack/react-form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { z } from "zod";
+import { useForm } from "@tanstack/react-form"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { signInWithEmailAndPassword } from "firebase/auth"
+import { z } from "zod"
 
-import { auth } from "@/lib/firebase";
-import { useTRPC } from "@/lib/trpc/react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { setAuthCookies } from "@/lib/auth"
+import { auth } from "@/lib/firebase"
+import { useTRPC } from "@/lib/trpc/react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 export const Route = createFileRoute("/(auth)/login")({
   component: RouteComponent,
@@ -16,16 +17,16 @@ export const Route = createFileRoute("/(auth)/login")({
     tenantId: z.string().optional(),
     redirect: z.string().optional(),
   }),
-});
+})
 
 function RouteComponent() {
-  const trpc = useTRPC();
-  const qc = useQueryClient();
-  const { tenantId, redirect } = Route.useSearch();
-  auth.tenantId = tenantId ?? "Tempero-kjm9i";
-  const navigate = useNavigate();
+  const trpc = useTRPC()
+  const qc = useQueryClient()
+  const { tenantId, redirect } = Route.useSearch()
+  auth.tenantId = tenantId ?? "Tempero-kjm9i"
+  const navigate = useNavigate()
 
-  const mutation = useMutation(trpc.auth.login.mutationOptions());
+  const mutation = useMutation(trpc.auth.login.mutationOptions())
 
   const form = useForm({
     defaultValues: {
@@ -48,21 +49,21 @@ function RouteComponent() {
       //   returnUrl: redirect,
       // });
 
-      auth.tenantId = tenantId ?? "Tempero-kjm9i";
+      auth.tenantId = tenantId ?? "Tempero-kjm9i"
       const go = await signInWithEmailAndPassword(
         auth,
         value.email,
-        value.password,
-      );
+        value.password
+      )
 
-      const token = await go.user.getIdToken();
-      window.localStorage.setItem("token", token);
-      window.localStorage.setItem(
-        "tokenExpiration",
-        String(Date.now() + 3500 * 1000),
-      );
-      window.localStorage.setItem("tenantId", auth.tenantId ?? "");
-      navigate({ to: redirect ?? "/" });
+      const token = await go.user.getIdToken()
+      await setAuthCookies({
+        data: {
+          token,
+          tenantId: auth.tenantId ?? null,
+        },
+      })
+      navigate({ to: redirect ?? "/" })
     },
     validators: {
       onSubmit: z.object({
@@ -70,7 +71,7 @@ function RouteComponent() {
         password: z.string().min(6, "Password must be at least 6 characters"),
       }),
     },
-  });
+  })
 
   return (
     <div className="mx-auto mt-10 max-w-md p-6">
@@ -78,9 +79,9 @@ function RouteComponent() {
 
       <form
         onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          void form.handleSubmit();
+          e.preventDefault()
+          e.stopPropagation()
+          void form.handleSubmit()
         }}
         className="space-y-4"
       >
@@ -153,5 +154,5 @@ function RouteComponent() {
       </div>
       {/* <pre>{JSON.stringify(auth.currentUser, null, 2)}</pre> */}
     </div>
-  );
+  )
 }

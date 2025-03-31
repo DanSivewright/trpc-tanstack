@@ -1,49 +1,48 @@
-import useAuthState from "@/hooks/use-auth-state";
-import { auth } from "@/lib/firebase";
-import type { User } from "firebase/auth";
-import { createContext, useContext, useEffect } from "react";
-import { signOut } from "firebase/auth";
-import { useLocation, useNavigate, useParams } from "@tanstack/react-router";
-import { useTokenManager } from "@/hooks/use-token-manager";
+import { createContext, useContext, useEffect } from "react"
+import { useLocation, useNavigate, useParams } from "@tanstack/react-router"
+import type { User } from "firebase/auth"
+import { signOut } from "firebase/auth"
+
+import { clearAuthCookies } from "@/lib/auth"
+import { auth } from "@/lib/firebase"
+import useAuthState from "@/hooks/use-auth-state"
+import { useTokenManager } from "@/hooks/use-token-manager"
 
 type AuthContextType = {
-  user: User | null | undefined;
-  loading: boolean;
-  error: Error | null | undefined;
-  token: string | null;
-};
+  user: User | null | undefined
+  loading: boolean
+  error: Error | null | undefined
+  token: string | null
+}
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { pathname } = useLocation();
-  const [user, loading, error] = useAuthState(auth);
-  const { token } = useTokenManager();
-  const navigate = useNavigate();
+  const { pathname } = useLocation()
+  const [user, loading, error] = useAuthState(auth)
+  const { token } = useTokenManager()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (error != null || (user == null && !loading)) {
-      window.localStorage.removeItem("token");
-      window.localStorage.removeItem("tenantId");
-      window.localStorage.removeItem("tokenExpiration");
-      signOut(auth);
-      navigate({ to: "/login" });
+      void signOut(auth).then(() => clearAuthCookies())
+      navigate({ to: "/login" })
     }
-  }, [user, loading, error, pathname]);
+  }, [user, loading, error, pathname])
 
   return (
     <AuthContext.Provider value={{ user, loading, error, token }}>
       {children}
     </AuthContext.Provider>
-  );
+  )
 }
 
 const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (!context) {
-    throw new Error("useAuth must be used within a AuthProvider");
+    throw new Error("useAuth must be used within a AuthProvider")
   }
-  return context;
-};
+  return context
+}
 
-export { AuthProvider, useAuth };
+export { AuthProvider, useAuth }
