@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router"
 
 import { useTRPC } from "@/lib/trpc/react"
 
-export const Route = createFileRoute("/(learner)/enrolments/$uid")({
+export const Route = createFileRoute("/_learner/enrolments/$uid")({
   component: RouteComponent,
 })
 

@@ -179,4 +179,4 @@ export const generateCacheKey = ({
   type: string
   path: string
   input?: Record<string, unknown>
-}) => `${type}.${path}.${hash(input)}`
+}) => `${type}.${path}${input ? `.${hash(input)}` : ""}`

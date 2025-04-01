@@ -8,10 +8,11 @@ import { ZodError } from "zod"
 export const createTRPCContext = async ({ headers }: { headers: Headers }) => {
   const token = headers.get("authorization")?.split(" ")[1]
   const tenantId = headers.get("x-tenant-id")
-
+  const uid = headers.get("uid")
   return {
     token,
     tenantId,
+    uid,
   }
 }
 
@@ -34,7 +35,7 @@ export const createTRPCRouter = t.router
 export const publicProcedure = t.procedure
 
 const enforceUserIsAuthenticated = t.middleware(({ ctx, next }) => {
-  if (!ctx.token || !ctx.tenantId) {
+  if (!ctx.token || !ctx.tenantId || !ctx.uid) {
     throw new TRPCError({ code: "UNAUTHORIZED" })
   }
 
@@ -42,6 +43,7 @@ const enforceUserIsAuthenticated = t.middleware(({ ctx, next }) => {
     ctx: {
       token: ctx.token,
       tenantId: ctx.tenantId,
+      uid: ctx.uid,
     },
   })
 })

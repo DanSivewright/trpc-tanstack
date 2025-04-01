@@ -7,15 +7,13 @@ import {
 import { z } from "zod"
 
 const AUTH_COOKIES_NAME = "auth"
-// const AUTH_COOKIE_NAME = "auth_token"
-// const TENANT_COOKIE_NAME = "tenant_id"
-// const AUTH_COOKIE_EXPIRATION_TIME = 60 * 1000 * 55
 
 export const setAuthCookie = createServerFn({ method: "POST" })
   .validator(
     z.object({
       token: z.string(),
       tenantId: z.string().optional().nullable(),
+      uid: z.string().optional().nullable(),
     })
   )
   .handler(async (ctx) => {
@@ -36,7 +34,8 @@ export const getAuthCookie = createServerFn({ method: "GET" }).handler(
   async () => {
     return JSON.parse((await getCookie(AUTH_COOKIES_NAME)) || "{}") as {
       token: string
-      tenantId: string
+      tenantId?: string
+      uid: string
     }
   }
 )

@@ -21,3 +21,5 @@ dist/
 !.env.example
 
 dev-dist
+
+iwin-io**.json

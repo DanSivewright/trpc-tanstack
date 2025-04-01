@@ -11,8 +11,8 @@ import { DefaultCatchBoundary } from "./components/default-catch-boundary"
 import { NotFound } from "./components/not-found"
 import { getAuthCookie } from "./lib/auth-cookies"
 // import { getAuthToken, getTenantId } from "./lib/auth-cookies"
-import { auth } from "./lib/firebase"
-// import { auth } from "./lib/firebase";
+import { auth } from "./lib/firebase/client"
+// import { auth } from "./lib/firebase/client";
 import { TRPCProvider } from "./lib/trpc/react"
 import type { TRPCRouter } from "./lib/trpc/router"
 import { routeTree } from "./routeTree.gen"
@@ -62,6 +62,7 @@ export function createRouter() {
             ...h,
             Authorization: auth ? `Bearer ${auth.token}` : "",
             "x-tenant-id": auth.tenantId ?? "",
+            uid: auth.uid ?? "",
           }
         },
       }),

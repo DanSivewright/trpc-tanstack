@@ -1,7 +1,9 @@
+import { z } from "zod"
+
 import { cachedFunction, generateCacheKey } from "@/lib/cache"
 import { fetcher } from "@/lib/query"
 
-import { protectedProcedure } from "../../init"
+import { protectedProcedure, publicProcedure } from "../../init"
 
 const CACHE_GROUP = "people"
 export const peopleRouter = {
@@ -20,7 +22,7 @@ export const peopleRouter = {
           path,
           input: { token: ctx.token, tenantId: ctx.tenantId },
         }),
-        maxAge: 300, // Cache for 5 minutes
+        maxAge: import.meta.env.VITE_CACHE_MAX_AGE, // Cache for 5 minutes
         group: CACHE_GROUP,
       }
     )

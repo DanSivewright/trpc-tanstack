@@ -19,7 +19,7 @@ export const enrolmentsRouter = {
           }),
         {
           name: generateCacheKey({ type, path, input }),
-          maxAge: 300, // Cache for 5 minutes
+          maxAge: import.meta.env.VITE_CACHE_MAX_AGE, // Cache for 5 minutes
           group: CACHE_GROUP,
         }
       )
@@ -38,7 +38,7 @@ export const enrolmentsRouter = {
           }),
         {
           name: generateCacheKey({ type, path, input }),
-          maxAge: 300, // Cache for 5 minutes
+          maxAge: import.meta.env.VITE_CACHE_MAX_AGE, // Cache for 5 minutes
           group: CACHE_GROUP,
         }
       )

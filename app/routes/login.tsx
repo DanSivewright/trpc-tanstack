@@ -5,13 +5,14 @@ import { signInWithEmailAndPassword } from "firebase/auth"
 import { z } from "zod"
 
 import { setAuthCookie } from "@/lib/auth-cookies"
-import { auth } from "@/lib/firebase"
+import { auth } from "@/lib/firebase/client"
+import { fetcher } from "@/lib/query"
 import { useTRPC } from "@/lib/trpc/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-export const Route = createFileRoute("/(auth)/login")({
+export const Route = createFileRoute("/login")({
   component: RouteComponent,
   validateSearch: z.object({
     tenantId: z.string().optional(),
@@ -21,9 +22,9 @@ export const Route = createFileRoute("/(auth)/login")({
 
 function RouteComponent() {
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const { tenantId, redirect } = Route.useSearch()
-  auth.tenantId = tenantId ?? "Tempero-kjm9i"
+  auth.tenantId = tenantId || (import.meta.env.DEV ? "Tempero-kjm9i" : null)
+  const queryClient = useQueryClient()
   const navigate = useNavigate()
 
   const form = useForm({
@@ -38,11 +39,20 @@ function RouteComponent() {
         value.email,
         value.password
       )
+      const me = await fetcher({
+        key: "people:me",
+        ctx: {
+          token: await go.user.getIdToken(true),
+          tenantId: auth.tenantId ?? null,
+        },
+        input: null,
+      })
 
       const token = await go.user.getIdToken()
       await setAuthCookie({
         data: {
           token,
+          uid: me?.uid ?? null,
           tenantId: auth.tenantId ?? null,
         },
       })

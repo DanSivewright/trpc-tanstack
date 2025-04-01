@@ -21,14 +21,11 @@ export const fetcher = cache(
 
     let path = c.path as string
 
-    console.log("input:::", input)
-
     if (input && "params" in input && input.params) {
       Object.entries(input.params).forEach(([key, value]) => {
         path = path.replace(`:${key}`, String(value))
       })
     }
-    console.log("path:::", path)
 
     const queryString =
       input && "query" in input && input.query

@@ -40,6 +40,13 @@ export const queryConfig = {
   },
   "people:me": {
     path: "/people/me",
+    input: z
+      .object({
+        token: z.string(),
+        tenantId: z.string().optional(),
+      })
+      .optional()
+      .nullable(),
     as: PeopleMeSchema,
   },
 } as const
