@@ -9,7 +9,8 @@ import superjson from "superjson"
 
 import { DefaultCatchBoundary } from "./components/default-catch-boundary"
 import { NotFound } from "./components/not-found"
-import { getAuthToken, getTenantId } from "./lib/auth"
+import { getAuthCookie } from "./lib/auth-cookies"
+// import { getAuthToken, getTenantId } from "./lib/auth-cookies"
 import { auth } from "./lib/firebase"
 // import { auth } from "./lib/firebase";
 import { TRPCProvider } from "./lib/trpc/react"
@@ -43,6 +44,9 @@ export function createRouter() {
     defaultOptions: {
       dehydrate: { serializeData: superjson.serialize },
       hydrate: { deserializeData: superjson.deserialize },
+      queries: {
+        staleTime: 1000 * 60 * 5,
+      },
     },
   })
 
@@ -52,13 +56,12 @@ export function createRouter() {
         transformer: superjson,
         url: getUrl(),
         async headers() {
-          const token = await getAuthToken()
-          const tenantId = await getTenantId()
+          const auth = await getAuthCookie()
           const h = await getRequestHeaders()
           return {
             ...h,
-            Authorization: token ? `Bearer ${token}` : "",
-            "x-tenant-id": tenantId ?? "",
+            Authorization: auth ? `Bearer ${auth.token}` : "",
+            "x-tenant-id": auth.tenantId ?? "",
           }
         },
       }),

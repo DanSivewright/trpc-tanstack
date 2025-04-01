@@ -1,0 +1,29 @@
+import { cachedFunction, generateCacheKey } from "@/lib/cache"
+import { fetcher } from "@/lib/query"
+
+import { protectedProcedure } from "../../init"
+
+const CACHE_GROUP = "people"
+export const peopleRouter = {
+  // @ts-ignore
+  me: protectedProcedure.query(async ({ ctx, input, type, path }) => {
+    const cachedFetcher = cachedFunction(
+      () =>
+        fetcher({
+          key: "people:me",
+          ctx,
+          input,
+        }),
+      {
+        name: generateCacheKey({
+          type,
+          path,
+          input: { token: ctx.token, tenantId: ctx.tenantId },
+        }),
+        maxAge: 300, // Cache for 5 minutes
+        group: CACHE_GROUP,
+      }
+    )
+    return cachedFetcher()
+  }),
+}

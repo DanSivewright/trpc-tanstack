@@ -2,19 +2,10 @@ import { initTRPC, TRPCError } from "@trpc/server"
 import superjson from "superjson"
 import { ZodError } from "zod"
 
-import { getAuthToken, getTenantId } from "../auth"
-
 // import { db } from "@/db";
 // import { validateRequest } from "@/lib/auth";
 
 export const createTRPCContext = async ({ headers }: { headers: Headers }) => {
-  // const token = await getAuthToken()
-  // const tenantId = await getTenantId()
-
-  // console.log("token", token)
-  // console.log("tenantId", tenantId)
-
-  // console.log("headers:::", headers)
   const token = headers.get("authorization")?.split(" ")[1]
   const tenantId = headers.get("x-tenant-id")
 
@@ -46,9 +37,6 @@ const enforceUserIsAuthenticated = t.middleware(({ ctx, next }) => {
   if (!ctx.token || !ctx.tenantId) {
     throw new TRPCError({ code: "UNAUTHORIZED" })
   }
-
-  console.log("ctx.token", ctx.token)
-  console.log("ctx.tenantId", ctx.tenantId)
 
   return next({
     ctx: {

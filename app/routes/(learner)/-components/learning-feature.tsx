@@ -1,10 +1,9 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 
 import { useTRPC } from "@/lib/trpc/react"
-
-import { Title } from "../title"
-import { Button } from "../ui/button"
-import { Separator } from "../ui/separator"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { Title } from "@/components/title"
 
 type Props = {
   uid: string

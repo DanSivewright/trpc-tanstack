@@ -1,18 +1,21 @@
 import { createContext, useContext, useEffect } from "react"
-import { useLocation, useNavigate, useParams } from "@tanstack/react-router"
+import { useQuery } from "@tanstack/react-query"
+import { useLocation, useNavigate } from "@tanstack/react-router"
 import type { User } from "firebase/auth"
 import { signOut } from "firebase/auth"
 
-import { clearAuthCookies } from "@/lib/auth"
+import {
+  clearAuthCookie,
+  getAuthCookie,
+  setAuthCookie,
+} from "@/lib/auth-cookies"
 import { auth } from "@/lib/firebase"
 import useAuthState from "@/hooks/use-auth-state"
-import { useTokenManager } from "@/hooks/use-token-manager"
 
 type AuthContextType = {
   user: User | null | undefined
   loading: boolean
   error: Error | null | undefined
-  token: string | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -20,19 +23,59 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation()
   const [user, loading, error] = useAuthState(auth)
-  const { token } = useTokenManager()
   const navigate = useNavigate()
+
+  const authQuery = useQuery({
+    queryKey: ["token"],
+    queryFn: async () => {
+      const authCookies = await getAuthCookie()
+
+      if (!user) {
+        return null
+      }
+
+      const currentToken = await user.getIdToken()
+      const lastStoredToken = authCookies.token
+
+      if (!lastStoredToken || lastStoredToken !== currentToken) {
+        const newAuth = await user.getIdToken(true)
+        if (!newAuth || typeof newAuth !== "string") {
+          void signOut(auth).then(() => clearAuthCookie())
+          navigate({ to: "/login" })
+        } else {
+          await setAuthCookie({
+            data: {
+              token: newAuth,
+              tenantId: user.tenantId ?? null,
+            },
+          })
+          return {
+            token: newAuth,
+            tenantId: user.tenantId ?? null,
+          }
+        }
+      }
+
+      return {
+        token: lastStoredToken,
+        tenantId: user.tenantId ?? null,
+      }
+    },
+    staleTime: 1000 * 60 * 50,
+    refetchInterval: 1000 * 60 * 50,
+    enabled: loading === false,
+  })
 
   useEffect(() => {
     if (error != null || (user == null && !loading)) {
-      void signOut(auth).then(() => clearAuthCookies())
+      void signOut(auth).then(() => clearAuthCookie())
       navigate({ to: "/login" })
     }
   }, [user, loading, error, pathname])
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, token }}>
-      {children}
+    <AuthContext.Provider value={{ user, loading, error }}>
+      {authQuery.isSuccess && children}
     </AuthContext.Provider>
   )
 }

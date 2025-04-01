@@ -1,24 +1,48 @@
-import { fetcher, queryConfig } from "@/lib/query"
+import { cachedFunction, generateCacheKey } from "@/lib/cache"
+import { fetcher } from "@/lib/query"
+import { queryConfig } from "@/lib/query-config"
 
 import { protectedProcedure } from "../../init"
 
+const CACHE_GROUP = "enrolments"
 export const enrolmentsRouter = {
-  all: protectedProcedure.input(queryConfig["enrolments:all"].input).query(
-    async ({ ctx, input }) =>
-      await fetcher({
-        key: "enrolments:all",
-        ctx,
-        input,
-      })
-  ),
+  all: protectedProcedure
+    .input(queryConfig["enrolments:all"].input)
+    // @ts-ignore
+    .query(async ({ ctx, input, type, path }) => {
+      const cachedFetcher = cachedFunction(
+        () =>
+          fetcher({
+            key: "enrolments:all",
+            ctx,
+            input,
+          }),
+        {
+          name: generateCacheKey({ type, path, input }),
+          maxAge: 300, // Cache for 5 minutes
+          group: CACHE_GROUP,
+        }
+      )
+      return cachedFetcher()
+    }),
   detail: protectedProcedure
     .input(queryConfig["enrolments:detail"].input)
-    .query(
-      async ({ ctx, input }) =>
-        await fetcher({
-          key: "enrolments:detail",
-          ctx,
-          input,
-        })
-    ),
+    // @ts-ignore
+    .query(async ({ ctx, input, type, path }) => {
+      const cachedFetcher = cachedFunction(
+        () =>
+          fetcher({
+            key: "enrolments:detail",
+            ctx,
+            input,
+          }),
+        {
+          name: generateCacheKey({ type, path, input }),
+          maxAge: 300, // Cache for 5 minutes
+          group: CACHE_GROUP,
+        }
+      )
+
+      return cachedFetcher()
+    }),
 }

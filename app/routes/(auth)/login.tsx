@@ -4,7 +4,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { signInWithEmailAndPassword } from "firebase/auth"
 import { z } from "zod"
 
-import { setAuthCookies } from "@/lib/auth"
+import { setAuthCookie } from "@/lib/auth-cookies"
 import { auth } from "@/lib/firebase"
 import { useTRPC } from "@/lib/trpc/react"
 import { Button } from "@/components/ui/button"
@@ -26,29 +26,12 @@ function RouteComponent() {
   auth.tenantId = tenantId ?? "Tempero-kjm9i"
   const navigate = useNavigate()
 
-  const mutation = useMutation(trpc.auth.login.mutationOptions())
-
   const form = useForm({
     defaultValues: {
       email: "",
       password: "",
     },
     onSubmit: async ({ value }) => {
-      // const userCredential = await signInWithEmailAndPassword(
-      //   auth,
-      //   value.email,
-      //   value.password
-      // )
-      // Get the token after successful sign in
-      // await userCredential.user.getIdToken()
-
-      // const token = await mutation.mutateAsync({
-      //   email: value.email,
-      //   password: value.password,
-      //   tenantId: tenantId,
-      //   returnUrl: redirect,
-      // });
-
       auth.tenantId = tenantId ?? "Tempero-kjm9i"
       const go = await signInWithEmailAndPassword(
         auth,
@@ -57,7 +40,7 @@ function RouteComponent() {
       )
 
       const token = await go.user.getIdToken()
-      await setAuthCookies({
+      await setAuthCookie({
         data: {
           token,
           tenantId: auth.tenantId ?? null,

@@ -11,13 +11,14 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as IndexImport } from './routes/index'
+import { Route as learnerIndexImport } from './routes/(learner)/index'
 import { Route as authLoginImport } from './routes/(auth)/login'
+import { Route as learnerEnrolmentsUidImport } from './routes/(learner)/enrolments.$uid'
 
 // Create/Update Routes
 
-const IndexRoute = IndexImport.update({
-  id: '/',
+const learnerIndexRoute = learnerIndexImport.update({
+  id: '/(learner)/',
   path: '/',
   getParentRoute: () => rootRoute,
 } as any)
@@ -28,22 +29,35 @@ const authLoginRoute = authLoginImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const learnerEnrolmentsUidRoute = learnerEnrolmentsUidImport.update({
+  id: '/(learner)/enrolments/$uid',
+  path: '/enrolments/$uid',
+  getParentRoute: () => rootRoute,
+} as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
     '/(auth)/login': {
       id: '/(auth)/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof authLoginImport
+      parentRoute: typeof rootRoute
+    }
+    '/(learner)/': {
+      id: '/(learner)/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof learnerIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/(learner)/enrolments/$uid': {
+      id: '/(learner)/enrolments/$uid'
+      path: '/enrolments/$uid'
+      fullPath: '/enrolments/$uid'
+      preLoaderRoute: typeof learnerEnrolmentsUidImport
       parentRoute: typeof rootRoute
     }
   }
@@ -52,38 +66,47 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/login': typeof authLoginRoute
+  '/': typeof learnerIndexRoute
+  '/enrolments/$uid': typeof learnerEnrolmentsUidRoute
 }
 
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/login': typeof authLoginRoute
+  '/': typeof learnerIndexRoute
+  '/enrolments/$uid': typeof learnerEnrolmentsUidRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/': typeof IndexRoute
   '/(auth)/login': typeof authLoginRoute
+  '/(learner)/': typeof learnerIndexRoute
+  '/(learner)/enrolments/$uid': typeof learnerEnrolmentsUidRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login'
+  fullPaths: '/login' | '/' | '/enrolments/$uid'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login'
-  id: '__root__' | '/' | '/(auth)/login'
+  to: '/login' | '/' | '/enrolments/$uid'
+  id:
+    | '__root__'
+    | '/(auth)/login'
+    | '/(learner)/'
+    | '/(learner)/enrolments/$uid'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   authLoginRoute: typeof authLoginRoute
+  learnerIndexRoute: typeof learnerIndexRoute
+  learnerEnrolmentsUidRoute: typeof learnerEnrolmentsUidRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   authLoginRoute: authLoginRoute,
+  learnerIndexRoute: learnerIndexRoute,
+  learnerEnrolmentsUidRoute: learnerEnrolmentsUidRoute,
 }
 
 export const routeTree = rootRoute
@@ -96,15 +119,19 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/",
-        "/(auth)/login"
+        "/(auth)/login",
+        "/(learner)/",
+        "/(learner)/enrolments/$uid"
       ]
-    },
-    "/": {
-      "filePath": "index.tsx"
     },
     "/(auth)/login": {
       "filePath": "(auth)/login.tsx"
+    },
+    "/(learner)/": {
+      "filePath": "(learner)/index.tsx"
+    },
+    "/(learner)/enrolments/$uid": {
+      "filePath": "(learner)/enrolments.$uid.tsx"
     }
   }
 }
