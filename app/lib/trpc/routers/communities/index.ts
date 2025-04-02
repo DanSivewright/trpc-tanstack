@@ -1,5 +1,5 @@
 import { getFirestore } from "firebase-admin/firestore"
-import type { z } from "zod"
+import { z } from "zod"
 
 import { cachedFunction, generateCacheKey } from "@/lib/cache"
 import { db } from "@/lib/firebase/server"
