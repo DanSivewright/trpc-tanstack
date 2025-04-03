@@ -1,8 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 
 import { useTRPC } from "@/lib/trpc/react"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
+import * as Button from "@/components/ui/button"
 import { Title } from "@/components/title"
 
 type Props = {
@@ -94,17 +93,17 @@ const LearningHero: React.FC<Props> = ({ uid }) => {
               level={1}
               showAs={2}
               style={{ marginTop: 0 }}
-              className="relative z-20 line-clamp-2 text-left text-balance"
+              className="relative z-20 line-clamp-2 text-balance text-left"
             >
               {enrolment?.publication?.title}
             </Title>
-            <p className="text-muted-foreground text-left text-balance">
+            <p className="text-muted-foreground text-balance text-left">
               {enrolment?.publication?.translations["1"]?.summary}
               {/* {enrolment?.publication?.translations["1"]?.summary ||
                 generateFallbackDescription(enrolment || null)} */}
             </p>
             <div className="mt-4 flex items-center gap-4">
-              <Button
+              <Button.Root
               // onClick={() => {
               //   qc.invalidateQueries({
               //     // queryKey: ["enrolments"],
@@ -121,18 +120,18 @@ const LearningHero: React.FC<Props> = ({ uid }) => {
               // rounded="full"
               >
                 Start Learning
-              </Button>
-              <Button
-                asChild
-                className="bg-background/70 backdrop-blur"
-                // rounded="full"
-                variant="outline"
+              </Button.Root>
+              <Button.Root
+              // asChild
+              // className="bg-background/70 backdrop-blur"
+              // // rounded="full"
+              // variant="outline"
               >
                 View
                 {/* <Link prefetch href={`/enrolments/${enrolment?.uid}`}>
                   View
                 </Link> */}
-              </Button>
+              </Button.Root>
             </div>
           </div>
           {/* <DraggableScrollContainer className="h-[38.2%]">

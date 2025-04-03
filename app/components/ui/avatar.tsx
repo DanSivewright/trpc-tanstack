@@ -1,137 +1,325 @@
+// AlignUI Avatar v0.0.0
+
 import * as React from "react"
-import * as AvatarPrimitive from "@radix-ui/react-avatar"
-import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "@/utils/cn"
+import { recursiveCloneChildren } from "@/utils/recursive-clone-children"
+import { tv, type VariantProps } from "@/utils/tv"
+import { Slot } from "@radix-ui/react-slot"
 
-import { cn } from "@/lib/utils"
+import {
+  IconEmptyCompany,
+  IconEmptyUser,
+} from "@/components/ui/avatar-empty-icons"
 
-const statusVariants = {
-  online: "bg-green-500",
-  offline: "bg-gray-400",
-  away: "bg-yellow-500",
-  busy: "bg-red-500",
-  // Add any other status variants you need
-}
+export const AVATAR_ROOT_NAME = "AvatarRoot"
+const AVATAR_IMAGE_NAME = "AvatarImage"
+const AVATAR_INDICATOR_NAME = "AvatarIndicator"
+const AVATAR_STATUS_NAME = "AvatarStatus"
+const AVATAR_BRAND_LOGO_NAME = "AvatarBrandLogo"
+const AVATAR_NOTIFICATION_NAME = "AvatarNotification"
 
-const sizes = {
-  20: "size-5 text-[10px]",
-  24: "size-6 text-xs",
-  32: "size-8 text-sm",
-  40: "size-10 text-base",
-  48: "size-12 text-lg",
-  56: "size-14 text-lg",
-  64: "size-16 text-xl",
-  72: "size-[72px] text-xl",
-  80: "size-20 text-xl",
-}
-const groupedSpacing = {
-  20: " -ml-1",
-  24: " -ml-1",
-  32: " -ml-1.5",
-  40: " -ml-3",
-  48: " -ml-3",
-  56: " -ml-4",
-  64: " -ml-4",
-  72: " -ml-4",
-  80: "-ml-4",
-}
-
-const avatarVariants = cva("relative flex shrink-0 rounded-full", {
+export const avatarVariants = tv({
+  slots: {
+    root: [
+      "relative flex shrink-0 items-center justify-center rounded-full",
+      "select-none text-center uppercase",
+    ],
+    image: "size-full rounded-full object-cover",
+    indicator:
+      "absolute flex size-8 items-center justify-center drop-shadow-[0_2px_4px_#1b1c1d0a]",
+  },
   variants: {
-    size: sizes,
-    grouped: {
-      true: "",
-      false: "",
+    size: {
+      "80": {
+        root: "size-20 text-title-h5",
+      },
+      "72": {
+        root: "size-[72px] text-title-h5",
+      },
+      "64": {
+        root: "size-16 text-title-h5",
+      },
+      "56": {
+        root: "size-14 text-label-lg",
+      },
+      "48": {
+        root: "size-12 text-label-lg",
+      },
+      "40": {
+        root: "size-10 text-label-md",
+      },
+      "32": {
+        root: "size-8 text-label-sm",
+      },
+      "24": {
+        root: "size-6 text-label-xs",
+      },
+      "20": {
+        root: "size-5 text-label-xs",
+      },
     },
     color: {
-      gray: "bg-gray-200 text-neutral-950",
-      yellow: "bg-yellow-200 text-yellow-950",
-      blue: "bg-blue-200 text-blue-950",
-      sky: "bg-sky-200 text-sky-950",
-      purple: "bg-purple-200 text-purple-950",
-      red: "bg-red-200 text-red-950",
-      green: "bg-green-200 text-green-950",
+      gray: {
+        root: "bg-bg-soft-200 text-static-black",
+      },
+      yellow: {
+        root: "bg-yellow-200 text-yellow-950",
+      },
+      blue: {
+        root: "bg-blue-200 text-blue-950",
+      },
+      sky: {
+        root: "bg-sky-200 text-sky-950",
+      },
+      purple: {
+        root: "bg-purple-200 text-purple-950",
+      },
+      red: {
+        root: "bg-red-200 text-red-950",
+      },
     },
-    status: statusVariants,
   },
   compoundVariants: [
-    ...Object.entries(sizes).map(([size, className]) => ({
-      grouped: true,
-      size: Number(size) as keyof typeof sizes,
-      className: `${className} ${groupedSpacing[Number(size) as keyof typeof groupedSpacing]}`,
-    })),
+    {
+      size: ["80", "72"],
+      class: {
+        indicator: "-right-2",
+      },
+    },
+    {
+      size: "64",
+      class: {
+        indicator: "-right-2 scale-[.875]",
+      },
+    },
+    {
+      size: "56",
+      class: {
+        indicator: "-right-1.5 scale-75",
+      },
+    },
+    {
+      size: "48",
+      class: {
+        indicator: "-right-1.5 scale-[.625]",
+      },
+    },
+    {
+      size: "40",
+      class: {
+        indicator: "-right-1.5 scale-[.5625]",
+      },
+    },
+    {
+      size: "32",
+      class: {
+        indicator: "-right-1.5 scale-50",
+      },
+    },
+    {
+      size: "24",
+      class: {
+        indicator: "-right-1 scale-[.375]",
+      },
+    },
+    {
+      size: "20",
+      class: {
+        indicator: "-right-1 scale-[.3125]",
+      },
+    },
   ],
   defaultVariants: {
-    size: 40,
+    size: "80",
     color: "gray",
-    grouped: false,
   },
 })
 
-function Avatar({
-  className,
+type AvatarSharedProps = VariantProps<typeof avatarVariants>
+
+export type AvatarRootProps = VariantProps<typeof avatarVariants> &
+  React.HTMLAttributes<HTMLDivElement> & {
+    asChild?: boolean
+    placeholderType?: "user" | "company"
+  }
+
+const AvatarRoot = React.forwardRef<HTMLDivElement, AvatarRootProps>(
+  (
+    {
+      asChild,
+      children,
+      size,
+      color,
+      className,
+      placeholderType = "user",
+      ...rest
+    },
+    forwardedRef
+  ) => {
+    const uniqueId = React.useId()
+    const Component = asChild ? Slot : "div"
+    const { root } = avatarVariants({ size, color })
+
+    const sharedProps: AvatarSharedProps = {
+      size,
+      color,
+    }
+
+    // use placeholder icon if no children provided
+    if (!children) {
+      return (
+        <div className={root({ class: className })} {...rest}>
+          <AvatarImage asChild>
+            {placeholderType === "company" ? (
+              <IconEmptyCompany />
+            ) : (
+              <IconEmptyUser />
+            )}
+          </AvatarImage>
+        </div>
+      )
+    }
+
+    const extendedChildren = recursiveCloneChildren(
+      children as React.ReactElement[],
+      sharedProps,
+      [AVATAR_IMAGE_NAME, AVATAR_INDICATOR_NAME],
+      uniqueId,
+      asChild
+    )
+
+    return (
+      <Component
+        ref={forwardedRef}
+        className={root({ class: className })}
+        {...rest}
+      >
+        {extendedChildren}
+      </Component>
+    )
+  }
+)
+AvatarRoot.displayName = AVATAR_ROOT_NAME
+
+type AvatarImageProps = AvatarSharedProps &
+  Omit<React.ImgHTMLAttributes<HTMLImageElement>, "color"> & {
+    asChild?: boolean
+  }
+
+const AvatarImage = React.forwardRef<HTMLImageElement, AvatarImageProps>(
+  ({ asChild, className, size, color, ...rest }, forwardedRef) => {
+    const Component = asChild ? Slot : "img"
+    const { image } = avatarVariants({ size, color })
+
+    return (
+      <Component
+        ref={forwardedRef}
+        className={image({ class: className })}
+        {...rest}
+      />
+    )
+  }
+)
+AvatarImage.displayName = AVATAR_IMAGE_NAME
+
+function AvatarIndicator({
   size,
   color,
+  className,
+  position = "bottom",
+  ...rest
+}: AvatarSharedProps &
+  React.HTMLAttributes<HTMLDivElement> & {
+    position?: "top" | "bottom"
+  }) {
+  const { indicator } = avatarVariants({ size, color })
+
+  return (
+    <div
+      className={cn(indicator({ class: className }), {
+        "top-0 origin-top-right": position === "top",
+        "bottom-0 origin-bottom-right": position === "bottom",
+      })}
+      {...rest}
+    />
+  )
+}
+AvatarIndicator.displayName = AVATAR_INDICATOR_NAME
+
+export const avatarStatusVariants = tv({
+  base: "box-content size-3 rounded-full border-4 border-bg-white-0",
+  variants: {
+    status: {
+      online: "bg-success-base",
+      offline: "bg-faded-base",
+      busy: "bg-error-base",
+      away: "bg-away-base",
+    },
+  },
+  defaultVariants: {
+    status: "online",
+  },
+})
+
+function AvatarStatus({
   status,
-  grouped,
-  children,
-  ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Root> &
-  VariantProps<typeof avatarVariants>) {
-  return (
-    <AvatarPrimitive.Root
-      data-slot="avatar"
-      className={avatarVariants({ className, size, color, grouped })}
-      {...props}
-    >
-      {status && (
-        <div
-          className={cn(
-            "absolute -right-2 -bottom-2 flex size-8 items-center justify-center drop-shadow-[0_2px_4px_#1b1c1d0a]"
-          )}
-        >
-          <span
-            className={cn(
-              "border-bg-white-0 box-content size-3 rounded-full border-4",
-              statusVariants[status]
-            )}
-          ></span>
-        </div>
-      )}
-      {children}
-    </AvatarPrimitive.Root>
-  )
-}
-
-function AvatarImage({
   className,
-  ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+  ...rest
+}: VariantProps<typeof avatarStatusVariants> &
+  React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <AvatarPrimitive.Image
-      data-slot="avatar-image"
-      className={cn(
-        "aspect-square size-full overflow-hidden rounded-full",
-        className
-      )}
-      {...props}
+    <div
+      className={avatarStatusVariants({ status, class: className })}
+      {...rest}
     />
   )
 }
+AvatarStatus.displayName = AVATAR_STATUS_NAME
 
-function AvatarFallback({
-  className,
-  ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
+type AvatarBrandLogoProps = React.ImgHTMLAttributes<HTMLImageElement> & {
+  asChild?: boolean
+}
+
+const AvatarBrandLogo = React.forwardRef<
+  HTMLImageElement,
+  AvatarBrandLogoProps
+>(({ asChild, className, ...rest }, forwardedRef) => {
+  const Component = asChild ? Slot : "img"
+
   return (
-    <AvatarPrimitive.Fallback
-      data-slot="avatar-fallback"
+    <Component
+      ref={forwardedRef}
       className={cn(
-        "flex size-full items-center justify-center rounded-full",
+        "border-bg-white-0 box-content size-6 rounded-full border-2",
         className
       )}
-      {...props}
+      {...rest}
+    />
+  )
+})
+AvatarBrandLogo.displayName = AVATAR_BRAND_LOGO_NAME
+
+function AvatarNotification({
+  className,
+  ...rest
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn(
+        "border-bg-white-0 bg-error-base box-content size-3 rounded-full border-2",
+        className
+      )}
+      {...rest}
     />
   )
 }
+AvatarNotification.displayName = AVATAR_NOTIFICATION_NAME
 
-export { Avatar, AvatarImage, AvatarFallback }
+export {
+  AvatarRoot as Root,
+  AvatarImage as Image,
+  AvatarIndicator as Indicator,
+  AvatarStatus as Status,
+  AvatarBrandLogo as BrandLogo,
+  AvatarNotification as Notification,
+}

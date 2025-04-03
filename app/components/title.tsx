@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority"
 
-import { Skeleton } from "./ui/skeleton"
+// import { Skeleton } from "./ui/skeleton"
 
 const titleVariants = cva("", {
   variants: {
@@ -186,26 +186,26 @@ const Title: TitleComponent = ({
 }
 Title.displayName = "Title"
 
-const TitleSkeleton: React.FC<Omit<TitleProps, "children">> = ({
-  level = 1,
-  className,
-  margin = true,
-  ...rest
-}) => {
-  return (
-    <Skeleton
-      className={titleVariants({
-        level,
-        skeleton: true,
-        margin,
-        className,
-      })}
-      {...rest}
-    />
-  )
-}
-TitleSkeleton.displayName = "Title.Skeleton"
+// const TitleSkeleton: React.FC<Omit<TitleProps, "children">> = ({
+//   level = 1,
+//   className,
+//   margin = true,
+//   ...rest
+// }) => {
+//   return (
+//     <Skeleton
+//       className={titleVariants({
+//         level,
+//         skeleton: true,
+//         margin,
+//         className,
+//       })}
+//       {...rest}
+//     />
+//   )
+// }
+// TitleSkeleton.displayName = "Title.Skeleton"
 
-Title.Skeleton = TitleSkeleton
+// Title.Skeleton = TitleSkeleton
 
 export { Title, titleVariants }

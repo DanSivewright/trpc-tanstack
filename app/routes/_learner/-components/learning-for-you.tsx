@@ -7,7 +7,6 @@ import type { z } from "zod"
 import { useTRPC } from "@/lib/trpc/react"
 import type { EnrolmentsAllSchema } from "@/lib/trpc/routers/enrolments/schemas/enrolments-all-schema"
 import { cn } from "@/lib/utils"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import DraggableScrollContainer from "@/components/draggable-scroll-container"
 import { Section } from "@/components/section"
 import { Title } from "@/components/title"
@@ -38,7 +37,7 @@ const LearningForYou: React.FC<Props> = ({}) => {
           style={{
             lineHeight: "7rem",
           }}
-          className="absolute top-[8rem] left-[25%] text-[10rem] font-black text-white/10 italic"
+          className="absolute left-[25%] top-[8rem] text-[10rem] font-black italic text-white/10"
         >
           {en?.publication.content.title}
         </p>
@@ -51,13 +50,14 @@ const LearningForYou: React.FC<Props> = ({}) => {
   return (
     <Section>
       <div className="gutter my-5 space-y-1 lg:my-6 xl:my-7">
-        <Avatar className="size-8 text-sm">
+        x
+        {/* <Avatar className="size-8 text-sm">
           <AvatarImage
             className="object-cover"
             src={me?.imageUrl || undefined}
           />
           <AvatarFallback>{me?.firstName?.[0] || ""}</AvatarFallback>
-        </Avatar>
+        </Avatar> */}
         <Title showAs={6} level={2} style={{ margin: 0 }} className="mt-1.5">
           For your today
         </Title>

@@ -1,16 +1,18 @@
 // app/routes/__root.tsx
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { TanStackRouterDevtools } from "@tanstack/router-devtools";
+import type { ReactNode } from "react"
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import {
   createRootRoute,
   HeadContent,
   Outlet,
   Scripts,
-} from "@tanstack/react-router";
-import type { ReactNode } from "react";
+} from "@tanstack/react-router"
+import { TanStackRouterDevtools } from "@tanstack/router-devtools"
 
-import appCss from "@/styles/app.css?url";
-import { AuthProvider } from "@/components/providers/auth-provider";
+import { NotificationProvider } from "@/components/ui/notification-provider"
+import { AuthProvider } from "@/components/providers/auth-provider"
+import { TailwindIndicator } from "@/components/tailwind-indicator"
+import appCss from "@/styles/app.css?url"
 
 export const Route = createRootRoute({
   head: () => ({
@@ -34,14 +36,14 @@ export const Route = createRootRoute({
     ],
   }),
   component: RootComponent,
-});
+})
 
 function RootComponent() {
   return (
     <RootDocument>
       <Outlet />
     </RootDocument>
-  );
+  )
 }
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
@@ -54,8 +56,10 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <AuthProvider>{children}</AuthProvider>
         <TanStackRouterDevtools position="bottom-right" />
         <ReactQueryDevtools buttonPosition="bottom-left" />
+        <TailwindIndicator />
+        <NotificationProvider />
         <Scripts />
       </body>
     </html>
-  );
+  )
 }
