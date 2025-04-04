@@ -76,7 +76,7 @@ dependencies:
     version: 1.114.29(@tanstack/react-query@5.71.0)(@tanstack/react-router@1.114.29)(@tanstack/router-core@1.114.33)(react-dom@19.0.0)(react@19.0.0)
   '@tanstack/react-start':
     specifier: ^1.114.29
-    version: 1.114.29(@tanstack/react-router@1.114.29)(react-dom@19.0.0)(react@19.0.0)(vite@6.2.4)
+    version: 1.114.29(@tanstack/react-router@1.114.29)(react-dom@19.0.0)(react@19.0.0)(vite@6.2.5)
   '@tanstack/router-devtools':
     specifier: ^1.114.29
     version: 1.114.29(@tanstack/react-router@1.114.29)(@tanstack/router-core@1.114.33)(csstype@3.1.3)(react-dom@19.0.0)(react@19.0.0)(tiny-invariant@1.3.3)
@@ -155,6 +155,9 @@ dependencies:
   vinxi:
     specifier: ^0.5.3
     version: 0.5.3
+  vite-tsconfig-paths:
+    specifier: ^5.1.4
+    version: 5.1.4(typescript@5.8.2)(vite@6.2.5)
   zod:
     specifier: ^3.24.2
     version: 3.24.2
@@ -174,7 +177,7 @@ devDependencies:
     version: 19.0.4(@types/react@19.0.12)
   '@vitejs/plugin-react':
     specifier: ^4.3.4
-    version: 4.3.4(vite@6.2.4)
+    version: 4.3.4(vite@6.2.5)
   autoprefixer:
     specifier: ^10.4.21
     version: 10.4.21(postcss@8.5.3)
@@ -196,9 +199,9 @@ devDependencies:
   typescript:
     specifier: ^5.8.2
     version: 5.8.2
-  vite-tsconfig-paths:
-    specifier: ^5.1.4
-    version: 5.1.4(typescript@5.8.2)(vite@6.2.4)
+  vite:
+    specifier: ^6.2.5
+    version: 6.2.5
 
 packages:
 
@@ -3842,7 +3845,7 @@ packages:
     dependencies:
       '@remix-run/node': 2.16.3(typescript@5.8.2)
       '@tanstack/form-core': 1.1.3
-      '@tanstack/react-start': 1.114.29(@tanstack/react-router@1.114.29)(react-dom@19.0.0)(react@19.0.0)(vite@6.2.4)
+      '@tanstack/react-start': 1.114.29(@tanstack/react-router@1.114.29)(react-dom@19.0.0)(react@19.0.0)(vite@6.2.5)
       '@tanstack/react-store': 0.7.0(react-dom@19.0.0)(react@19.0.0)
       decode-formdata: 0.8.0
       react: 19.0.0
@@ -3985,7 +3988,7 @@ packages:
       - yaml
     dev: false
 
-  /@tanstack/react-start-config@1.114.29(@tanstack/react-router@1.114.29)(react-dom@19.0.0)(react@19.0.0)(vite@6.2.4):
+  /@tanstack/react-start-config@1.114.29(@tanstack/react-router@1.114.29)(react-dom@19.0.0)(react@19.0.0)(vite@6.2.5):
     resolution: {integrity: sha512-ndQIzIYWNB4DmvGhWBf4eYDDSd8ftI53MsF8qaF3JUh+BvOm/DnZe+AqjoWnhmDp/dgV8TgZmg7y8Vd7FqIAbQ==}
     engines: {node: '>=12'}
     peerDependencies:
@@ -3996,17 +3999,17 @@ packages:
       '@tanstack/react-start-plugin': 1.114.29
       '@tanstack/router-core': 1.114.29
       '@tanstack/router-generator': 1.114.29(@tanstack/react-router@1.114.29)
-      '@tanstack/router-plugin': 1.114.29(@tanstack/react-router@1.114.29)(vite@6.2.4)
+      '@tanstack/router-plugin': 1.114.29(@tanstack/react-router@1.114.29)(vite@6.2.5)
       '@tanstack/server-functions-plugin': 1.114.29
       '@tanstack/start-server-functions-handler': 1.114.29
-      '@vitejs/plugin-react': 4.3.4(vite@6.2.4)
+      '@vitejs/plugin-react': 4.3.4(vite@6.2.5)
       import-meta-resolve: 4.1.0
       nitropack: 2.11.8
       ofetch: 1.4.1
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
       vinxi: 0.5.3
-      vite: 6.2.4
+      vite: 6.2.5
       zod: 3.24.2
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -4157,7 +4160,7 @@ packages:
       unctx: 2.4.1
     dev: false
 
-  /@tanstack/react-start@1.114.29(@tanstack/react-router@1.114.29)(react-dom@19.0.0)(react@19.0.0)(vite@6.2.4):
+  /@tanstack/react-start@1.114.29(@tanstack/react-router@1.114.29)(react-dom@19.0.0)(react@19.0.0)(vite@6.2.5):
     resolution: {integrity: sha512-G8noI0HolnpPRwCR5FKbJbWGyN8vPJKjCVSvHoDdGXfEBXMY2sI9M6rGEdg0SOo0cROiuNboCxsMUrRQ2u2dwQ==}
     engines: {node: '>=12'}
     peerDependencies:
@@ -4166,7 +4169,7 @@ packages:
       vite: ^6.0.0
     dependencies:
       '@tanstack/react-start-client': 1.114.29(react-dom@19.0.0)(react@19.0.0)
-      '@tanstack/react-start-config': 1.114.29(@tanstack/react-router@1.114.29)(react-dom@19.0.0)(react@19.0.0)(vite@6.2.4)
+      '@tanstack/react-start-config': 1.114.29(@tanstack/react-router@1.114.29)(react-dom@19.0.0)(react@19.0.0)(vite@6.2.5)
       '@tanstack/react-start-router-manifest': 1.114.29
       '@tanstack/react-start-server': 1.114.29(react-dom@19.0.0)(react@19.0.0)
       '@tanstack/start-api-routes': 1.114.29
@@ -4176,7 +4179,7 @@ packages:
       '@tanstack/start-server-functions-ssr': 1.114.29
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
-      vite: 6.2.4
+      vite: 6.2.5
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -4315,7 +4318,7 @@ packages:
       zod: 3.24.2
     dev: false
 
-  /@tanstack/router-plugin@1.114.29(@tanstack/react-router@1.114.29)(vite@6.2.4):
+  /@tanstack/router-plugin@1.114.29(@tanstack/react-router@1.114.29)(vite@6.2.5):
     resolution: {integrity: sha512-0xWAtyiselqTQiV9O8WtgFb/DN4yOgTP75uHAwxpHq6upcnBFBXqVw8DO/KR6AoTRsN96HdtuyjhK98JuQqngA==}
     engines: {node: '>=12'}
     peerDependencies:
@@ -4353,7 +4356,7 @@ packages:
       babel-dead-code-elimination: 1.0.9
       chokidar: 3.6.0
       unplugin: 2.2.2
-      vite: 6.2.4
+      vite: 6.2.5
       zod: 3.24.2
     transitivePeerDependencies:
       - supports-color
@@ -4937,7 +4940,7 @@ packages:
       uqr: 0.1.2
     dev: false
 
-  /@vitejs/plugin-react@4.3.4(vite@6.2.4):
+  /@vitejs/plugin-react@4.3.4(vite@6.2.5):
     resolution: {integrity: sha512-SCCPBJtYLdE8PX/7ZQAs1QAZ8Jqwih+0VBLum1EGqmCCQal+MIUqLCzj3ZUy8ufbC0cAM4LRlSTm7IQJwWT4ug==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
@@ -4948,7 +4951,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.25.9(@babel/core@7.26.10)
       '@types/babel__core': 7.20.5
       react-refresh: 0.14.2
-      vite: 6.2.4
+      vite: 6.2.5
     transitivePeerDependencies:
       - supports-color
 
@@ -6384,7 +6387,7 @@ packages:
 
   /globrex@0.1.2:
     resolution: {integrity: sha512-uHJgbwAMwNFf5mLst7IWLNg14x1CkeqglJb/K3doi4dw6q2IvAAmM/Y81kevy83wP+Sst+nutFTYOGg3d1lsxg==}
-    dev: true
+    dev: false
 
   /goober@2.1.16(csstype@3.1.3):
     resolution: {integrity: sha512-erjk19y1U33+XAMe1VTvIONHYoSqE4iS7BYUZfHaqeohLmnC0FdxEh7rQU+6MZ4OajItzjZFSRtVANrQwNq6/g==}
@@ -8691,7 +8694,7 @@ packages:
         optional: true
     dependencies:
       typescript: 5.8.2
-    dev: true
+    dev: false
 
   /tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
@@ -9062,7 +9065,7 @@ packages:
       unctx: 2.4.1
       unenv: 1.10.0
       unstorage: 1.15.0(db0@0.3.1)(ioredis@5.6.0)
-      vite: 6.2.3
+      vite: 6.2.5
       zod: 3.24.2
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -9107,7 +9110,7 @@ packages:
       - yaml
     dev: false
 
-  /vite-tsconfig-paths@5.1.4(typescript@5.8.2)(vite@6.2.4):
+  /vite-tsconfig-paths@5.1.4(typescript@5.8.2)(vite@6.2.5):
     resolution: {integrity: sha512-cYj0LRuLV2c2sMqhqhGpaO3LretdtMn/BVX4cPLanIZuwwrkVl+lK84E/miEXkCHWXuq65rhNN4rXsBcOB3S4w==}
     peerDependencies:
       vite: '*'
@@ -9118,11 +9121,11 @@ packages:
       debug: 4.4.0
       globrex: 0.1.2
       tsconfck: 3.1.5(typescript@5.8.2)
-      vite: 6.2.4
+      vite: 6.2.5
     transitivePeerDependencies:
       - supports-color
       - typescript
-    dev: true
+    dev: false
 
   /vite@6.1.2:
     resolution: {integrity: sha512-EiXfDyO/uNKhYOSlZ6+9qBz4H46A8Lr07pyjmb88KTbJ+xkXvnqtxvgtg2VxPU6Kfj8Ep0un9JLqdrCWLqIanw==}
@@ -9171,55 +9174,8 @@ packages:
       fsevents: 2.3.3
     dev: false
 
-  /vite@6.2.3:
-    resolution: {integrity: sha512-IzwM54g4y9JA/xAeBPNaDXiBF8Jsgl3VBQ2YQ/wOY6fyW3xMdSoltIV3Bo59DErdqdE6RxUfv8W69DvUorE4Eg==}
-    engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
-    hasBin: true
-    peerDependencies:
-      '@types/node': ^18.0.0 || ^20.0.0 || >=22.0.0
-      jiti: '>=1.21.0'
-      less: '*'
-      lightningcss: ^1.21.0
-      sass: '*'
-      sass-embedded: '*'
-      stylus: '*'
-      sugarss: '*'
-      terser: ^5.16.0
-      tsx: ^4.8.1
-      yaml: ^2.4.2
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-      jiti:
-        optional: true
-      less:
-        optional: true
-      lightningcss:
-        optional: true
-      sass:
-        optional: true
-      sass-embedded:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      terser:
-        optional: true
-      tsx:
-        optional: true
-      yaml:
-        optional: true
-    dependencies:
-      esbuild: 0.25.1
-      postcss: 8.5.3
-      rollup: 4.37.0
-    optionalDependencies:
-      fsevents: 2.3.3
-    dev: false
-
-  /vite@6.2.4:
-    resolution: {integrity: sha512-veHMSew8CcRzhL5o8ONjy8gkfmFJAd5Ac16oxBUjlwgX3Gq2Wqr+qNC3TjPIpy7TPV/KporLga5GT9HqdrCizw==}
+  /vite@6.2.5:
+    resolution: {integrity: sha512-j023J/hCAa4pRIUH6J9HemwYfjB5llR2Ps0CWeikOtdR8+pAURAk0DoJC5/mm9kd+UgdnIy7d6HE4EAvlYhPhA==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
     peerDependencies:
