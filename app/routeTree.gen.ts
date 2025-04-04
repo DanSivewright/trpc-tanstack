@@ -11,174 +11,327 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as TeamsImport } from './routes/teams'
-import { Route as LoginImport } from './routes/login'
-import { Route as ExploreImport } from './routes/explore'
-import { Route as CommunitiesImport } from './routes/communities'
-import { Route as IndexImport } from './routes/index'
-import { Route as EnrolmentsUidImport } from './routes/enrolments.$uid'
+import { Route as LearnerImport } from './routes/_learner'
+import { Route as AuthImport } from './routes/_auth'
+import { Route as LearnerIndexImport } from './routes/_learner.index'
+import { Route as LearnerTasksImport } from './routes/_learner.tasks'
+import { Route as LearnerExploreImport } from './routes/_learner.explore'
+import { Route as LearnerChatImport } from './routes/_learner.chat'
+import { Route as LearnerCalendarImport } from './routes/_learner.calendar'
+import { Route as AuthLoginImport } from './routes/_auth.login'
+import { Route as LearnerCommunitiesRouteImport } from './routes/_learner.communities.route'
+import { Route as LearnerCommunitiesIndexImport } from './routes/_learner.communities.index'
+import { Route as LearnerEnrolmentsUidImport } from './routes/_learner.enrolments.$uid'
+import { Route as LearnerCommunitiesIdImport } from './routes/_learner.communities.$id'
 
 // Create/Update Routes
 
-const TeamsRoute = TeamsImport.update({
-  id: '/teams',
-  path: '/teams',
+const LearnerRoute = LearnerImport.update({
+  id: '/_learner',
   getParentRoute: () => rootRoute,
 } as any)
 
-const LoginRoute = LoginImport.update({
-  id: '/login',
-  path: '/login',
+const AuthRoute = AuthImport.update({
+  id: '/_auth',
   getParentRoute: () => rootRoute,
 } as any)
 
-const ExploreRoute = ExploreImport.update({
-  id: '/explore',
-  path: '/explore',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const CommunitiesRoute = CommunitiesImport.update({
-  id: '/communities',
-  path: '/communities',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const IndexRoute = IndexImport.update({
+const LearnerIndexRoute = LearnerIndexImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => LearnerRoute,
 } as any)
 
-const EnrolmentsUidRoute = EnrolmentsUidImport.update({
+const LearnerTasksRoute = LearnerTasksImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => LearnerRoute,
+} as any)
+
+const LearnerExploreRoute = LearnerExploreImport.update({
+  id: '/explore',
+  path: '/explore',
+  getParentRoute: () => LearnerRoute,
+} as any)
+
+const LearnerChatRoute = LearnerChatImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => LearnerRoute,
+} as any)
+
+const LearnerCalendarRoute = LearnerCalendarImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => LearnerRoute,
+} as any)
+
+const AuthLoginRoute = AuthLoginImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const LearnerCommunitiesRouteRoute = LearnerCommunitiesRouteImport.update({
+  id: '/communities',
+  path: '/communities',
+  getParentRoute: () => LearnerRoute,
+} as any)
+
+const LearnerCommunitiesIndexRoute = LearnerCommunitiesIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LearnerCommunitiesRouteRoute,
+} as any)
+
+const LearnerEnrolmentsUidRoute = LearnerEnrolmentsUidImport.update({
   id: '/enrolments/$uid',
   path: '/enrolments/$uid',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => LearnerRoute,
+} as any)
+
+const LearnerCommunitiesIdRoute = LearnerCommunitiesIdImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => LearnerCommunitiesRouteRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthImport
       parentRoute: typeof rootRoute
     }
-    '/communities': {
-      id: '/communities'
+    '/_learner': {
+      id: '/_learner'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof LearnerImport
+      parentRoute: typeof rootRoute
+    }
+    '/_learner/communities': {
+      id: '/_learner/communities'
       path: '/communities'
       fullPath: '/communities'
-      preLoaderRoute: typeof CommunitiesImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof LearnerCommunitiesRouteImport
+      parentRoute: typeof LearnerImport
     }
-    '/explore': {
-      id: '/explore'
-      path: '/explore'
-      fullPath: '/explore'
-      preLoaderRoute: typeof ExploreImport
-      parentRoute: typeof rootRoute
-    }
-    '/login': {
-      id: '/login'
+    '/_auth/login': {
+      id: '/_auth/login'
       path: '/login'
       fullPath: '/login'
-      preLoaderRoute: typeof LoginImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof AuthLoginImport
+      parentRoute: typeof AuthImport
     }
-    '/teams': {
-      id: '/teams'
-      path: '/teams'
-      fullPath: '/teams'
-      preLoaderRoute: typeof TeamsImport
-      parentRoute: typeof rootRoute
+    '/_learner/calendar': {
+      id: '/_learner/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof LearnerCalendarImport
+      parentRoute: typeof LearnerImport
     }
-    '/enrolments/$uid': {
-      id: '/enrolments/$uid'
+    '/_learner/chat': {
+      id: '/_learner/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof LearnerChatImport
+      parentRoute: typeof LearnerImport
+    }
+    '/_learner/explore': {
+      id: '/_learner/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof LearnerExploreImport
+      parentRoute: typeof LearnerImport
+    }
+    '/_learner/tasks': {
+      id: '/_learner/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof LearnerTasksImport
+      parentRoute: typeof LearnerImport
+    }
+    '/_learner/': {
+      id: '/_learner/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof LearnerIndexImport
+      parentRoute: typeof LearnerImport
+    }
+    '/_learner/communities/$id': {
+      id: '/_learner/communities/$id'
+      path: '/$id'
+      fullPath: '/communities/$id'
+      preLoaderRoute: typeof LearnerCommunitiesIdImport
+      parentRoute: typeof LearnerCommunitiesRouteImport
+    }
+    '/_learner/enrolments/$uid': {
+      id: '/_learner/enrolments/$uid'
       path: '/enrolments/$uid'
       fullPath: '/enrolments/$uid'
-      preLoaderRoute: typeof EnrolmentsUidImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof LearnerEnrolmentsUidImport
+      parentRoute: typeof LearnerImport
+    }
+    '/_learner/communities/': {
+      id: '/_learner/communities/'
+      path: '/'
+      fullPath: '/communities/'
+      preLoaderRoute: typeof LearnerCommunitiesIndexImport
+      parentRoute: typeof LearnerCommunitiesRouteImport
     }
   }
 }
 
 // Create and export the route tree
 
+interface AuthRouteChildren {
+  AuthLoginRoute: typeof AuthLoginRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthLoginRoute: AuthLoginRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
+interface LearnerCommunitiesRouteRouteChildren {
+  LearnerCommunitiesIdRoute: typeof LearnerCommunitiesIdRoute
+  LearnerCommunitiesIndexRoute: typeof LearnerCommunitiesIndexRoute
+}
+
+const LearnerCommunitiesRouteRouteChildren: LearnerCommunitiesRouteRouteChildren =
+  {
+    LearnerCommunitiesIdRoute: LearnerCommunitiesIdRoute,
+    LearnerCommunitiesIndexRoute: LearnerCommunitiesIndexRoute,
+  }
+
+const LearnerCommunitiesRouteRouteWithChildren =
+  LearnerCommunitiesRouteRoute._addFileChildren(
+    LearnerCommunitiesRouteRouteChildren,
+  )
+
+interface LearnerRouteChildren {
+  LearnerCommunitiesRouteRoute: typeof LearnerCommunitiesRouteRouteWithChildren
+  LearnerCalendarRoute: typeof LearnerCalendarRoute
+  LearnerChatRoute: typeof LearnerChatRoute
+  LearnerExploreRoute: typeof LearnerExploreRoute
+  LearnerTasksRoute: typeof LearnerTasksRoute
+  LearnerIndexRoute: typeof LearnerIndexRoute
+  LearnerEnrolmentsUidRoute: typeof LearnerEnrolmentsUidRoute
+}
+
+const LearnerRouteChildren: LearnerRouteChildren = {
+  LearnerCommunitiesRouteRoute: LearnerCommunitiesRouteRouteWithChildren,
+  LearnerCalendarRoute: LearnerCalendarRoute,
+  LearnerChatRoute: LearnerChatRoute,
+  LearnerExploreRoute: LearnerExploreRoute,
+  LearnerTasksRoute: LearnerTasksRoute,
+  LearnerIndexRoute: LearnerIndexRoute,
+  LearnerEnrolmentsUidRoute: LearnerEnrolmentsUidRoute,
+}
+
+const LearnerRouteWithChildren =
+  LearnerRoute._addFileChildren(LearnerRouteChildren)
+
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/communities': typeof CommunitiesRoute
-  '/explore': typeof ExploreRoute
-  '/login': typeof LoginRoute
-  '/teams': typeof TeamsRoute
-  '/enrolments/$uid': typeof EnrolmentsUidRoute
+  '': typeof LearnerRouteWithChildren
+  '/communities': typeof LearnerCommunitiesRouteRouteWithChildren
+  '/login': typeof AuthLoginRoute
+  '/calendar': typeof LearnerCalendarRoute
+  '/chat': typeof LearnerChatRoute
+  '/explore': typeof LearnerExploreRoute
+  '/tasks': typeof LearnerTasksRoute
+  '/': typeof LearnerIndexRoute
+  '/communities/$id': typeof LearnerCommunitiesIdRoute
+  '/enrolments/$uid': typeof LearnerEnrolmentsUidRoute
+  '/communities/': typeof LearnerCommunitiesIndexRoute
 }
 
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/communities': typeof CommunitiesRoute
-  '/explore': typeof ExploreRoute
-  '/login': typeof LoginRoute
-  '/teams': typeof TeamsRoute
-  '/enrolments/$uid': typeof EnrolmentsUidRoute
+  '': typeof AuthRouteWithChildren
+  '/login': typeof AuthLoginRoute
+  '/calendar': typeof LearnerCalendarRoute
+  '/chat': typeof LearnerChatRoute
+  '/explore': typeof LearnerExploreRoute
+  '/tasks': typeof LearnerTasksRoute
+  '/': typeof LearnerIndexRoute
+  '/communities/$id': typeof LearnerCommunitiesIdRoute
+  '/enrolments/$uid': typeof LearnerEnrolmentsUidRoute
+  '/communities': typeof LearnerCommunitiesIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/': typeof IndexRoute
-  '/communities': typeof CommunitiesRoute
-  '/explore': typeof ExploreRoute
-  '/login': typeof LoginRoute
-  '/teams': typeof TeamsRoute
-  '/enrolments/$uid': typeof EnrolmentsUidRoute
+  '/_auth': typeof AuthRouteWithChildren
+  '/_learner': typeof LearnerRouteWithChildren
+  '/_learner/communities': typeof LearnerCommunitiesRouteRouteWithChildren
+  '/_auth/login': typeof AuthLoginRoute
+  '/_learner/calendar': typeof LearnerCalendarRoute
+  '/_learner/chat': typeof LearnerChatRoute
+  '/_learner/explore': typeof LearnerExploreRoute
+  '/_learner/tasks': typeof LearnerTasksRoute
+  '/_learner/': typeof LearnerIndexRoute
+  '/_learner/communities/$id': typeof LearnerCommunitiesIdRoute
+  '/_learner/enrolments/$uid': typeof LearnerEnrolmentsUidRoute
+  '/_learner/communities/': typeof LearnerCommunitiesIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
+    | ''
     | '/communities'
-    | '/explore'
     | '/login'
-    | '/teams'
+    | '/calendar'
+    | '/chat'
+    | '/explore'
+    | '/tasks'
+    | '/'
+    | '/communities/$id'
     | '/enrolments/$uid'
+    | '/communities/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
-    | '/communities'
-    | '/explore'
+    | ''
     | '/login'
-    | '/teams'
+    | '/calendar'
+    | '/chat'
+    | '/explore'
+    | '/tasks'
+    | '/'
+    | '/communities/$id'
     | '/enrolments/$uid'
+    | '/communities'
   id:
     | '__root__'
-    | '/'
-    | '/communities'
-    | '/explore'
-    | '/login'
-    | '/teams'
-    | '/enrolments/$uid'
+    | '/_auth'
+    | '/_learner'
+    | '/_learner/communities'
+    | '/_auth/login'
+    | '/_learner/calendar'
+    | '/_learner/chat'
+    | '/_learner/explore'
+    | '/_learner/tasks'
+    | '/_learner/'
+    | '/_learner/communities/$id'
+    | '/_learner/enrolments/$uid'
+    | '/_learner/communities/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  CommunitiesRoute: typeof CommunitiesRoute
-  ExploreRoute: typeof ExploreRoute
-  LoginRoute: typeof LoginRoute
-  TeamsRoute: typeof TeamsRoute
-  EnrolmentsUidRoute: typeof EnrolmentsUidRoute
+  AuthRoute: typeof AuthRouteWithChildren
+  LearnerRoute: typeof LearnerRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  CommunitiesRoute: CommunitiesRoute,
-  ExploreRoute: ExploreRoute,
-  LoginRoute: LoginRoute,
-  TeamsRoute: TeamsRoute,
-  EnrolmentsUidRoute: EnrolmentsUidRoute,
+  AuthRoute: AuthRouteWithChildren,
+  LearnerRoute: LearnerRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -191,31 +344,71 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/",
-        "/communities",
-        "/explore",
-        "/login",
-        "/teams",
-        "/enrolments/$uid"
+        "/_auth",
+        "/_learner"
       ]
     },
-    "/": {
-      "filePath": "index.tsx"
+    "/_auth": {
+      "filePath": "_auth.tsx",
+      "children": [
+        "/_auth/login"
+      ]
     },
-    "/communities": {
-      "filePath": "communities.tsx"
+    "/_learner": {
+      "filePath": "_learner.tsx",
+      "children": [
+        "/_learner/communities",
+        "/_learner/calendar",
+        "/_learner/chat",
+        "/_learner/explore",
+        "/_learner/tasks",
+        "/_learner/",
+        "/_learner/enrolments/$uid"
+      ]
     },
-    "/explore": {
-      "filePath": "explore.tsx"
+    "/_learner/communities": {
+      "filePath": "_learner.communities.route.tsx",
+      "parent": "/_learner",
+      "children": [
+        "/_learner/communities/$id",
+        "/_learner/communities/"
+      ]
     },
-    "/login": {
-      "filePath": "login.tsx"
+    "/_auth/login": {
+      "filePath": "_auth.login.tsx",
+      "parent": "/_auth"
     },
-    "/teams": {
-      "filePath": "teams.tsx"
+    "/_learner/calendar": {
+      "filePath": "_learner.calendar.tsx",
+      "parent": "/_learner"
     },
-    "/enrolments/$uid": {
-      "filePath": "enrolments.$uid.tsx"
+    "/_learner/chat": {
+      "filePath": "_learner.chat.tsx",
+      "parent": "/_learner"
+    },
+    "/_learner/explore": {
+      "filePath": "_learner.explore.tsx",
+      "parent": "/_learner"
+    },
+    "/_learner/tasks": {
+      "filePath": "_learner.tasks.tsx",
+      "parent": "/_learner"
+    },
+    "/_learner/": {
+      "filePath": "_learner.index.tsx",
+      "parent": "/_learner"
+    },
+    "/_learner/communities/$id": {
+      "filePath": "_learner.communities.$id.tsx",
+      "parent": "/_learner/communities"
+    },
+    "/_learner/enrolments/$uid": {
+      "filePath": "_learner.enrolments.$uid.tsx",
+      "parent": "/_learner"
+    },
+    "/_learner/communities/": {
+      "filePath": "_learner.communities.index.tsx",
+      "parent": "/_learner/communities"
     }
   }
 }

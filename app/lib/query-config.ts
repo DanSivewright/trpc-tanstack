@@ -1,8 +1,7 @@
+import { EnrolmentsAllSchema } from "@/integrations/trpc/routers/enrolments/schemas/enrolments-all-schema"
+import { EnrolmentsDetailSchema } from "@/integrations/trpc/routers/enrolments/schemas/enrolments-detail-schema"
+import { PeopleMeSchema } from "@/integrations/trpc/routers/people/schemas/people-me-schema"
 import { z } from "zod"
-
-import { EnrolmentsAllSchema } from "./trpc/routers/enrolments/schemas/enrolments-all-schema"
-import { EnrolmentsDetailSchema } from "./trpc/routers/enrolments/schemas/enrolments-detail-schema"
-import { PeopleMeSchema } from "./trpc/routers/people/schemas/people-me-schema"
 
 export const queryConfig = {
   "enrolments:all": {

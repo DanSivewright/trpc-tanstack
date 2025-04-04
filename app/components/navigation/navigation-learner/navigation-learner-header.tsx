@@ -1,5 +1,9 @@
+import React from "react"
+import { auth } from "@/integrations/firebase/client"
+import { useTRPC } from "@/integrations/trpc/react"
 import {
   RiAddLine,
+  RiArrowRightSLine,
   RiChatUnreadLine,
   RiCloseLine,
   RiEqualizer3Fill,
@@ -12,13 +16,19 @@ import {
   RiSunLine,
 } from "@remixicon/react"
 import { useQuery } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
+import {
+  isMatch,
+  Link,
+  useLocation,
+  useMatches,
+  useRouterState,
+} from "@tanstack/react-router"
 import { signOut } from "firebase/auth"
+import { motion, useScroll, useTransform } from "motion/react"
 
-import { auth } from "@/lib/firebase/client"
-import { useTRPC } from "@/lib/trpc/react"
 import * as Avatar from "@/components/ui/avatar"
 import * as Badge from "@/components/ui/badge"
+import * as Breadcrumb from "@/components/ui/breadcrumb"
 import * as Button from "@/components/ui/button"
 import * as CompactButton from "@/components/ui/compact-button"
 import * as Divider from "@/components/ui/divider"
@@ -28,14 +38,188 @@ import * as LinkButton from "@/components/ui/link-button"
 import * as Popover from "@/components/ui/popover"
 import * as SegmentedControl from "@/components/ui/segmented-control"
 import * as Switch from "@/components/ui/switch"
+import * as TabMenuHorizontal from "@/components/ui/tab-menu-horizontal"
 
 type Props = {}
 const NavigationLearnerHeader: React.FC<Props> = ({}) => {
   const trpc = useTRPC()
   const me = useQuery(trpc.people.me.queryOptions())
+
+  const location = useLocation()
+  // const matches = useRouterState({ select: (s) => s.matches })
+
+  const matches = useMatches()
+  const matchesWithCrumbs = matches.filter((match) =>
+    isMatch(match, "loaderData.crumb")
+  )
+
+  const items = matchesWithCrumbs.map(({ pathname, loaderData }) => {
+    return {
+      href: pathname,
+      label: loaderData?.crumb,
+    }
+  })
+
+  const { scrollY } = useScroll()
+
+  const backgroundColor = useTransform(
+    scrollY,
+    [0, 88, 144],
+    ["rgba(235, 235, 235)", "rgba(235, 235, 235)", "rgba(235, 235, 235, 0.88)"]
+  )
+  const backdropBlur = useTransform(
+    scrollY,
+    [0, 88, 144],
+    ["blur(0px)", "blur(0px)", "blur(20px)"]
+  )
+  const boxShadow = useTransform(
+    scrollY,
+
+    [0, 88, 144],
+    [
+      "0px 0px 0px rgba(0, 0, 0, 0)",
+      "0px 0px 0px rgba(0, 0, 0, 0)",
+      "0px 4px 12px rgba(235, 235, 235, 0.2)",
+    ]
+  )
+  // const borderColor = useTransform(
+  //   scrollY,
+  //   [0, 88, 144],
+  //   [
+  //     "rgba(163, 163, 163, 0)",
+  //     "rgba(163, 163, 163, 0)",
+  //     "rgba(163, 163, 163, 1)",
+  //   ]
+  // )
+  const navClass =
+    "text flex h-full items-center hover:text-primary-dark transition-colors justify-center px-2 text-center text-[13px] font-light"
+  const navActiveProps = {
+    className: "text-primary-base ",
+  }
   return (
     <>
-      <header className="gutter bg-bg-white-0 sticky top-0 z-10 flex w-full items-center justify-between gap-x-2 border-b backdrop-blur-md sm:gap-x-3">
+      <header className="bg-bg-soft-200">
+        <nav className="mx-auto flex w-full max-w-screen-lg items-center justify-between">
+          <ul className="flex h-11 grow items-center gap-4">
+            <li className="h-11 py-3">
+              <div className="aspect-square h-full overflow-hidden rounded-br-lg bg-primary-base">
+                <Link className="block h-full w-full" to="/"></Link>
+              </div>
+            </li>
+            <li className="h-full">
+              <Link className={navClass} activeProps={navActiveProps} to="/">
+                Learning
+              </Link>
+            </li>
+            <li className="h-full">
+              <Link
+                className={navClass}
+                activeProps={navActiveProps}
+                to="/communities"
+              >
+                Communities
+              </Link>
+            </li>
+            <li className="h-full">
+              <Link
+                className={navClass}
+                activeProps={navActiveProps}
+                to="/explore"
+              >
+                Explore
+              </Link>
+            </li>
+            <li className="h-full">
+              <Link
+                className={navClass}
+                activeProps={navActiveProps}
+                to="/calendar"
+              >
+                Calendar
+              </Link>
+            </li>
+            <li className="h-full">
+              <Link
+                className={navClass}
+                activeProps={navActiveProps}
+                to="/tasks"
+              >
+                Tasks
+              </Link>
+            </li>
+            <li className="h-full">
+              <Link
+                className={navClass}
+                activeProps={navActiveProps}
+                to="/chat"
+              >
+                Chat
+              </Link>
+            </li>
+          </ul>
+        </nav>
+      </header>
+      <motion.div
+        style={{
+          backgroundColor,
+          backdropFilter: backdropBlur,
+          boxShadow,
+        }}
+        className="sticky inset-x-0 top-0 z-50"
+      >
+        <div className="mx-auto flex w-full max-w-screen-lg items-center justify-between">
+          <Breadcrumb.Root>
+            {items?.map((crumb, i) => {
+              const isLast = items?.length - 1 === i
+              return (
+                <React.Fragment key={crumb.href + crumb.label}>
+                  <Breadcrumb.Item
+                    key={crumb.href + crumb.label}
+                    active={isLast}
+                    asChild
+                  >
+                    <Link to={crumb.href}>{crumb.label}</Link>
+                  </Breadcrumb.Item>
+                  {!isLast && <Breadcrumb.ArrowIcon as={RiArrowRightSLine} />}
+                </React.Fragment>
+              )
+            })}
+          </Breadcrumb.Root>
+
+          <div className="flex items-center gap-5">
+            <TabMenuHorizontal.Root defaultValue="feed" className="w-fit">
+              <TabMenuHorizontal.List className="border-none">
+                <TabMenuHorizontal.Trigger value="feed">
+                  <TabMenuHorizontal.Icon as={RiLayoutGridLine} />
+                  Feed
+                </TabMenuHorizontal.Trigger>
+                <TabMenuHorizontal.Trigger value="popular">
+                  <TabMenuHorizontal.Icon as={RiLayoutGridLine} />
+                  Popular
+                </TabMenuHorizontal.Trigger>
+                <TabMenuHorizontal.Trigger value="recommended">
+                  <TabMenuHorizontal.Icon as={RiLayoutGridLine} />
+                  Recommended
+                </TabMenuHorizontal.Trigger>
+                <TabMenuHorizontal.Trigger value="explore">
+                  <TabMenuHorizontal.Icon as={RiLayoutGridLine} />
+                  Explore
+                </TabMenuHorizontal.Trigger>
+              </TabMenuHorizontal.List>
+            </TabMenuHorizontal.Root>
+            <Button.Root
+              mode="filled"
+              variant="primary"
+              size="xxsmall"
+              className="rounded-full"
+            >
+              <Button.Icon as={RiAddLine} />
+              Create
+            </Button.Root>
+          </div>
+        </div>
+      </motion.div>
+      {/* <header className="gutter sticky top-0 z-10 flex w-full items-center justify-between gap-x-2 border-b bg-bg-white-0 backdrop-blur-md sm:gap-x-3">
         <nav className="flex h-11 w-1/3 items-center gap-x-4 md:h-[unset] md:gap-x-6">
           <Link to="/" className="h-6 w-6 rounded-br-lg bg-blue-500" />
 
@@ -49,20 +233,20 @@ const NavigationLearnerHeader: React.FC<Props> = ({}) => {
             >
               <SegmentedControl.Trigger
                 value="light"
-                // className="data-[state=active]:text-text-white-0 h-8 w-fit data-[state=active]:px-2"
+                // className="data-[state=active]: h-8 w-fit data-[state=active]:px-2"
                 asChild
               >
                 <Link to="/">Home</Link>
               </SegmentedControl.Trigger>
               <SegmentedControl.Trigger
-                // className="data-[state=active]:text-text-white-0 h-8 w-fit data-[state=active]:px-2"
+                // className="data-[state=active]: h-8 w-fit data-[state=active]:px-2"
                 value="dark"
                 asChild
               >
                 <Link to="/communities">Communities</Link>
               </SegmentedControl.Trigger>
               <SegmentedControl.Trigger
-                // className="data-[state=active]:text-text-white-0 h-8 w-fit data-[state=active]:px-2"
+                // className="data-[state=active]: h-8 w-fit data-[state=active]:px-2"
                 value="system"
                 asChild
               >
@@ -70,33 +254,13 @@ const NavigationLearnerHeader: React.FC<Props> = ({}) => {
               </SegmentedControl.Trigger>
             </SegmentedControl.List>
           </SegmentedControl.Root>
-
-          {/* <TabMenuHorizontal.Root defaultValue="overview">
-            <TabMenuHorizontal.List className="border-none">
-              <TabMenuHorizontal.Trigger value="overview">
-                <TabMenuHorizontal.Icon as={RiLayoutGridLine} />
-                Overview
-                <TabMenuHorizontal.ArrowIcon as={RiArrowRightSLine} />
-              </TabMenuHorizontal.Trigger>
-              <TabMenuHorizontal.Trigger value="dashboard">
-                <TabMenuHorizontal.Icon as={RiLayoutGridLine} />
-                Dashboard
-                <TabMenuHorizontal.ArrowIcon as={RiArrowRightSLine} />
-              </TabMenuHorizontal.Trigger>
-              <TabMenuHorizontal.Trigger value="settings">
-                <TabMenuHorizontal.Icon as={RiLayoutGridLine} />
-                Settings
-                <TabMenuHorizontal.ArrowIcon as={RiArrowRightSLine} />
-              </TabMenuHorizontal.Trigger>
-            </TabMenuHorizontal.List>
-          </TabMenuHorizontal.Root> */}
         </nav>
         <div className="flex grow items-center justify-center">
           <Input.Root
-            className="bg-bg-soft-200 max-w-[500px] rounded-full border-none"
+            className="max-w-[500px] rounded-full border-none bg-bg-soft-200"
             size="small"
           >
-            <Input.Wrapper className="bg-bg-soft-200 rounded-full border-none">
+            <Input.Wrapper className="rounded-full border-none bg-bg-soft-200">
               <Input.Icon as={RiSearchLine} />
               <Input.Input
                 type="text"
@@ -119,7 +283,7 @@ const NavigationLearnerHeader: React.FC<Props> = ({}) => {
             </Popover.Trigger>
             <Popover.Content
               showArrow={false}
-              className="bg-bg-white-0 shadow-regular-md mx-4 h-[480px] w-screen max-w-[calc(100vw-36px)] rounded-3xl p-0 will-change-transform min-[480px]:max-w-[420px]"
+              className="mx-4 h-[480px] w-screen max-w-[calc(100vw-36px)] rounded-3xl bg-bg-white-0 p-0 shadow-regular-md will-change-transform min-[480px]:max-w-[420px]"
             >
               <Popover.Close asChild>
                 <CompactButton.Root size="large" variant="ghost">
@@ -144,7 +308,7 @@ const NavigationLearnerHeader: React.FC<Props> = ({}) => {
                 <div>
                   <div className="p-4">
                     <div className="flex items-start gap-4">
-                      <div className="text-text-soft-400 flex shrink-0 items-center justify-center">
+                      <div className="flex shrink-0 items-center justify-center text-text-soft-400">
                         <svg
                           viewBox="0 0 24 24"
                           xmlns="http://www.w3.org/2000/svg"
@@ -160,22 +324,22 @@ const NavigationLearnerHeader: React.FC<Props> = ({}) => {
                         <h5 className="text-label-sm text-text-strong-950">
                           Performance Review Due
                         </h5>
-                        <span className="text-paragraph-sm text-text-sub-600 pt-1">
+                        <span className="pt-1 text-paragraph-sm text-text-sub-600">
                           5 team members need Q4 evaluation
                         </span>
-                        <span className="text-label-xs text-text-soft-400 pt-2">
+                        <span className="pt-2 text-label-xs text-text-soft-400">
                           15 minutes ago
                         </span>
                       </div>
                       <div className="ml-auto flex size-4 items-center justify-center">
-                        <div className="bg-primary-base size-1.5 shrink-0 rounded-full"></div>
+                        <div className="size-1.5 shrink-0 rounded-full bg-primary-base"></div>
                       </div>
                     </div>
                   </div>
                   <Divider.Root />
                   <div className="p-4">
                     <div className="flex items-start gap-4">
-                      <div className="text-text-soft-400 flex shrink-0 items-center justify-center">
+                      <div className="flex shrink-0 items-center justify-center text-text-soft-400">
                         <svg
                           viewBox="0 0 24 24"
                           xmlns="http://www.w3.org/2000/svg"
@@ -191,15 +355,15 @@ const NavigationLearnerHeader: React.FC<Props> = ({}) => {
                         <h5 className="text-label-sm text-text-strong-950">
                           Onboarding Status
                         </h5>
-                        <span className="text-paragraph-sm text-text-sub-600 pt-1">
+                        <span className="pt-1 text-paragraph-sm text-text-sub-600">
                           New hire documentation pending for James
                         </span>
-                        <span className="text-label-xs text-text-soft-400 pt-2">
+                        <span className="pt-2 text-label-xs text-text-soft-400">
                           1 hour ago
                         </span>
                       </div>
                       <div className="ml-auto flex size-4 items-center justify-center">
-                        <div className="bg-primary-base size-1.5 shrink-0 rounded-full"></div>
+                        <div className="size-1.5 shrink-0 rounded-full bg-primary-base"></div>
                       </div>
                     </div>
                   </div>
@@ -229,7 +393,7 @@ const NavigationLearnerHeader: React.FC<Props> = ({}) => {
                   <div className="text-label-sm text-text-strong-950">
                     {me?.data?.firstName} {me?.data?.lastName}
                   </div>
-                  <div className="text-paragraph-xs text-text-sub-600 mt-1">
+                  <div className="mt-1 text-paragraph-xs text-text-sub-600">
                     {me?.data?.companyPerson?.email ||
                       me?.data?.contact?.email ||
                       ""}
@@ -276,61 +440,13 @@ const NavigationLearnerHeader: React.FC<Props> = ({}) => {
                   Logout
                 </Dropdown.Item>
               </Dropdown.Group>
-              <div className="text-paragraph-sm text-text-soft-400 p-2">
+              <div className="p-2 text-paragraph-sm text-text-soft-400">
                 v.1.5.69 · Terms & Conditions
               </div>
             </Dropdown.Content>
           </Dropdown.Root>
         </div>
-        {/* <nav className="flex h-11 items-center gap-x-4 py-1 md:h-[unset] md:gap-x-6">
-          <Link to="/" className="h-6 w-6 rounded-br-lg bg-blue-500" />
-
-          <div className="bg-accent inset-shadow-foreground inset-shadow flex items-center gap-0.5 rounded-full p-1 text-sm">
-            <Link
-              activeProps={{
-                className: "bg-background shadow",
-              }}
-              to="/"
-              className="rounded-full px-3 py-1"
-            >
-              <span>Home</span>
-            </Link>
-            <Link
-              activeProps={{
-                className: "bg-background shadow",
-              }}
-              to="/communities"
-              className="rounded-full px-3 py-1"
-            >
-              <span>Communities</span>
-            </Link>
-            <Link
-              activeProps={{
-                className: "bg-background shadow",
-              }}
-              to="/explore"
-              className="rounded-full px-3 py-1"
-            >
-              <span>Explore</span>
-            </Link>
-          </div>
-        </nav> */}
-        {/* <div className="w-full grow px-6">
-          <div ref={ref} className="bg-muted relative w-full rounded-full">
-            <input
-              onClick={() => setOpen(true)}
-              style={{
-                background: "none",
-              }}
-              className="peer rounded-full border-none bg-none ps-9 shadow-none"
-              placeholder={`Search ${width}px`}
-            />
-            <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 peer-disabled:opacity-50">
-              x
-            </div>
-          </div>
-        </div> */}
-      </header>
+      </header> */}
     </>
   )
 }

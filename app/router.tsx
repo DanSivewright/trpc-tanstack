@@ -1,27 +1,30 @@
 import { createRouter as createTanstackRouter } from "@tanstack/react-router"
 import { routerWithQueryClient } from "@tanstack/react-router-with-query"
 
-import * as TanstackQuery from "./lib/trpc/provider"
-// import { getAuthToken, getTenantId } from "./lib/auth-cookies"
-// import { auth } from "./lib/firebase/client";
+import * as TanstackQuery from "./integrations/tanstack-query/root-provider"
 import { routeTree } from "./routeTree.gen"
 
-export function createRouter() {
-  const router = createTanstackRouter({
-    routeTree,
-    context: {
-      ...TanstackQuery.getContext(),
-    },
-    scrollRestoration: true,
-    defaultPreloadStaleTime: 0,
-    Wrap: (props: { children: React.ReactNode }) => {
-      return <TanstackQuery.Provider>{props.children}</TanstackQuery.Provider>
-    },
-  })
+export const createRouter = () => {
+  const router = routerWithQueryClient(
+    createTanstackRouter({
+      routeTree,
+      context: {
+        ...TanstackQuery.getContext(),
+      },
+      scrollRestoration: true,
+      defaultPreloadStaleTime: 0,
 
-  return routerWithQueryClient(router, TanstackQuery.getContext().queryClient)
+      Wrap: (props: { children: React.ReactNode }) => {
+        return <TanstackQuery.Provider>{props.children}</TanstackQuery.Provider>
+      },
+    }),
+    TanstackQuery.getContext().queryClient
+  )
+
+  return router
 }
 
+// Register the router instance for type safety
 declare module "@tanstack/react-router" {
   interface Register {
     router: ReturnType<typeof createRouter>

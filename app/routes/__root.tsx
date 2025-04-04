@@ -1,20 +1,26 @@
 // app/routes/__root.tsx
 import type { ReactNode } from "react"
+import type { TRPCRouter } from "@/integrations/trpc/router"
+import type { QueryClient } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import {
-  createRootRoute,
+  createRootRouteWithContext,
   HeadContent,
   Outlet,
   Scripts,
 } from "@tanstack/react-router"
-import { TanStackRouterDevtools } from "@tanstack/router-devtools"
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
+import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query"
 
 import { NotificationProvider } from "@/components/ui/notification-provider"
 import { AuthProvider } from "@/components/providers/auth-provider"
 import { TailwindIndicator } from "@/components/tailwind-indicator"
 import appCss from "@/styles/app.css?url"
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient
+  trpc: TRPCOptionsProxy<TRPCRouter>
+}>()({
   head: () => ({
     meta: [
       {

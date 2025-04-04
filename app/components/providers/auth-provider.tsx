@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect } from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { auth } from "@/integrations/firebase/client"
+import { RiLoaderFill } from "@remixicon/react"
+import { useQuery } from "@tanstack/react-query"
 import { useLocation, useNavigate } from "@tanstack/react-router"
 import type { User } from "firebase/auth"
 import { signOut } from "firebase/auth"
@@ -9,9 +11,7 @@ import {
   getAuthCookie,
   setAuthCookie,
 } from "@/lib/auth-cookies"
-import { auth } from "@/lib/firebase/client"
 import { fetcher } from "@/lib/query"
-import { useTRPC } from "@/lib/trpc/react"
 import useAuthState from "@/hooks/use-auth-state"
 
 type AuthContextType = {
@@ -27,31 +27,17 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, loading, error] = useAuthState(auth)
   const navigate = useNavigate()
 
-  const trpc = useTRPC()
-  const queryClient = useQueryClient()
-  // const me = useQuery(trpc.people.me.queryOptions())
-
   const authQuery = useQuery({
     queryKey: ["token"],
     queryFn: async () => {
       const authCookies = await getAuthCookie()
-      console.log("authCookies:::", authCookies)
 
       if (!user) {
         return null
       }
 
-      // const me = await queryClient.ensureQueryData(
-      //   trpc.people.me.queryOptions()
-      // )
-      // console.log("me:::", me)
       const currentToken = await user.getIdToken()
       const lastStoredToken = authCookies.token
-
-      // if (me?.uid !== authCookies.uid) {
-      //   void signOut(auth).then(() => clearAuthCookie())
-      //   navigate({ to: "/login" })
-      // }
 
       if (!lastStoredToken || lastStoredToken !== currentToken) {
         const newAuth = await user.getIdToken(true)
@@ -93,29 +79,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     enabled: loading === false,
   })
 
-  // const queryClient = useQueryClient()
-
-  // useEffect(() => {
-  //   async function setUidForCookie(uid: string) {
-  //     const authCookies = await getAuthCookie()
-  //     await setAuthCookie({
-  //       data: { ...authCookies, uid },
-  //     })
-  //     await queryClient.invalidateQueries({
-  //       queryKey: ["token"],
-  //     })
-  //   }
-  //   if (me.data && authQuery.data && !me.isLoading && !authQuery.isLoading) {
-  //     console.log("ran now:::")
-  //     if (
-  //       me.data.company?.tenantId !== authQuery.data.tenantId ||
-  //       me?.data?.uid !== authQuery.data.uid
-  //     ) {
-  //       void setUidForCookie(me.data.uid)
-  //     }
-  //   }
-  // }, [me.data, me.isLoading, authQuery.data, authQuery.isLoading])
-
   useEffect(() => {
     if (error != null || (user == null && !loading)) {
       void signOut(auth).then(() => clearAuthCookie())
@@ -125,7 +88,11 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ user, loading, error }}>
-      {authQuery.isSuccess && children}
+      {authQuery.isSuccess && !authQuery.isLoading && !authQuery.isFetching ? (
+        children
+      ) : (
+        <RiLoaderFill className="animate-spin" />
+      )}
     </AuthContext.Provider>
   )
 }

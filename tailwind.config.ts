@@ -590,6 +590,9 @@ const config = {
       none: defaultTheme.boxShadow.none,
     },
     extend: {
+      fontFamily: {
+        sans: ["Apple", ...defaultTheme.fontFamily.sans],
+      },
       borderRadius: {
         ...borderRadii,
       },

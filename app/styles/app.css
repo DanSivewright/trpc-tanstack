@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Apple";
+  src: url("../public/fonts/apple-sf-pro.ttf") format(".ttf");
+}
+
 @layer base {
   /*#region Colors */
   :root {
