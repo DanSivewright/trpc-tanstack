@@ -30,7 +30,7 @@ import { Grid, gridVariants } from "@/components/grid"
 import Image from "@/components/image"
 import { Section } from "@/components/section"
 
-export const Route = createFileRoute("/_learner/communities")({
+export const Route = createFileRoute("/communities")({
   component: RouteComponent,
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(
@@ -74,7 +74,7 @@ function RouteComponent() {
     <>
       <CommunitiesCarousel communities={communities?.data?.slice(0, 6) || []} />
       <Section className="flex flex-col">
-        <h2 className="text-paragraph-sm gutter text-text-sub-600 mt-8 lg:mt-0">
+        <h2 className="gutter mt-8 text-paragraph-sm text-text-sub-600 lg:mt-0">
           Your Communities
         </h2>
         <DraggableScrollContainer>
@@ -94,13 +94,13 @@ function RouteComponent() {
               return (
                 <button
                   key={community?.id + "-joined"}
-                  className="rounded-10 flex aspect-[13/16] max-h-[240px] w-[40vw] max-w-[230px] flex-col justify-between gap-2 p-2 pt-4 md:w-[25vw] lg:w-[15vw]"
+                  className="flex aspect-[13/16] max-h-[240px] w-[40vw] max-w-[230px] flex-col justify-between gap-2 rounded-10 p-2 pt-4 md:w-[25vw] lg:w-[15vw]"
                   style={{
                     backgroundColor: community.meta.colors.DarkVibrant.hex,
                     color: community.meta.colors.DarkVibrant.titleTextColor,
                   }}
                 >
-                  <h3 className="text-title-h6 line-clamp-2 px-2 text-left font-light">
+                  <h3 className="line-clamp-2 px-2 text-left text-title-h6 font-light">
                     {community?.name}
                   </h3>
                   <Image
@@ -122,13 +122,13 @@ function RouteComponent() {
         </DraggableScrollContainer>
       </Section>
       <Section className="gutter flex flex-col gap-5">
-        <h3 className="text-title-h3 text-text-strong-950 font-light">
+        <h3 className="text-title-h3 font-light text-text-strong-950">
           Editor Picks
         </h3>
         <Grid>
           <Image
             path="community-wvxnO56olQ8TdQAA0Vco-image.jpg"
-            className="rounded-20 col-span-6 overflow-hidden object-contain"
+            className="col-span-6 overflow-hidden rounded-20 object-contain"
             lqip={{
               active: true,
               quality: 1,
@@ -143,15 +143,15 @@ function RouteComponent() {
               <span className="text-label-sm font-light">
                 {communities?.data?.[0]?.name}
               </span>
-              <span className="text-label-sm text-text-sub-600 font-light">
+              <span className="text-label-sm font-light text-text-sub-600">
                 {" "}
                 • 12 Mins Ago
               </span>
             </div>
-            <h3 className="text-title-h2 text-pretty font-light">
+            <h3 className="text-pretty text-title-h2 font-light">
               The Ultimate Digital Detox: How to Unplug Without Falling Behind
             </h3>
-            <p className="text-paragraph-md text-text-sub-600 text-pretty">
+            <p className="text-pretty text-paragraph-md text-text-sub-600">
               Struggling to balance screen time with real life? A digital detox
               doesn’t mean going off the grid—it’s about using technology
               intentionally. Learn how to unplug, recharge, and stay productive
@@ -161,7 +161,7 @@ function RouteComponent() {
               <LinkButton.Root className="text-warning-base">
                 Tech
               </LinkButton.Root>
-              <span className="text-text-sub-600 text-label-sm">
+              <span className="text-label-sm text-text-sub-600">
                 {" "}
                 • 4 Min Read
               </span>
@@ -261,7 +261,7 @@ function CommunitiesCarousel({
                           +9
                         </AvatarGroupCompact.Overflow>
                       </AvatarGroupCompact.Root>
-                      <p className="text-label-sm w-full text-pretty font-light opacity-75">
+                      <p className="w-full text-pretty text-label-sm font-light opacity-75">
                         Lorem ipsum dolor, sit amet consectetur adipisicing
                         elit. Culpa quidem excepturi, quam porro consequatur
                         minima nihil tempora ut autem nam quo eum labore
@@ -275,7 +275,7 @@ function CommunitiesCarousel({
                             color:
                               community.meta.colors.Vibrant?.titleTextColor,
                           }}
-                          className="text-paragraph-xs pt-1"
+                          className="pt-1 text-paragraph-xs"
                         >
                           4.5 ∙ 5.2K Ratings
                         </span>
@@ -288,7 +288,7 @@ function CommunitiesCarousel({
                         color:
                           community.meta?.colors?.DarkVibrant.titleTextColor,
                       }}
-                      className="hover:shadow-regular-md flex h-16 w-fit cursor-pointer items-center gap-4 rounded-full p-1 pe-8 backdrop-blur-md transition-colors"
+                      className="flex h-16 w-fit cursor-pointer items-center gap-4 rounded-full p-1 pe-8 backdrop-blur-md transition-colors hover:shadow-regular-md"
                     >
                       <div
                         style={{
@@ -311,7 +311,7 @@ function CommunitiesCarousel({
         {communities?.map((c, i) => (
           <li
             key={c.id + "-dot"}
-            className="bg-white-alpha-24 relative h-1 grow cursor-pointer overflow-hidden rounded-full bg-opacity-50"
+            className="relative h-1 grow cursor-pointer overflow-hidden rounded-full bg-white-alpha-24 bg-opacity-50"
             onClick={() => {
               if (i + 1 !== current) {
                 api?.scrollTo(i)
@@ -322,7 +322,7 @@ function CommunitiesCarousel({
               {i + 1 === current && (
                 <>
                   <motion.span
-                    className="bg-bg-white-0 absolute inset-0 rounded-r-full"
+                    className="absolute inset-0 rounded-r-full bg-bg-white-0"
                     initial={{ width: 0, opacity: 0 }}
                     animate={{ width: "100%", opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -346,7 +346,7 @@ function StarRating({ rating }: { rating: number }) {
     } else if (rating >= i + 0.5) {
       return <SVGStarHalf className="size-5 text-yellow-500" key={i} />
     }
-    return <SVGStarLine className="text-stroke-sub-300 size-5" key={i} />
+    return <SVGStarLine className="size-5 text-stroke-sub-300" key={i} />
   }
 
   return (

@@ -7,7 +7,7 @@ import * as Button from "@/components/ui/button"
 import LearningHero from "./-components/learning-feature"
 import LearningForYou from "./-components/learning-for-you"
 
-export const Route = createFileRoute("/_learner/")({
+export const Route = createFileRoute("/")({
   component: RouteComponent,
 
   loader: async ({ context }) => {
