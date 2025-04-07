@@ -390,6 +390,35 @@
   /*#endregion Colors */
 }
 
+.fadeout-horizontal-sm {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black theme("spacing.10"),
+    black calc(100% - theme("spacing.10")),
+    transparent
+  );
+}
+
+.fadeout-horizontal {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black theme("spacing.20"),
+    black calc(100% - theme("spacing.20")),
+    transparent
+  );
+}
+
+.fadeout-horizontal-lg {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black theme("spacing.32"),
+    black calc(100% - theme("spacing.32")),
+    transparent
+  );
+}
 /* custom scale for Remix Icon */
 .remixicon path {
   transform: scale(0.8996);

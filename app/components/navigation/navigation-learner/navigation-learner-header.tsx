@@ -1,44 +1,7 @@
 import React from "react"
-import { auth } from "@/integrations/firebase/client"
 import { useTRPC } from "@/integrations/trpc/react"
-import {
-  RiAddLine,
-  RiArrowRightSLine,
-  RiChatUnreadLine,
-  RiCloseLine,
-  RiEqualizer3Fill,
-  RiLayoutGridLine,
-  RiLogoutBoxRLine,
-  RiMoonLine,
-  RiPulseLine,
-  RiSearchLine,
-  RiSettings2Line,
-  RiSunLine,
-} from "@remixicon/react"
 import { useQuery } from "@tanstack/react-query"
-import {
-  isMatch,
-  Link,
-  useLocation,
-  useMatches,
-  useRouterState,
-} from "@tanstack/react-router"
-import { signOut } from "firebase/auth"
-import { motion, useScroll, useTransform } from "motion/react"
-
-import * as Avatar from "@/components/ui/avatar"
-import * as Badge from "@/components/ui/badge"
-import * as Breadcrumb from "@/components/ui/breadcrumb"
-import * as Button from "@/components/ui/button"
-import * as CompactButton from "@/components/ui/compact-button"
-import * as Divider from "@/components/ui/divider"
-import * as Dropdown from "@/components/ui/dropdown"
-import * as Input from "@/components/ui/input"
-import * as LinkButton from "@/components/ui/link-button"
-import * as Popover from "@/components/ui/popover"
-import * as SegmentedControl from "@/components/ui/segmented-control"
-import * as Switch from "@/components/ui/switch"
-import * as TabMenuHorizontal from "@/components/ui/tab-menu-horizontal"
+import { Link, useLocation } from "@tanstack/react-router"
 
 type Props = {}
 const NavigationLearnerHeader: React.FC<Props> = ({}) => {
@@ -46,51 +9,7 @@ const NavigationLearnerHeader: React.FC<Props> = ({}) => {
   const me = useQuery(trpc.people.me.queryOptions())
 
   const location = useLocation()
-  // const matches = useRouterState({ select: (s) => s.matches })
 
-  const matches = useMatches()
-  const matchesWithCrumbs = matches.filter((match) =>
-    isMatch(match, "loaderData.crumb")
-  )
-
-  const items = matchesWithCrumbs.map(({ pathname, loaderData }) => {
-    return {
-      href: pathname,
-      label: loaderData?.crumb,
-    }
-  })
-
-  const { scrollY } = useScroll()
-
-  const backgroundColor = useTransform(
-    scrollY,
-    [0, 88, 144],
-    ["rgba(235, 235, 235)", "rgba(235, 235, 235)", "rgba(235, 235, 235, 0.88)"]
-  )
-  const backdropBlur = useTransform(
-    scrollY,
-    [0, 88, 144],
-    ["blur(0px)", "blur(0px)", "blur(20px)"]
-  )
-  const boxShadow = useTransform(
-    scrollY,
-
-    [0, 88, 144],
-    [
-      "0px 0px 0px rgba(0, 0, 0, 0)",
-      "0px 0px 0px rgba(0, 0, 0, 0)",
-      "0px 4px 12px rgba(235, 235, 235, 0.2)",
-    ]
-  )
-  // const borderColor = useTransform(
-  //   scrollY,
-  //   [0, 88, 144],
-  //   [
-  //     "rgba(163, 163, 163, 0)",
-  //     "rgba(163, 163, 163, 0)",
-  //     "rgba(163, 163, 163, 1)",
-  //   ]
-  // )
   const navClass =
     "text flex h-full items-center hover:text-primary-dark transition-colors justify-center px-2 text-center text-[13px] font-light"
   const navActiveProps = {
@@ -159,66 +78,7 @@ const NavigationLearnerHeader: React.FC<Props> = ({}) => {
           </ul>
         </nav>
       </header>
-      <motion.div
-        style={{
-          backgroundColor,
-          backdropFilter: backdropBlur,
-          boxShadow,
-        }}
-        className="sticky inset-x-0 top-0 z-50"
-      >
-        <div className="mx-auto flex w-full max-w-screen-lg items-center justify-between">
-          <Breadcrumb.Root>
-            {items?.map((crumb, i) => {
-              const isLast = items?.length - 1 === i
-              return (
-                <React.Fragment key={crumb.href + crumb.label}>
-                  <Breadcrumb.Item
-                    key={crumb.href + crumb.label}
-                    active={isLast}
-                    asChild
-                  >
-                    <Link to={crumb.href}>{crumb.label}</Link>
-                  </Breadcrumb.Item>
-                  {!isLast && <Breadcrumb.ArrowIcon as={RiArrowRightSLine} />}
-                </React.Fragment>
-              )
-            })}
-          </Breadcrumb.Root>
 
-          <div className="flex items-center gap-5">
-            <TabMenuHorizontal.Root defaultValue="feed" className="w-fit">
-              <TabMenuHorizontal.List className="border-none">
-                <TabMenuHorizontal.Trigger value="feed">
-                  <TabMenuHorizontal.Icon as={RiLayoutGridLine} />
-                  Feed
-                </TabMenuHorizontal.Trigger>
-                <TabMenuHorizontal.Trigger value="popular">
-                  <TabMenuHorizontal.Icon as={RiLayoutGridLine} />
-                  Popular
-                </TabMenuHorizontal.Trigger>
-                <TabMenuHorizontal.Trigger value="recommended">
-                  <TabMenuHorizontal.Icon as={RiLayoutGridLine} />
-                  Recommended
-                </TabMenuHorizontal.Trigger>
-                <TabMenuHorizontal.Trigger value="explore">
-                  <TabMenuHorizontal.Icon as={RiLayoutGridLine} />
-                  Explore
-                </TabMenuHorizontal.Trigger>
-              </TabMenuHorizontal.List>
-            </TabMenuHorizontal.Root>
-            <Button.Root
-              mode="filled"
-              variant="primary"
-              size="xxsmall"
-              className="rounded-full"
-            >
-              <Button.Icon as={RiAddLine} />
-              Create
-            </Button.Root>
-          </div>
-        </div>
-      </motion.div>
       {/* <header className="gutter sticky top-0 z-10 flex w-full items-center justify-between gap-x-2 border-b bg-bg-white-0 backdrop-blur-md sm:gap-x-3">
         <nav className="flex h-11 w-1/3 items-center gap-x-4 md:h-[unset] md:gap-x-6">
           <Link to="/" className="h-6 w-6 rounded-br-lg bg-blue-500" />

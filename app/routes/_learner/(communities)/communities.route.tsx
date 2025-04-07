@@ -1,34 +1,38 @@
 import { useEffect, useState } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
 import type { communitiesAllSchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
-import { RiArrowRightLine } from "@remixicon/react"
+import { RiAddLine, RiArrowRightLine, RiCalendarLine } from "@remixicon/react"
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute, Link } from "@tanstack/react-router"
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useLocation,
+} from "@tanstack/react-router"
 import Autoplay from "embla-carousel-autoplay"
 import { AnimatePresence, motion } from "motion/react"
-import type { z } from "zod"
+import { z } from "zod"
 
 import * as Avatar from "@/components/ui/avatar"
 import * as AvatarGroupCompact from "@/components/ui/avatar-group-compact"
+import * as Button from "@/components/ui/button"
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel"
-import * as LinkButton from "@/components/ui/link-button"
 import {
   SVGStarFill,
   SVGStarHalf,
   SVGStarLine,
 } from "@/components/ui/svg-rating-icons"
-import DraggableScrollContainer from "@/components/draggable-scroll-container"
-import { Grid } from "@/components/grid"
+import * as TabMenuHorizontal from "@/components/ui/tab-menu-horizontal"
 import Image from "@/components/image"
-import { Section } from "@/components/section"
+import NavigationLearnerSubHeader from "@/components/navigation/navigation-learner/navigation-learner-sub-header"
 
-export const Route = createFileRoute("/_learner/communities/")({
-  component: RouteComponent,
+export const Route = createFileRoute("/_learner/(communities)/communities")({
+  component: RootComponent,
   loader: async ({ context }) => {
     await Promise.all([
       context.queryClient.prefetchQuery(
@@ -38,113 +42,55 @@ export const Route = createFileRoute("/_learner/communities/")({
         context.trpc.communities.joined.queryOptions()
       ),
     ])
+    return {
+      crumb: "Communities",
+    }
   },
 })
 
-function RouteComponent() {
+function RootComponent() {
   const trpc = useTRPC()
   const communities = useQuery(trpc.communities.all.queryOptions())
-  const joined = useQuery(trpc.communities.joined.queryOptions())
+
+  const location = useLocation()
+
   return (
     <>
+      <NavigationLearnerSubHeader>
+        <TabMenuHorizontal.Root value={location.pathname} className="w-fit">
+          <TabMenuHorizontal.List className="border-none">
+            <TabMenuHorizontal.Trigger value="/communities/today" asChild>
+              <Link to="/communities/today">
+                <TabMenuHorizontal.Icon as={RiCalendarLine} />
+                Today
+              </Link>
+            </TabMenuHorizontal.Trigger>
+            <TabMenuHorizontal.Trigger value="/communities" asChild>
+              <Link to="/communities">
+                <TabMenuHorizontal.Icon as={RiCalendarLine} />
+                Communities
+              </Link>
+            </TabMenuHorizontal.Trigger>
+            <TabMenuHorizontal.Trigger value="/communities/explore" asChild>
+              <Link to="/communities/explore">
+                <TabMenuHorizontal.Icon as={RiCalendarLine} />
+                Explore
+              </Link>
+            </TabMenuHorizontal.Trigger>
+          </TabMenuHorizontal.List>
+        </TabMenuHorizontal.Root>
+        <Button.Root
+          mode="filled"
+          variant="primary"
+          size="xxsmall"
+          className="rounded-full"
+        >
+          <Button.Icon as={RiAddLine} />
+          Create
+        </Button.Root>
+      </NavigationLearnerSubHeader>
       <CommunitiesCarousel communities={communities?.data?.slice(0, 6) || []} />
-      <Section className="flex flex-col">
-        <h2 className="gutter mt-8 text-paragraph-sm text-text-sub-600 lg:mt-0">
-          Your Communities
-        </h2>
-        <DraggableScrollContainer>
-          <section className="few no-scrollbar gutter flex w-max items-start space-x-4 py-3">
-            {joined?.data?.map((community, i) => {
-              const opts = [
-                "online",
-                "offline",
-                "busy",
-                "away",
-                undefined,
-              ] as const
-
-              const randomIndex = Math.floor(Math.random() * opts.length)
-              const randomOpt = opts[randomIndex]
-
-              return (
-                <button
-                  key={community?.id + "-joined"}
-                  className="flex aspect-[13/16] max-h-[240px] w-[40vw] max-w-[230px] flex-col justify-between gap-2 rounded-10 p-2 pt-4 md:w-[25vw] lg:w-[15vw]"
-                  style={{
-                    backgroundColor: community.meta.colors.DarkVibrant.hex,
-                    color: community.meta.colors.DarkVibrant.titleTextColor,
-                  }}
-                >
-                  <h3 className="line-clamp-2 px-2 text-left text-title-h6 font-light">
-                    {community?.name}
-                  </h3>
-                  <Image
-                    path={`community-${community.id}-image.jpg`}
-                    transformation={[{ quality: 100 }]}
-                    lqip={{
-                      active: true,
-                      quality: 1,
-                      blur: 50,
-                    }}
-                    sizes="33vw"
-                    className="aspect-video max-h-[115px] w-full overflow-hidden rounded-md object-cover"
-                    alt={`Community ${community.name} image`}
-                  />
-                </button>
-              )
-            })}
-          </section>
-        </DraggableScrollContainer>
-      </Section>
-      <Section className="gutter flex flex-col gap-5">
-        <h3 className="text-title-h3 font-light text-text-strong-950">
-          Editor Picks
-        </h3>
-        <Grid>
-          <Image
-            path="community-wvxnO56olQ8TdQAA0Vco-image.jpg"
-            className="col-span-6 overflow-hidden rounded-20 object-contain"
-            lqip={{
-              active: true,
-              quality: 1,
-              blur: 50,
-            }}
-          />
-          <div className="col-span-6 flex flex-col items-start justify-center gap-6">
-            <div className="flex items-center gap-3">
-              <Avatar.Root size="24">
-                <Avatar.Image src={communities?.data?.[0]?.featureImageUrl} />
-              </Avatar.Root>
-              <span className="text-label-sm font-light">
-                {communities?.data?.[0]?.name}
-              </span>
-              <span className="text-label-sm font-light text-text-sub-600">
-                {" "}
-                • 12 Mins Ago
-              </span>
-            </div>
-            <h3 className="text-pretty text-title-h2 font-light">
-              The Ultimate Digital Detox: How to Unplug Without Falling Behind
-            </h3>
-            <p className="text-pretty text-paragraph-md text-text-sub-600">
-              Struggling to balance screen time with real life? A digital detox
-              doesn’t mean going off the grid—it’s about using technology
-              intentionally. Learn how to unplug, recharge, and stay productive
-              without missing out. Your mind (and focus) will thank you!
-            </p>
-            <div className="flex items-center gap-2.5">
-              <LinkButton.Root className="text-warning-base">
-                Tech
-              </LinkButton.Root>
-              <span className="text-label-sm text-text-sub-600">
-                {" "}
-                • 4 Min Read
-              </span>
-            </div>
-          </div>
-        </Grid>
-        {/* <div className="col-span-6 aspect-[16/11]"></div> */}
-      </Section>
+      <Outlet />
     </>
   )
 }
