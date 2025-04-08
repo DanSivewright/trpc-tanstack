@@ -17,7 +17,7 @@ const NavigationLearnerHeader: React.FC<Props> = ({}) => {
   }
   return (
     <>
-      <header className="bg-bg-soft-200">
+      <header className="relative z-10 bg-bg-soft-200">
         <nav className="mx-auto flex w-full max-w-screen-lg items-center justify-between">
           <ul className="flex h-11 grow items-center gap-4">
             <li className="h-11 py-3">

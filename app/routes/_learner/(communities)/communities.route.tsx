@@ -1,13 +1,20 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
 import type { communitiesAllSchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
 import { RiAddLine, RiArrowRightLine, RiCalendarLine } from "@remixicon/react"
 import { useQuery } from "@tanstack/react-query"
 import {
   createFileRoute,
+  getRouteApi,
+  isMatch,
   Link,
   Outlet,
+  useChildMatches,
   useLocation,
+  useMatch,
+  useMatches,
+  useMatchRoute,
+  useRouterState,
 } from "@tanstack/react-router"
 import Autoplay from "embla-carousel-autoplay"
 import { AnimatePresence, motion } from "motion/react"
@@ -49,11 +56,30 @@ export const Route = createFileRoute("/_learner/(communities)/communities")({
 })
 
 function RootComponent() {
+  const routerState = useRouterState()
+  const matchRoute = useMatchRoute()
+  const communityRouteApi = getRouteApi(
+    "/_learner/(communities)/communities/$id"
+  )
+  const isSingleCommunity = useMemo(() => {
+    return routerState.matches.find(
+      (pattern) => communityRouteApi.id === pattern.routeId
+    )
+  }, [routerState, matchRoute])
+
+  return (
+    <>
+      {!isSingleCommunity ? <CommunitiesHeader /> : <CommunityHeader />}
+
+      <Outlet />
+    </>
+  )
+}
+
+function CommunitiesHeader() {
   const trpc = useTRPC()
   const communities = useQuery(trpc.communities.all.queryOptions())
-
   const location = useLocation()
-
   return (
     <>
       <NavigationLearnerSubHeader>
@@ -89,8 +115,78 @@ function RootComponent() {
           Create
         </Button.Root>
       </NavigationLearnerSubHeader>
-      <CommunitiesCarousel communities={communities?.data?.slice(0, 6) || []} />
-      <Outlet />
+
+      {!location.pathname.includes("explore") && (
+        <CommunitiesCarousel
+          communities={communities?.data?.slice(0, 6) || []}
+        />
+      )}
+    </>
+  )
+}
+function CommunityHeader() {
+  const location = useLocation()
+  return (
+    <>
+      <NavigationLearnerSubHeader>
+        <TabMenuHorizontal.Root value={location.pathname} className="w-fit">
+          <TabMenuHorizontal.List className="border-none">
+            <TabMenuHorizontal.Trigger value="/" asChild>
+              <Link
+                to="/communities/$id"
+                params={{
+                  id: "123",
+                }}
+              >
+                <TabMenuHorizontal.Icon as={RiCalendarLine} />
+                Feed
+              </Link>
+            </TabMenuHorizontal.Trigger>
+            <TabMenuHorizontal.Trigger value="/" asChild>
+              <Link
+                to="/communities/$id/members"
+                params={{
+                  id: "123",
+                }}
+              >
+                <TabMenuHorizontal.Icon as={RiCalendarLine} />
+                Members
+              </Link>
+            </TabMenuHorizontal.Trigger>
+            <TabMenuHorizontal.Trigger value="/" asChild>
+              <Link
+                to="/communities/$id/calendar"
+                params={{
+                  id: "123",
+                }}
+              >
+                <TabMenuHorizontal.Icon as={RiCalendarLine} />
+                Calendar
+              </Link>
+            </TabMenuHorizontal.Trigger>
+            <TabMenuHorizontal.Trigger value="/" asChild>
+              <Link
+                to="/communities/$id/about"
+                params={{
+                  id: "123",
+                }}
+              >
+                <TabMenuHorizontal.Icon as={RiCalendarLine} />
+                About
+              </Link>
+            </TabMenuHorizontal.Trigger>
+          </TabMenuHorizontal.List>
+        </TabMenuHorizontal.Root>
+        <Button.Root
+          mode="filled"
+          variant="primary"
+          size="xxsmall"
+          className="rounded-full"
+        >
+          <Button.Icon as={RiAddLine} />
+          Create
+        </Button.Root>
+      </NavigationLearnerSubHeader>
     </>
   )
 }

@@ -26,8 +26,6 @@ const NavigationLearnerSubHeader: React.FC<Props> = ({ children }) => {
     }
   })
 
-  console.log("itesm:::", items)
-  const tabs = items?.[items?.length - 1]?.tabs || null
   const { scrollY } = useScroll()
 
   const backgroundColor = useTransform(
