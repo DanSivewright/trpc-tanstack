@@ -1,11 +1,9 @@
 import React from "react"
-import { RiAddLine, RiArrowRightSLine } from "@remixicon/react"
+import { RiArrowRightSLine } from "@remixicon/react"
 import { isMatch, Link, useMatches } from "@tanstack/react-router"
 import { motion, useScroll, useTransform } from "motion/react"
 
 import * as Breadcrumb from "@/components/ui/breadcrumb"
-import * as Button from "@/components/ui/button"
-import * as TabMenuHorizontal from "@/components/ui/tab-menu-horizontal"
 
 type Props = {
   children?: React.ReactNode
@@ -55,7 +53,7 @@ const NavigationLearnerSubHeader: React.FC<Props> = ({ children }) => {
         backdropFilter: backdropBlur,
         boxShadow,
       }}
-      className="sticky inset-x-0 top-0 z-50"
+      className="sticky inset-x-0 top-0 z-50 px-8 xl:px-0"
     >
       <div className="mx-auto flex w-full max-w-screen-lg items-center justify-between">
         <Breadcrumb.Root>

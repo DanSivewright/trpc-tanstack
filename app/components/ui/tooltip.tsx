@@ -83,10 +83,20 @@ export const tooltipVariants = tv({
 const TooltipContent = React.forwardRef<
   React.ComponentRef<typeof TooltipPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content> &
-    VariantProps<typeof tooltipVariants>
+    VariantProps<typeof tooltipVariants> & {
+      showArrow?: boolean
+    }
 >(
   (
-    { size, variant, className, children, sideOffset = 4, ...rest },
+    {
+      size,
+      variant,
+      className,
+      showArrow = true,
+      children,
+      sideOffset = 4,
+      ...rest
+    },
     forwardedRef
   ) => {
     const { content, arrow } = tooltipVariants({
@@ -103,9 +113,11 @@ const TooltipContent = React.forwardRef<
           {...rest}
         >
           {children}
-          <TooltipPrimitive.Arrow asChild>
-            <div className={arrow()} />
-          </TooltipPrimitive.Arrow>
+          {showArrow && (
+            <TooltipPrimitive.Arrow asChild>
+              <div className={arrow()} />
+            </TooltipPrimitive.Arrow>
+          )}
         </TooltipPrimitive.Content>
       </TooltipPrimitive.Portal>
     )

@@ -16,7 +16,7 @@ import {
   RiTreeLine,
 } from "@remixicon/react"
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
 import { z } from "zod"
 
 import * as Avatar from "@/components/ui/avatar"
@@ -134,19 +134,12 @@ function RouteComponent() {
         <DraggableScrollContainer>
           <section className="few no-scrollbar gutter flex w-max items-start space-x-4 py-3">
             {joined?.data?.map((community, i) => {
-              const opts = [
-                "online",
-                "offline",
-                "busy",
-                "away",
-                undefined,
-              ] as const
-
-              const randomIndex = Math.floor(Math.random() * opts.length)
-              const randomOpt = opts[randomIndex]
-
               return (
-                <button
+                <Link
+                  to="/communities/$id"
+                  params={{
+                    id: community.id,
+                  }}
                   key={community?.id + "-joined"}
                   className="flex aspect-[13/16] max-h-[240px] w-[40vw] max-w-[230px] flex-col justify-between gap-2 rounded-10 p-2 pt-4 md:w-[25vw] lg:w-[15vw]"
                   style={{
@@ -169,7 +162,7 @@ function RouteComponent() {
                     className="aspect-video max-h-[115px] w-full overflow-hidden rounded-md object-cover"
                     alt={`Community ${community.name} image`}
                   />
-                </button>
+                </Link>
               )
             })}
           </section>

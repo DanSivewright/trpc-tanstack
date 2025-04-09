@@ -1,7 +1,18 @@
 import { useEffect, useMemo, useState } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
 import type { communitiesAllSchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
-import { RiAddLine, RiArrowRightLine, RiCalendarLine } from "@remixicon/react"
+import {
+  RiAddLine,
+  RiArrowRightLine,
+  RiArticleLine,
+  RiBloggerLine,
+  RiCalendarLine,
+  RiGraduationCapLine,
+  RiHashtag,
+  RiLayoutMasonryLine,
+  RiTaskLine,
+  RiTodoLine,
+} from "@remixicon/react"
 import { useQuery } from "@tanstack/react-query"
 import {
   createFileRoute,
@@ -14,6 +25,7 @@ import {
   useMatch,
   useMatches,
   useMatchRoute,
+  useParams,
   useRouterState,
 } from "@tanstack/react-router"
 import Autoplay from "embla-carousel-autoplay"
@@ -69,8 +81,12 @@ function RootComponent() {
 
   return (
     <>
-      {!isSingleCommunity ? <CommunitiesHeader /> : <CommunityHeader />}
-
+      {!isSingleCommunity ? (
+        <CommunitiesHeader />
+      ) : (
+        //
+        <CommunityHeader />
+      )}
       <Outlet />
     </>
   )
@@ -126,53 +142,79 @@ function CommunitiesHeader() {
 }
 function CommunityHeader() {
   const location = useLocation()
+  const { id } = useParams({
+    from: "/_learner/(communities)/communities/$id",
+  })
   return (
     <>
       <NavigationLearnerSubHeader>
         <TabMenuHorizontal.Root value={location.pathname} className="w-fit">
           <TabMenuHorizontal.List className="border-none">
-            <TabMenuHorizontal.Trigger value="/" asChild>
+            <TabMenuHorizontal.Trigger value={`/communities/${id}`} asChild>
               <Link
                 to="/communities/$id"
                 params={{
-                  id: "123",
+                  id,
                 }}
               >
-                <TabMenuHorizontal.Icon as={RiCalendarLine} />
+                <TabMenuHorizontal.Icon as={RiLayoutMasonryLine} />
                 Feed
               </Link>
             </TabMenuHorizontal.Trigger>
-            <TabMenuHorizontal.Trigger value="/" asChild>
+            <TabMenuHorizontal.Trigger
+              value={`/communities/${id}/tasks`}
+              asChild
+            >
               <Link
-                to="/communities/$id/members"
+                to="/communities/$id/tasks"
                 params={{
-                  id: "123",
+                  id,
                 }}
               >
-                <TabMenuHorizontal.Icon as={RiCalendarLine} />
-                Members
+                <TabMenuHorizontal.Icon as={RiTaskLine} />
+                Tasks
               </Link>
             </TabMenuHorizontal.Trigger>
-            <TabMenuHorizontal.Trigger value="/" asChild>
+            <TabMenuHorizontal.Trigger
+              value={`/communities/${id}/articles`}
+              asChild
+            >
               <Link
-                to="/communities/$id/calendar"
+                to="/communities/$id/articles"
                 params={{
-                  id: "123",
+                  id,
                 }}
               >
-                <TabMenuHorizontal.Icon as={RiCalendarLine} />
-                Calendar
+                <TabMenuHorizontal.Icon as={RiArticleLine} />
+                Articles
               </Link>
             </TabMenuHorizontal.Trigger>
-            <TabMenuHorizontal.Trigger value="/" asChild>
+            <TabMenuHorizontal.Trigger
+              value={`/communities/${id}/threads`}
+              asChild
+            >
               <Link
-                to="/communities/$id/about"
+                to="/communities/$id/threads"
                 params={{
-                  id: "123",
+                  id,
                 }}
               >
-                <TabMenuHorizontal.Icon as={RiCalendarLine} />
-                About
+                <TabMenuHorizontal.Icon as={RiHashtag} />
+                Thread
+              </Link>
+            </TabMenuHorizontal.Trigger>
+            <TabMenuHorizontal.Trigger
+              value={`/communities/${id}/courses`}
+              asChild
+            >
+              <Link
+                to="/communities/$id/courses"
+                params={{
+                  id,
+                }}
+              >
+                <TabMenuHorizontal.Icon as={RiGraduationCapLine} />
+                Courses
               </Link>
             </TabMenuHorizontal.Trigger>
           </TabMenuHorizontal.List>

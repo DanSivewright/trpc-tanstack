@@ -13,6 +13,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query"
 
 import { NotificationProvider } from "@/components/ui/notification-provider"
+import { Provider as TooltipProvider } from "@/components/ui/tooltip"
 import { AuthProvider } from "@/components/providers/auth-provider"
 import { TailwindIndicator } from "@/components/tailwind-indicator"
 import appCss from "@/styles/app.css?url"
@@ -59,7 +60,9 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <HeadContent />
       </head>
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+        </AuthProvider>
         <TanStackRouterDevtools position="bottom-right" />
         <ReactQueryDevtools buttonPosition="bottom-left" />
         <TailwindIndicator />

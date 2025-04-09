@@ -7,6 +7,7 @@ import { protectedProcedure } from "../../init"
 import type {
   communitiesAllSchema,
   communitiesJoinedSchema,
+  communitySchema,
 } from "./schemas/communities-schema"
 
 const CACHE_GROUP = "communities"
@@ -81,4 +82,24 @@ export const communitiesRouter = {
     )
     return cachedFetcher()
   }),
+  detail: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    // @ts-ignore
+    .query(async ({ ctx, input, type, path }) => {
+      const cachedFetcher = cachedFunction(
+        async () => {
+          const doc = await db.collection("communities").doc(input.id).get()
+          return {
+            id: doc.id,
+            ...doc.data(),
+          } as z.infer<typeof communitySchema>
+        },
+        {
+          name: generateCacheKey({ path, type, input }),
+          maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
+          group: CACHE_GROUP,
+        }
+      )
+      return cachedFetcher()
+    }),
 }
