@@ -25,6 +25,7 @@ export const Route = createFileRoute(
       .array(
         z.enum(["all", "articles", "members", "events", "threads", "courses"])
       )
+      .default(["all"])
       .optional(),
   }),
   search: {
@@ -236,6 +237,7 @@ function RouteComponent() {
           </div>
         </div>
       </div>
+      <pre>{JSON.stringify(searchParams.scope, null, 2)}</pre>
     </>
   )
 }
