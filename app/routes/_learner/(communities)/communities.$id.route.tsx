@@ -78,7 +78,7 @@ function RouteComponent() {
   ]
 
   return (
-    <div className="flex h-full w-full rounded-t-20 bg-bg-white-0 pr-2">
+    <div className="flex h-full w-full rounded-t-20 bg-bg-white-0">
       <aside className="flex h-[calc(100vh-92px)] w-full max-w-96 border-r border-bg-soft-200">
         <nav className="h-full w-16 min-w-16 pb-3 pt-2">
           <ul className="flex flex-col">
