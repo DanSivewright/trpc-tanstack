@@ -4,6 +4,9 @@ export const Route = createFileRoute(
   "/_learner/(communities)/communities/$id/calendar"
 )({
   component: RouteComponent,
+  loader: () => ({
+    leaf: "Calendar",
+  }),
 })
 
 function RouteComponent() {

@@ -1,458 +1,172 @@
-import * as React from "react"
+import React, { useEffect, useState } from "react"
+import { faker } from "@faker-js/faker"
 import {
-  RiArrowDownSFill,
-  RiArrowUpSFill,
-  RiCheckboxCircleFill,
-  RiExpandUpDownFill,
-  RiMore2Line,
-} from "@remixicon/react"
+  compareItems,
+  rankItem,
+  type RankingInfo,
+} from "@tanstack/match-sorter-utils"
 import { createFileRoute } from "@tanstack/react-router"
 import {
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getSortedRowModel,
+  sortingFns,
   useReactTable,
-  type ColumnDef,
-  type SortingState,
+  type ColumnFiltersState,
+  type FilterFn,
+  type RowSelectionState,
+  type SortingFn,
 } from "@tanstack/react-table"
+import type { z } from "zod"
 
-import * as Avatar from "@/components/ui/avatar"
-import * as Button from "@/components/ui/button"
-import * as Checkbox from "@/components/ui/checkbox"
-import * as FileFormatIcon from "@/components/ui/file-format-icon"
-import * as StatusBadge from "@/components/ui/status-badge"
 import * as Table from "@/components/ui/table"
+import { Section } from "@/components/section"
 
-const data: Data[] = [
-  {
-    id: "326860c3",
-    member: {
-      name: "James Brown",
-      email: "james@alignui.com",
-      image: "/images/avatar/illustration/james.png",
-    },
-    title: {
-      name: "Marketing Manager",
-      date: "Since Aug, 2021",
-    },
-    project: {
-      name: "Monday.com",
-      description: "Campaign Strategy Brainstorming",
-      image: ["/images/major-brands/monday.svg"],
-    },
-    doc: {
-      name: "brown-james.pdf",
-      size: "2.4 MB",
-    },
-    status: {
-      variant: "completed",
-      label: "Active",
-    },
-  },
-  {
-    id: "8a2c57d0",
-    member: {
-      name: "Sophia Williams",
-      email: "sophia@alignui.com",
-      image: "/images/avatar/illustration/sophia.png",
-    },
-    title: {
-      name: "HR Assistant",
-      date: "Since Aug, 2021",
-    },
-    project: {
-      name: "Notion",
-      description: "Employee Engagement Survey",
-      image: [
-        "/images/major-brands/notion.svg",
-        "/images/major-brands/notion-white.svg",
-      ],
-    },
-    doc: {
-      name: "williams-sophia.pdf",
-      size: "2.4 MB",
-    },
-    status: {
-      variant: "completed",
-      label: "Active",
-    },
-  },
-  {
-    id: "1a6256ab",
-    member: {
-      name: "Arthur Taylor",
-      email: "arthur@alignui.com",
-      image: "/images/avatar/illustration/arthur.png",
-    },
-    title: {
-      name: "Entrepreneur / CEO",
-      date: "Since May, 2022",
-    },
-    project: {
-      name: "Spotify",
-      description: "Vision and Goal Setting Session",
-      image: ["/images/major-brands/spotify.svg"],
-    },
-    doc: {
-      name: "taylor-arthur.pdf",
-      size: "2.4 MB",
-    },
-    status: {
-      variant: "disabled",
-      label: "Absent",
-    },
-  },
-  {
-    id: "9f92efe3",
-    member: {
-      name: "Emma Wright",
-      email: "emma@alignui.com",
-      image: "/images/avatar/illustration/emma.png",
-    },
-    title: {
-      name: "Front-end Developer",
-      date: "Since Sep, 2022",
-    },
-    project: {
-      name: "Formcarry",
-      description: "User Feedback Analysis",
-      image: ["/images/major-brands/formcarry.svg"],
-    },
-    doc: {
-      name: "wright-emma.pdf",
-      size: "1.9 MB",
-    },
-    status: {
-      variant: "completed",
-      label: "Active",
-    },
-  },
-  {
-    id: "a5b7b936",
-    member: {
-      name: "Matthew Johnson",
-      email: "matthew@alignui.com",
-      image: "/images/avatar/illustration/matthew.png",
-    },
-    title: {
-      name: "Data Software Engineer",
-      date: "Since Feb, 2022",
-    },
-    project: {
-      name: "Loom",
-      description: "Data Analysis Methodology",
-      image: ["/images/major-brands/loom.svg"],
-    },
-    doc: {
-      name: "johnson-matthew.pdf",
-      size: "2.9 MB",
-    },
-    status: {
-      variant: "completed",
-      label: "Active",
-    },
-  },
-  {
-    id: "0153ab9a",
-    member: {
-      name: "Laura Perez",
-      email: "laura@alignui.com",
-      image: "/images/avatar/illustration/laura.png",
-    },
-    title: {
-      name: "Fashion Designer",
-      date: "Since Mar, 2022",
-    },
-    project: {
-      name: "Tidal",
-      description: "Design Trends and Inspirations",
-      image: [
-        "/images/major-brands/tidal.svg",
-        "/images/major-brands/tidal-white.svg",
-      ],
-    },
-    doc: {
-      name: "perez-laura.pdf",
-      size: "2.5 MB",
-    },
-    status: {
-      variant: "disabled",
-      label: "Absent",
-    },
-  },
-  {
-    id: "e18b8b38",
-    member: {
-      name: "Wei Chen",
-      email: "wei@alignui.com",
-      image: "/images/avatar/illustration/wei.png",
-    },
-    title: {
-      name: "Operations Manager",
-      date: "Since July, 2021",
-    },
-    project: {
-      name: "Dropbox",
-      description: "Process Optimization Brainstorming",
-      image: ["/images/major-brands/dropbox.svg"],
-    },
-    doc: {
-      name: "chen-wei.pdf",
-      size: "2.6 MB",
-    },
-    status: {
-      variant: "completed",
-      label: "Active",
-    },
-  },
-]
+import { ColumnsTasks, type taskSchema } from "./-components/columns-tasks"
 
-type Data = {
-  id: string
-  member: {
-    name: string
-    email: string
-    image: string
+const range = (len: number) => {
+  const arr: Array<number> = []
+  for (let i = 0; i < len; i++) {
+    arr.push(i)
   }
-  title: {
-    name: string
-    date: string
-  }
-  project: {
-    name: string
-    description: string
-    image: [string, string?]
-  }
-  doc: {
-    name: string
-    size: string
-  }
-  status: {
-    variant: "completed" | "pending" | "failed" | "disabled"
-    label: string
+  return arr
+}
+
+const newPerson = (num: number): z.infer<typeof taskSchema> => {
+  return {
+    id: num.toString(),
+    title: faker.commerce.product(),
+    description: faker.commerce.productDescription(),
+    completed: faker.datatype.boolean(),
+    status: faker.helpers.shuffle<z.infer<typeof taskSchema>["status"]>([
+      "todo",
+      "in-progress",
+      "blocked",
+      "closed",
+      "archived",
+    ])[0],
+    assignees: Array.from(
+      { length: faker.number.int({ min: 0, max: 6 }) },
+      () => ({
+        id: faker.string.uuid(),
+        name: faker.person.fullName(),
+        avatarUrl: faker.image.avatar(),
+      })
+    ),
+    assignedBy: {
+      id: faker.string.uuid(),
+      name: faker.person.fullName(),
+      avatarUrl: faker.image.avatar(),
+    },
+    dueDate: faker.date.future().toISOString(),
   }
 }
 
-const getSortingIcon = (state: "asc" | "desc" | false) => {
-  if (state === "asc")
-    return <RiArrowUpSFill className="size-5 text-text-sub-600" />
-  if (state === "desc")
-    return <RiArrowDownSFill className="size-5 text-text-sub-600" />
-  return <RiExpandUpDownFill className="size-5 text-text-sub-600" />
+export function makeData(...lens: Array<number>) {
+  const makeDataLevel = (depth = 0): Array<z.infer<typeof taskSchema>> => {
+    const len = lens[depth]
+    return range(len).map((index): z.infer<typeof taskSchema> => {
+      return {
+        ...newPerson(index),
+        // subRows: lens[depth + 1] ? makeDataLevel(depth + 1) : undefined,
+      }
+    })
+  }
+
+  return makeDataLevel()
 }
 
-const columns: ColumnDef<Data>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox.Root
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox.Root
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    id: "member",
-    accessorKey: "member.name",
-    header: ({ column }) => (
-      <div className="flex items-center gap-0.5">
-        Member Name
-        <button
-          type="button"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          {getSortingIcon(column.getIsSorted())}
-        </button>
-      </div>
-    ),
-    enableSorting: true,
-    cell: ({ row }) => (
-      <div className="flex items-center gap-3">
-        <Avatar.Root size="40">
-          <Avatar.Image src={row.original.member.image} />
-        </Avatar.Root>
-        <div className="flex flex-col gap-0.5">
-          <span className="text-label-sm text-text-strong-950">
-            {row.original.member.name}
-          </span>
-          <span className="text-paragraph-xs text-text-sub-600">
-            {row.original.member.email}
-          </span>
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: "title",
-    accessorKey: "title.name",
-    header: ({ column }) => (
-      <div className="flex min-w-36 items-center gap-0.5">
-        Title
-        <button
-          type="button"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          {getSortingIcon(column.getIsSorted())}
-        </button>
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex flex-col gap-0.5">
-        <span className="text-label-sm text-text-strong-950">
-          {row.original.title.name}
-        </span>
-        <span className="text-paragraph-xs text-text-sub-600">
-          {row.original.title.date}
-        </span>
-      </div>
-    ),
-  },
-  {
-    id: "project",
-    accessorKey: "project.name",
-    header: ({ column }) => (
-      <div className="flex min-w-48 items-center gap-0.5">
-        Projects
-        <button
-          type="button"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          {getSortingIcon(column.getIsSorted())}
-        </button>
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-bg-white-0 shadow-regular-xs ring-1 ring-inset ring-stroke-soft-200">
-          <picture>
-            {row.original.project.image.length > 1 && (
-              <source
-                srcSet={row.original.project.image[1]}
-                media="(prefers-color-scheme: dark)"
-              />
-            )}
-            <img
-              src={row.original.project.image[0]}
-              alt=""
-              width={28}
-              height={28}
-            />
-          </picture>
-        </div>
-        <div className="flex flex-col gap-0.5">
-          <span className="text-label-sm text-text-strong-950">
-            {row.original.project.name}
-          </span>
-          <span className="text-paragraph-xs text-text-sub-600">
-            {row.original.project.description}
-          </span>
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: "doc",
-    accessorKey: "doc.name",
-    header: ({ column }) => (
-      <div className="flex items-center gap-0.5 whitespace-nowrap">
-        Member Documents
-        <button
-          type="button"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          {getSortingIcon(column.getIsSorted())}
-        </button>
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center gap-3">
-        <FileFormatIcon.Root format="PDF" size="small" color="red" />
-        <div className="flex flex-col gap-0.5">
-          <span className="text-label-sm text-text-strong-950">
-            {row.original.doc.name}
-          </span>
-          <span className="text-paragraph-xs text-text-sub-600">
-            {row.original.doc.size}
-          </span>
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: "status",
-    accessorKey: "status.label",
-    header: ({ column }) => (
-      <div className="flex items-center gap-0.5">
-        Status
-        <button
-          type="button"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          {getSortingIcon(column.getIsSorted())}
-        </button>
-      </div>
-    ),
-    cell: ({ row }) => (
-      <StatusBadge.Root status={row.original.status.variant}>
-        <StatusBadge.Icon as={RiCheckboxCircleFill} />
-        {row.original.status.label}
-      </StatusBadge.Root>
-    ),
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => (
-      <Button.Root variant="neutral" mode="ghost" size="xsmall">
-        <Button.Icon as={RiMore2Line} />
-      </Button.Root>
-    ),
-  },
-]
+declare module "@tanstack/react-table" {
+  interface FilterFns {
+    fuzzy: FilterFn<unknown>
+  }
+  interface FilterMeta {
+    itemRank: RankingInfo
+  }
+}
+
+// Define a custom fuzzy filter function that will apply ranking info to rows (using match-sorter utils)
+const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
+  // Rank the item
+  const itemRank = rankItem(row.getValue(columnId), value)
+
+  // Store the itemRank info
+  addMeta({
+    itemRank,
+  })
+
+  // Return if the item should be filtered in/out
+  return itemRank.passed
+}
+
+// Define a custom fuzzy sort function that will sort by rank if the row has ranking information
+const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
+  let dir = 0
+
+  // Only sort by rank if the column has ranking information
+  if (rowA.columnFiltersMeta[columnId]) {
+    dir = compareItems(
+      rowA.columnFiltersMeta[columnId].itemRank,
+      rowB.columnFiltersMeta[columnId].itemRank
+    )
+  }
+
+  // Provide an alphanumeric fallback for when the item ranks are equal
+  return dir === 0 ? sortingFns.alphanumeric(rowA, rowB, columnId) : dir
+}
 
 export const Route = createFileRoute(
   "/_learner/(communities)/communities/$id/tasks"
 )({
+  loader: () => ({
+    leaf: "Tasks",
+  }),
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [globalFilter, setGlobalFilter] = useState("")
 
+  const [data, setData] = useState<Array<z.infer<typeof taskSchema>>>(() =>
+    makeData(50)
+  )
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const table = useReactTable({
     data,
-    columns,
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    columns: ColumnsTasks,
+    filterFns: {
+      fuzzy: fuzzyFilter, // define as a filter function that can be used in column definitions
+    },
     state: {
-      sorting,
+      columnFilters,
+      globalFilter,
+      rowSelection,
     },
-    initialState: {
-      sorting: [
-        {
-          id: "member",
-          desc: true,
-        },
-      ],
-    },
+    enableRowSelection: true, //enable row selection for all rows
+    onRowSelectionChange: setRowSelection,
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: "fuzzy", // apply fuzzy filter to the global filter (most common use case for fuzzy filter)
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(), // client side filtering
+    getSortedRowModel: getSortedRowModel(),
+    debugTable: true,
+    debugHeaders: true,
+    debugColumns: false,
   })
 
+  useEffect(() => {
+    if (table.getState().columnFilters[0]?.id === "fullName") {
+      if (table.getState().sorting[0]?.id !== "fullName") {
+        table.setSorting([{ id: "fullName", desc: false }])
+      }
+    }
+  }, [table.getState().columnFilters[0]?.id])
+
   return (
-    <div className="w-full">
+    <Section side="b" className="w-full px-3">
       <Table.Root>
         <Table.Header>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -491,6 +205,6 @@ function RouteComponent() {
             ))}
         </Table.Body>
       </Table.Root>
-    </div>
+    </Section>
   )
 }

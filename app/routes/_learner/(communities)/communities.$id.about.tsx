@@ -4,6 +4,9 @@ export const Route = createFileRoute(
   "/_learner/(communities)/communities/$id/about"
 )({
   component: RouteComponent,
+  loader: () => ({
+    leaf: "About",
+  }),
 })
 
 function RouteComponent() {

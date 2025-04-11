@@ -1,8 +1,11 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router"
 
 export const Route = createFileRoute(
-  '/_learner/(communities)/communities/$id/threads',
+  "/_learner/(communities)/communities/$id/threads"
 )({
+  loader: () => ({
+    leaf: "Threads",
+  }),
   component: RouteComponent,
 })
 
