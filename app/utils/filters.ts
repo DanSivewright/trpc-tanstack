@@ -1,3 +1,5 @@
+import "@tanstack/table-core"
+
 import type { RemixiconComponentType } from "@remixicon/react"
 import type {
   AccessorFn,
@@ -16,7 +18,6 @@ import {
   startOfDay,
 } from "date-fns"
 
-// import type { LucideIcon } from 'lucide-react'
 import { intersection, uniq } from "@/lib/array"
 
 export type ElementType<T> = T extends (infer U)[] ? U : T

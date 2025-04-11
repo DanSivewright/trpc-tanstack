@@ -1,14 +1,17 @@
 import { dateFormatter } from "@/utils/date-formatter"
+import { defineMeta, filterFn } from "@/utils/filters"
 import {
   RiAccountCircleLine,
   RiArchiveLine,
   RiCalendarLine,
   RiCloseLine,
+  RiH1,
+  RiListCheck,
   RiLoaderLine,
   RiSpam3Line,
   RiTodoLine,
 } from "@remixicon/react"
-import type { ColumnDef } from "@tanstack/react-table"
+import { createColumnHelper, type ColumnDef } from "@tanstack/react-table"
 import { z } from "zod"
 
 import * as Avatar from "@/components/ui/avatar"
@@ -56,11 +59,50 @@ export const taskSchema = baseTask.extend({
   parent: baseTask.optional().nullable(),
   subTasks: z.array(baseTask).optional().nullable(),
 })
+
+const statuses = [
+  {
+    value: "todo",
+    name: "Todo",
+    icon: RiTodoLine,
+    color: "green",
+  },
+  {
+    value: "in-progress",
+    name: "In Progress",
+    icon: RiLoaderLine,
+    color: "blue",
+  },
+  {
+    value: "blocked",
+    name: "Blocked",
+    icon: RiSpam3Line,
+    color: "red",
+  },
+  {
+    value: "closed",
+    name: "Closed",
+    icon: RiCloseLine,
+    color: "gray",
+  },
+  {
+    value: "archived",
+    name: "Archived",
+    icon: RiArchiveLine,
+    color: "gray",
+  },
+] as const
 export const ColumnsTasks: ColumnDef<z.infer<typeof taskSchema>>[] = [
   {
     id: "title",
     accessorKey: "title",
     header: "Title",
+    filterFn: filterFn("text"),
+    meta: {
+      displayName: "Title",
+      type: "text",
+      icon: RiH1,
+    },
     cell: ({ row, getValue }) => {
       const value = getValue() as string
       return (
@@ -82,65 +124,76 @@ export const ColumnsTasks: ColumnDef<z.infer<typeof taskSchema>>[] = [
     id: "status",
     accessorKey: "status",
     header: "Status",
-    cell: ({ getValue }) => {
-      const value = getValue() as string
-      const colorMap: Record<
-        string,
-        | "green"
-        | "blue"
-        | "red"
-        | "gray"
-        | "orange"
-        | "yellow"
-        | "purple"
-        | "sky"
-        | "pink"
-        | "teal"
-      > = {
-        todo: "green",
-        "in-progress": "blue",
-        blocked: "red",
-        closed: "gray",
-        archived: "gray",
-      }
-      const iconMap: Record<string, React.ElementType> = {
-        todo: RiTodoLine,
-        "in-progress": RiLoaderLine,
-        blocked: RiSpam3Line,
-        closed: RiCloseLine,
-        archived: RiArchiveLine,
-      }
-      const icon = iconMap[value]
+    filterFn: filterFn("option"),
+    meta: {
+      displayName: "Status",
+      type: "option",
+      icon: RiAccountCircleLine,
+      options: statuses.map((x) => ({ ...x, label: x.name })),
+    },
+    cell: ({ row }) => {
+      const status = statuses.find((x) => x.value === row.original.status)!
+
       return (
         <Badge.Root
           size="medium"
           variant="lighter"
           className="capitalize"
-          color={colorMap[value]}
+          color={status.color}
         >
-          {icon && (
+          {status.icon && (
             <Badge.Icon
-              {...(value === "in-progress"
+              {...(status.value === "in-progress"
                 ? { className: "animate-spin" }
                 : {})}
-              as={icon}
+              as={status.icon}
             />
           )}
-          {value.replace(/-/g, " ")}
+          {status.name}
         </Badge.Root>
       )
     },
   },
   {
     id: "subTasks",
-    accessorKey: "subTasks",
-    cell: ({ row }) => row?.original?.subTasks?.length ?? "",
+    accessorFn: (row) => row?.subTasks?.length ?? 0,
     header: "Sub Tasks",
+    filterFn: filterFn("number"),
+    meta: {
+      displayName: "Sub Tasks",
+      type: "number",
+      icon: RiListCheck,
+      max: 100,
+    },
   },
   {
     id: "assignees",
     accessorKey: "assignees",
     header: "Assignees",
+    filterFn: filterFn("multiOption"),
+    // @ts-ignore
+    meta: defineMeta((row) => row.assignees, {
+      displayName: "Assignees",
+      type: "multiOption",
+      icon: RiAccountCircleLine,
+      transformOptionFn: (u) => ({
+        value: u.id,
+        label: u.name,
+        icon: (
+          <Avatar.Root size="24">
+            {u.avatarUrl ? (
+              <Avatar.Image src={u.avatarUrl} />
+            ) : (
+              u.name
+                .split(" ")
+                .map((x) => x[0])
+                .join("")
+                .toUpperCase()
+            )}
+          </Avatar.Root>
+        ),
+      }),
+    }),
     cell: ({ row }) => {
       if (row.original.assignees.length > 0) {
         return (
@@ -171,6 +224,13 @@ export const ColumnsTasks: ColumnDef<z.infer<typeof taskSchema>>[] = [
   {
     id: "dueDate",
     accessorKey: "dueDate",
+    header: "Due Date",
+    filterFn: filterFn("date"),
+    meta: {
+      displayName: "Due Date",
+      type: "date",
+      icon: RiCalendarLine,
+    },
     cell: ({ row }) => {
       return (
         <div className="flex items-center gap-2 *:text-text-sub-600">
@@ -183,6 +243,5 @@ export const ColumnsTasks: ColumnDef<z.infer<typeof taskSchema>>[] = [
         </div>
       )
     },
-    header: "Due Date",
   },
 ]

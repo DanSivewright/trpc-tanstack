@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { Suspense, useState } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
 import { cn } from "@/utils/cn"
 import { dateFormatter } from "@/utils/date-formatter"
@@ -163,7 +163,7 @@ function RouteComponent() {
 
   return (
     <div className="flex h-full w-full rounded-t-20 bg-bg-white-0">
-      <aside className="flex h-[calc(100vh-92px)] w-full max-w-96 border-r border-bg-soft-200">
+      <aside className="hidden h-[calc(100vh-92px)] w-full max-w-96 border-r border-bg-soft-200 md:flex">
         <nav className="h-full w-16 min-w-16 pb-3 pt-2">
           <ul className="flex flex-col">
             {communities.data?.map((c) => (
@@ -333,7 +333,7 @@ function RouteComponent() {
           />
         </div>
       </aside>
-      <div className="h-[calc(100vh-92px)] max-h-[calc(100vh-92px)] grow overflow-y-scroll">
+      <div className="h-full grow overflow-auto md:h-[calc(100vh-92px)] md:max-h-[calc(100vh-92px)] md:overflow-y-scroll">
         <header className="border-b border-bg-soft-200 px-4 py-3">
           <Breadcrumb.Root>
             {leaves?.map((leaf, i) => {
@@ -478,7 +478,9 @@ function RouteComponent() {
             </div>
           </div>
         </Section>
-        <Outlet />
+        <Suspense>
+          <Outlet />
+        </Suspense>
       </div>
     </div>
   )

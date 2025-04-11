@@ -11,8 +11,6 @@ function ColumnHeader<TData, TValue>({
   className,
   ...props
 }: Props<TData, TValue>) {
-  const columnFilterValue = column.getFilterValue()
-  const { filterVariant } = column.columnDef.meta ?? {}
   return <div>x</div>
 }
 export default ColumnHeader

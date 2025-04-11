@@ -34,7 +34,6 @@ import { Route as LearnercommunitiesCommunitiesIdCoursesImport } from './routes/
 import { Route as LearnercommunitiesCommunitiesIdCalendarImport } from './routes/_learner/(communities)/communities.$id.calendar'
 import { Route as LearnercommunitiesCommunitiesIdArticlesImport } from './routes/_learner/(communities)/communities.$id.articles'
 import { Route as LearnercommunitiesCommunitiesIdAboutImport } from './routes/_learner/(communities)/communities.$id.about'
-import { Route as LearnercommunitiesCommunitiesIdArticlesArticleIdImport } from './routes/_learner/(communities)/communities.$id.articles.$articleId'
 
 // Create/Update Routes
 
@@ -187,13 +186,6 @@ const LearnercommunitiesCommunitiesIdAboutRoute =
     id: '/about',
     path: '/about',
     getParentRoute: () => LearnercommunitiesCommunitiesIdRouteRoute,
-  } as any)
-
-const LearnercommunitiesCommunitiesIdArticlesArticleIdRoute =
-  LearnercommunitiesCommunitiesIdArticlesArticleIdImport.update({
-    id: '/$articleId',
-    path: '/$articleId',
-    getParentRoute: () => LearnercommunitiesCommunitiesIdArticlesRoute,
   } as any)
 
 // Populate the FileRoutesByPath interface
@@ -361,13 +353,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LearnercommunitiesCommunitiesIdIndexImport
       parentRoute: typeof LearnercommunitiesCommunitiesIdRouteImport
     }
-    '/_learner/(communities)/communities/$id/articles/$articleId': {
-      id: '/_learner/(communities)/communities/$id/articles/$articleId'
-      path: '/$articleId'
-      fullPath: '/communities/$id/articles/$articleId'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesIdArticlesArticleIdImport
-      parentRoute: typeof LearnercommunitiesCommunitiesIdArticlesImport
-    }
   }
 }
 
@@ -383,24 +368,9 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
-interface LearnercommunitiesCommunitiesIdArticlesRouteChildren {
-  LearnercommunitiesCommunitiesIdArticlesArticleIdRoute: typeof LearnercommunitiesCommunitiesIdArticlesArticleIdRoute
-}
-
-const LearnercommunitiesCommunitiesIdArticlesRouteChildren: LearnercommunitiesCommunitiesIdArticlesRouteChildren =
-  {
-    LearnercommunitiesCommunitiesIdArticlesArticleIdRoute:
-      LearnercommunitiesCommunitiesIdArticlesArticleIdRoute,
-  }
-
-const LearnercommunitiesCommunitiesIdArticlesRouteWithChildren =
-  LearnercommunitiesCommunitiesIdArticlesRoute._addFileChildren(
-    LearnercommunitiesCommunitiesIdArticlesRouteChildren,
-  )
-
 interface LearnercommunitiesCommunitiesIdRouteRouteChildren {
   LearnercommunitiesCommunitiesIdAboutRoute: typeof LearnercommunitiesCommunitiesIdAboutRoute
-  LearnercommunitiesCommunitiesIdArticlesRoute: typeof LearnercommunitiesCommunitiesIdArticlesRouteWithChildren
+  LearnercommunitiesCommunitiesIdArticlesRoute: typeof LearnercommunitiesCommunitiesIdArticlesRoute
   LearnercommunitiesCommunitiesIdCalendarRoute: typeof LearnercommunitiesCommunitiesIdCalendarRoute
   LearnercommunitiesCommunitiesIdCoursesRoute: typeof LearnercommunitiesCommunitiesIdCoursesRoute
   LearnercommunitiesCommunitiesIdMembersRoute: typeof LearnercommunitiesCommunitiesIdMembersRoute
@@ -416,7 +386,7 @@ const LearnercommunitiesCommunitiesIdRouteRouteChildren: LearnercommunitiesCommu
     LearnercommunitiesCommunitiesIdAboutRoute:
       LearnercommunitiesCommunitiesIdAboutRoute,
     LearnercommunitiesCommunitiesIdArticlesRoute:
-      LearnercommunitiesCommunitiesIdArticlesRouteWithChildren,
+      LearnercommunitiesCommunitiesIdArticlesRoute,
     LearnercommunitiesCommunitiesIdCalendarRoute:
       LearnercommunitiesCommunitiesIdCalendarRoute,
     LearnercommunitiesCommunitiesIdCoursesRoute:
@@ -500,7 +470,7 @@ export interface FileRoutesByFullPath {
   '/communities/today': typeof LearnercommunitiesCommunitiesTodayRoute
   '/communities/': typeof LearnercommunitiesCommunitiesIndexRoute
   '/communities/$id/about': typeof LearnercommunitiesCommunitiesIdAboutRoute
-  '/communities/$id/articles': typeof LearnercommunitiesCommunitiesIdArticlesRouteWithChildren
+  '/communities/$id/articles': typeof LearnercommunitiesCommunitiesIdArticlesRoute
   '/communities/$id/calendar': typeof LearnercommunitiesCommunitiesIdCalendarRoute
   '/communities/$id/courses': typeof LearnercommunitiesCommunitiesIdCoursesRoute
   '/communities/$id/members': typeof LearnercommunitiesCommunitiesIdMembersRoute
@@ -509,7 +479,6 @@ export interface FileRoutesByFullPath {
   '/communities/$id/threads': typeof LearnercommunitiesCommunitiesIdThreadsRoute
   '/communities/$id/workflows': typeof LearnercommunitiesCommunitiesIdWorkflowsRoute
   '/communities/$id/': typeof LearnercommunitiesCommunitiesIdIndexRoute
-  '/communities/$id/articles/$articleId': typeof LearnercommunitiesCommunitiesIdArticlesArticleIdRoute
 }
 
 export interface FileRoutesByTo {
@@ -524,7 +493,7 @@ export interface FileRoutesByTo {
   '/communities/today': typeof LearnercommunitiesCommunitiesTodayRoute
   '/communities': typeof LearnercommunitiesCommunitiesIndexRoute
   '/communities/$id/about': typeof LearnercommunitiesCommunitiesIdAboutRoute
-  '/communities/$id/articles': typeof LearnercommunitiesCommunitiesIdArticlesRouteWithChildren
+  '/communities/$id/articles': typeof LearnercommunitiesCommunitiesIdArticlesRoute
   '/communities/$id/calendar': typeof LearnercommunitiesCommunitiesIdCalendarRoute
   '/communities/$id/courses': typeof LearnercommunitiesCommunitiesIdCoursesRoute
   '/communities/$id/members': typeof LearnercommunitiesCommunitiesIdMembersRoute
@@ -533,7 +502,6 @@ export interface FileRoutesByTo {
   '/communities/$id/threads': typeof LearnercommunitiesCommunitiesIdThreadsRoute
   '/communities/$id/workflows': typeof LearnercommunitiesCommunitiesIdWorkflowsRoute
   '/communities/$id': typeof LearnercommunitiesCommunitiesIdIndexRoute
-  '/communities/$id/articles/$articleId': typeof LearnercommunitiesCommunitiesIdArticlesArticleIdRoute
 }
 
 export interface FileRoutesById {
@@ -552,7 +520,7 @@ export interface FileRoutesById {
   '/_learner/(communities)/communities/today': typeof LearnercommunitiesCommunitiesTodayRoute
   '/_learner/(communities)/communities/': typeof LearnercommunitiesCommunitiesIndexRoute
   '/_learner/(communities)/communities/$id/about': typeof LearnercommunitiesCommunitiesIdAboutRoute
-  '/_learner/(communities)/communities/$id/articles': typeof LearnercommunitiesCommunitiesIdArticlesRouteWithChildren
+  '/_learner/(communities)/communities/$id/articles': typeof LearnercommunitiesCommunitiesIdArticlesRoute
   '/_learner/(communities)/communities/$id/calendar': typeof LearnercommunitiesCommunitiesIdCalendarRoute
   '/_learner/(communities)/communities/$id/courses': typeof LearnercommunitiesCommunitiesIdCoursesRoute
   '/_learner/(communities)/communities/$id/members': typeof LearnercommunitiesCommunitiesIdMembersRoute
@@ -561,7 +529,6 @@ export interface FileRoutesById {
   '/_learner/(communities)/communities/$id/threads': typeof LearnercommunitiesCommunitiesIdThreadsRoute
   '/_learner/(communities)/communities/$id/workflows': typeof LearnercommunitiesCommunitiesIdWorkflowsRoute
   '/_learner/(communities)/communities/$id/': typeof LearnercommunitiesCommunitiesIdIndexRoute
-  '/_learner/(communities)/communities/$id/articles/$articleId': typeof LearnercommunitiesCommunitiesIdArticlesArticleIdRoute
 }
 
 export interface FileRouteTypes {
@@ -589,7 +556,6 @@ export interface FileRouteTypes {
     | '/communities/$id/threads'
     | '/communities/$id/workflows'
     | '/communities/$id/'
-    | '/communities/$id/articles/$articleId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | ''
@@ -612,7 +578,6 @@ export interface FileRouteTypes {
     | '/communities/$id/threads'
     | '/communities/$id/workflows'
     | '/communities/$id'
-    | '/communities/$id/articles/$articleId'
   id:
     | '__root__'
     | '/_auth'
@@ -638,7 +603,6 @@ export interface FileRouteTypes {
     | '/_learner/(communities)/communities/$id/threads'
     | '/_learner/(communities)/communities/$id/workflows'
     | '/_learner/(communities)/communities/$id/'
-    | '/_learner/(communities)/communities/$id/articles/$articleId'
   fileRoutesById: FileRoutesById
 }
 
@@ -751,10 +715,7 @@ export const routeTree = rootRoute
     },
     "/_learner/(communities)/communities/$id/articles": {
       "filePath": "_learner/(communities)/communities.$id.articles.tsx",
-      "parent": "/_learner/(communities)/communities/$id",
-      "children": [
-        "/_learner/(communities)/communities/$id/articles/$articleId"
-      ]
+      "parent": "/_learner/(communities)/communities/$id"
     },
     "/_learner/(communities)/communities/$id/calendar": {
       "filePath": "_learner/(communities)/communities.$id.calendar.tsx",
@@ -787,10 +748,6 @@ export const routeTree = rootRoute
     "/_learner/(communities)/communities/$id/": {
       "filePath": "_learner/(communities)/communities.$id.index.tsx",
       "parent": "/_learner/(communities)/communities/$id"
-    },
-    "/_learner/(communities)/communities/$id/articles/$articleId": {
-      "filePath": "_learner/(communities)/communities.$id.articles.$articleId.tsx",
-      "parent": "/_learner/(communities)/communities/$id/articles"
     }
   }
 }

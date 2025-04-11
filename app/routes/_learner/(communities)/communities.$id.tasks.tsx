@@ -9,7 +9,10 @@ import { createFileRoute } from "@tanstack/react-router"
 import {
   flexRender,
   getCoreRowModel,
+  getFacetedMinMaxValues,
+  getFacetedRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   sortingFns,
   useReactTable,
@@ -17,11 +20,14 @@ import {
   type FilterFn,
   type RowSelectionState,
   type SortingFn,
+  type SortingState,
+  type VisibilityState,
 } from "@tanstack/react-table"
 import type { z } from "zod"
 
 import * as Table from "@/components/ui/table"
 import { Section } from "@/components/section"
+import TableFilters from "@/components/table-filters"
 
 import { ColumnsTasks, type taskSchema } from "./-components/columns-tasks"
 
@@ -33,7 +39,7 @@ const range = (len: number) => {
   return arr
 }
 
-const newPerson = (num: number): z.infer<typeof taskSchema> => {
+const newTask = (num: number): z.infer<typeof taskSchema> => {
   return {
     id: num.toString(),
     title: faker.commerce.product(),
@@ -67,53 +73,24 @@ export function makeData(...lens: Array<number>) {
   const makeDataLevel = (depth = 0): Array<z.infer<typeof taskSchema>> => {
     const len = lens[depth]
     return range(len).map((index): z.infer<typeof taskSchema> => {
+      const task = newTask(index)
+      const numSubtasks = faker.number.int({ min: 0, max: 10 })
+      const subtasks =
+        numSubtasks > 0
+          ? range(numSubtasks).map((subIndex) => ({
+              ...newTask(subIndex),
+              parent: task,
+            }))
+          : undefined
+
       return {
-        ...newPerson(index),
-        // subRows: lens[depth + 1] ? makeDataLevel(depth + 1) : undefined,
+        ...task,
+        subTasks: subtasks,
       }
     })
   }
 
   return makeDataLevel()
-}
-
-declare module "@tanstack/react-table" {
-  interface FilterFns {
-    fuzzy: FilterFn<unknown>
-  }
-  interface FilterMeta {
-    itemRank: RankingInfo
-  }
-}
-
-// Define a custom fuzzy filter function that will apply ranking info to rows (using match-sorter utils)
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
-  // Rank the item
-  const itemRank = rankItem(row.getValue(columnId), value)
-
-  // Store the itemRank info
-  addMeta({
-    itemRank,
-  })
-
-  // Return if the item should be filtered in/out
-  return itemRank.passed
-}
-
-// Define a custom fuzzy sort function that will sort by rank if the row has ranking information
-const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
-  let dir = 0
-
-  // Only sort by rank if the column has ranking information
-  if (rowA.columnFiltersMeta[columnId]) {
-    dir = compareItems(
-      rowA.columnFiltersMeta[columnId].itemRank,
-      rowB.columnFiltersMeta[columnId].itemRank
-    )
-  }
-
-  // Provide an alphanumeric fallback for when the item ranks are equal
-  return dir === 0 ? sortingFns.alphanumeric(rowA, rowB, columnId) : dir
 }
 
 export const Route = createFileRoute(
@@ -128,45 +105,42 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
-
-  const [data, setData] = useState<Array<z.infer<typeof taskSchema>>>(() =>
-    makeData(50)
-  )
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [sorting, setSorting] = useState<SortingState>([])
+
+  const [data] = useState(() => makeData(10))
+
   const table = useReactTable({
     data,
     columns: ColumnsTasks,
-    filterFns: {
-      fuzzy: fuzzyFilter, // define as a filter function that can be used in column definitions
-    },
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedMinMaxValues: getFacetedMinMaxValues(),
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    onGlobalFilterChange: setGlobalFilter,
     state: {
+      sorting,
       columnFilters,
       globalFilter,
+      columnVisibility,
       rowSelection,
     },
-    enableRowSelection: true, //enable row selection for all rows
-    onRowSelectionChange: setRowSelection,
-    onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: "fuzzy", // apply fuzzy filter to the global filter (most common use case for fuzzy filter)
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(), // client side filtering
-    getSortedRowModel: getSortedRowModel(),
-    debugTable: true,
-    debugHeaders: true,
-    debugColumns: false,
   })
 
-  useEffect(() => {
-    if (table.getState().columnFilters[0]?.id === "fullName") {
-      if (table.getState().sorting[0]?.id !== "fullName") {
-        table.setSorting([{ id: "fullName", desc: false }])
-      }
-    }
-  }, [table.getState().columnFilters[0]?.id])
+  console.log("data:::", data)
 
   return (
     <Section side="b" className="w-full px-3">
+      <div className="flex items-center gap-2 py-4">
+        <TableFilters table={table} />
+      </div>
       <Table.Root>
         <Table.Header>
           {table.getHeaderGroups().map((headerGroup) => (
