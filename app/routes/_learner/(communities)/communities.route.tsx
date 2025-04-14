@@ -13,7 +13,7 @@ import {
   RiTaskLine,
   RiTodoLine,
 } from "@remixicon/react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   createFileRoute,
   getRouteApi,
@@ -224,9 +224,12 @@ function CommunityHeader() {
           variant="primary"
           size="xxsmall"
           className="rounded-full"
+          asChild
         >
-          <Button.Icon as={RiAddLine} />
-          Create
+          <Link to="/communities/create">
+            <Button.Icon as={RiAddLine} />
+            Create
+          </Link>
         </Button.Root>
       </NavigationLearnerSubHeader>
     </>
@@ -238,6 +241,8 @@ function CommunitiesCarousel({
 }: {
   communities: z.infer<typeof communitiesAllSchema>
 }) {
+  const trpc = useTRPC()
+  const qc = useQueryClient()
   const [api, setApi] = useState<CarouselApi>()
   const [current, setCurrent] = useState(0)
   const [count, setCount] = useState(0)
@@ -301,7 +306,17 @@ function CommunitiesCarousel({
                     {community?.name}
                   </h1>
                 </header>
-                <div className="flex w-full flex-col gap-8">
+                <div
+                  onMouseOver={() =>
+                    qc.prefetchQuery({
+                      ...trpc.communities.detail.queryOptions({
+                        id: community.id,
+                      }),
+                      staleTime: 1000 * 60 * 2,
+                    })
+                  }
+                  className="flex w-full flex-col gap-8"
+                >
                   <div className="flex w-full items-end justify-between">
                     <div className="flex w-[40%] flex-col gap-3">
                       <AvatarGroupCompact.Root size="32">

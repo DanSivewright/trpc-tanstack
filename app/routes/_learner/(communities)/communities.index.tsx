@@ -15,7 +15,7 @@ import {
   RiTeamLine,
   RiTreeLine,
 } from "@remixicon/react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { z } from "zod"
 
@@ -111,12 +111,14 @@ export const Route = createFileRoute("/_learner/(communities)/communities/")({
   }),
   loader: async ({ context }) => {
     await Promise.all([
-      context.queryClient.prefetchQuery(
-        context.trpc.communities.all.queryOptions()
-      ),
-      context.queryClient.prefetchQuery(
-        context.trpc.communities.joined.queryOptions()
-      ),
+      context.queryClient.prefetchQuery({
+        ...context.trpc.communities.all.queryOptions(),
+        staleTime: 1000 * 60 * 2,
+      }),
+      context.queryClient.prefetchQuery({
+        ...context.trpc.communities.joined.queryOptions(),
+        staleTime: 1000 * 60 * 2,
+      }),
     ])
   },
 })
@@ -125,6 +127,7 @@ function RouteComponent() {
   const trpc = useTRPC()
   const communities = useQuery(trpc.communities.all.queryOptions())
   const joined = useQuery(trpc.communities.joined.queryOptions())
+  const qc = useQueryClient()
   return (
     <>
       <Section className="flex flex-col">
@@ -136,6 +139,14 @@ function RouteComponent() {
             {joined?.data?.map((community, i) => {
               return (
                 <Link
+                  onMouseOver={() =>
+                    qc.prefetchQuery({
+                      ...trpc.communities.detail.queryOptions({
+                        id: community.id,
+                      }),
+                      staleTime: 1000 * 60 * 2,
+                    })
+                  }
                   to="/communities/$id"
                   params={{
                     id: community.id,

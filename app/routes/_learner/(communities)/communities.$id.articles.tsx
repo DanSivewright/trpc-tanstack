@@ -60,7 +60,7 @@ const dataTableFilterQuerySchema = z
 export const Route = createFileRoute(
   "/_learner/(communities)/communities/$id/articles"
 )({
-  validateSearch: dataTableFilterQuerySchema,
+  // validateSearch: dataTableFilterQuerySchema,
   loader: () => ({
     leaf: "Articles",
   }),
