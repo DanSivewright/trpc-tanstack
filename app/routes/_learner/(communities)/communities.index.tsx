@@ -1,7 +1,36 @@
 import { useTRPC } from "@/integrations/trpc/react"
-import { RiSearchLine } from "@remixicon/react"
+import { cn } from "@/utils/cn"
+import { dateFormatter } from "@/utils/date-formatter"
+import {
+  RiArrowRightLine,
+  RiAwardLine,
+  RiBook2Line,
+  RiBriefcaseLine,
+  RiBuildingLine,
+  RiCameraLine,
+  RiChat1Line,
+  RiClockwiseLine,
+  RiComputerLine,
+  RiFireLine,
+  RiGlobeLine,
+  RiHammerLine,
+  RiHeartLine,
+  RiInfinityLine,
+  RiKanbanView,
+  RiMusic2Line,
+  RiPaletteLine,
+  RiPencilLine,
+  RiSearchLine,
+  RiSparkling2Line,
+  RiTranslate,
+  RiUserLine,
+  RiUserStarLine,
+  RiVideoLine,
+  type RemixiconComponentType,
+} from "@remixicon/react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
+import { format } from "date-fns"
 import { motion } from "motion/react"
 
 import { useElementSize } from "@/hooks/use-element-size"
@@ -11,6 +40,7 @@ import * as Badge from "@/components/ui/badge"
 import * as Button from "@/components/ui/button"
 import * as Divider from "@/components/ui/divider"
 import * as Input from "@/components/ui/input"
+import DraggableScrollContainer from "@/components/draggable-scroll-container"
 import { Grid } from "@/components/grid"
 import Image from "@/components/image"
 import { Section } from "@/components/section"
@@ -29,6 +59,36 @@ const rows = [
   [29, 30, 31],
   [32, 33],
   [34],
+]
+const filters: {
+  title: string
+  icon: RemixiconComponentType
+}[] = [
+  { title: "Most Active", icon: RiFireLine },
+  { title: "Recently Created", icon: RiClockwiseLine },
+  { title: "Beginner Friendly", icon: RiSparkling2Line },
+  { title: "Professional", icon: RiBriefcaseLine },
+  { title: "Creative Arts", icon: RiPaletteLine },
+  { title: "Technology", icon: RiComputerLine },
+  { title: "Business", icon: RiBuildingLine },
+  { title: "Language Learning", icon: RiTranslate },
+  { title: "Health & Wellness", icon: RiHeartLine },
+  { title: "Science", icon: RiInfinityLine },
+  { title: "Music", icon: RiMusic2Line },
+  { title: "Photography", icon: RiCameraLine },
+  { title: "Writing", icon: RiPencilLine },
+  { title: "Digital Marketing", icon: RiComputerLine },
+  { title: "Personal Development", icon: RiUserLine },
+  { title: "Certification Available", icon: RiAwardLine },
+  { title: "Project Based", icon: RiKanbanView },
+  { title: "Mentorship", icon: RiUserLine },
+  { title: "Live Sessions", icon: RiVideoLine },
+  { title: "Self-Paced", icon: RiClockwiseLine },
+  { title: "Discussion Active", icon: RiChat1Line },
+  { title: "Resource Rich", icon: RiBook2Line },
+  { title: "Collaboration", icon: RiUserStarLine },
+  { title: "Workshop Style", icon: RiHammerLine },
+  { title: "International", icon: RiGlobeLine },
 ]
 
 export const Route = createFileRoute("/_learner/(communities)/communities/")({
@@ -178,12 +238,42 @@ function RouteComponent() {
         size="sm"
         className="relative z-10 bg-bg-white-0 px-6 2xl:px-0"
       >
-        {/* 1536px */}
-        {/* 1024px */}
+        <DraggableScrollContainer className="bg-background shadow sticky top-0 z-10 mb-4 bg-bg-white-0 px-6">
+          <ul className="flex w-max items-center gap-8">
+            {filters.map((filter, i) => {
+              const Icon = filter.icon
+              return (
+                <li
+                  key={filter.title}
+                  className={cn(
+                    "group relative flex flex-col items-center justify-center gap-2 py-4 text-center",
+                    {
+                      "text-text-soft-400": i !== 0,
+                    }
+                  )}
+                >
+                  <Icon className="size-6" />
+                  <span className="shrink-0 text-label-xs">{filter.title}</span>
+                  {i === 0 ? (
+                    <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-bg-strong-950"></span>
+                  ) : (
+                    <span className="bg-foreground/30 absolute inset-x-0 bottom-0 h-0.5 rounded-full opacity-0 transition-opacity group-hover:opacity-100"></span>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </DraggableScrollContainer>
         <Grid className="mx-auto max-w-screen-2xl">
           <Grid gap="xs" className="col-span-12 gap-8 lg:col-span-9">
             {communities?.data?.map((c) => (
               <Link
+                onMouseOver={() =>
+                  qc.prefetchQuery(
+                    trpc.communities.detail.queryOptions({ id: c.id })
+                  )
+                }
+                preload="intent"
                 to="/communities/$id"
                 params={{
                   id: c.id,
@@ -258,7 +348,38 @@ function RouteComponent() {
               Your Communities
             </h3>
             <div className="flex flex-col gap-2">
-              {joined?.data?.map((c) => <div key={c.id}>{c.name}</div>)}
+              {joined?.data?.map((c) => {
+                return (
+                  <Link
+                    onMouseOver={() =>
+                      qc.prefetchQuery(
+                        trpc.communities.detail.queryOptions({ id: c.id })
+                      )
+                    }
+                    preload="intent"
+                    to="/communities/$id"
+                    params={{
+                      id: c.id,
+                    }}
+                    key={c.id}
+                    className="flex w-full items-center gap-3 rounded-xl py-2 text-left transition-all duration-200 ease-out hover:bg-[#E9E9E9] hover:px-3 dark:hover:bg-[#191919]"
+                  >
+                    <Avatar.Root size="40">
+                      <Avatar.Image src={c?.logoUrl} />
+                    </Avatar.Root>
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="line-clamp-2 text-label-md font-light">
+                        {c.name}
+                      </div>
+                      <div className="line-clamp-1 truncate text-pretty text-subheading-xs font-light text-text-soft-400">
+                        {c.headline}
+                      </div>
+                    </div>
+
+                    <RiArrowRightLine className="size-4 fill-text-soft-400" />
+                  </Link>
+                )
+              })}
             </div>
           </div>
         </Grid>
