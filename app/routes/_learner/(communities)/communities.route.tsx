@@ -81,9 +81,7 @@ function RootComponent() {
 
   return (
     <>
-      {!isSingleCommunity ? (
-        <CommunitiesHeader />
-      ) : (
+      {!isSingleCommunity ? null : (
         //
         <CommunityHeader />
       )}
@@ -92,54 +90,6 @@ function RootComponent() {
   )
 }
 
-function CommunitiesHeader() {
-  const trpc = useTRPC()
-  const communities = useQuery(trpc.communities.all.queryOptions())
-  const location = useLocation()
-  return (
-    <>
-      <NavigationLearnerSubHeader>
-        <TabMenuHorizontal.Root value={location.pathname} className="w-fit">
-          <TabMenuHorizontal.List className="border-none">
-            <TabMenuHorizontal.Trigger value="/communities/today" asChild>
-              <Link to="/communities/today">
-                <TabMenuHorizontal.Icon as={RiCalendarLine} />
-                Today
-              </Link>
-            </TabMenuHorizontal.Trigger>
-            <TabMenuHorizontal.Trigger value="/communities" asChild>
-              <Link to="/communities">
-                <TabMenuHorizontal.Icon as={RiCalendarLine} />
-                Communities
-              </Link>
-            </TabMenuHorizontal.Trigger>
-            <TabMenuHorizontal.Trigger value="/communities/explore" asChild>
-              <Link to="/communities/explore">
-                <TabMenuHorizontal.Icon as={RiCalendarLine} />
-                Explore
-              </Link>
-            </TabMenuHorizontal.Trigger>
-          </TabMenuHorizontal.List>
-        </TabMenuHorizontal.Root>
-        <Button.Root
-          mode="filled"
-          variant="primary"
-          size="xxsmall"
-          className="rounded-full"
-        >
-          <Button.Icon as={RiAddLine} />
-          Create
-        </Button.Root>
-      </NavigationLearnerSubHeader>
-
-      {!location.pathname.includes("explore") && (
-        <CommunitiesCarousel
-          communities={communities?.data?.slice(0, 6) || []}
-        />
-      )}
-    </>
-  )
-}
 function CommunityHeader() {
   const location = useLocation()
   const { id } = useParams({

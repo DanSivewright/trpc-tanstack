@@ -1,114 +1,38 @@
 import { useTRPC } from "@/integrations/trpc/react"
-import {
-  RiAttachmentLine,
-  RiBankLine,
-  RiCloudLine,
-  RiCompassLine,
-  RiGolfBallLine,
-  RiHeadphoneLine,
-  RiLayoutGridLine,
-  RiNewsLine,
-  RiRestaurantLine,
-  RiSchoolLine,
-  RiShakeHandsLine,
-  RiShoppingBagLine,
-  RiTeamLine,
-  RiTreeLine,
-} from "@remixicon/react"
+import { RiSearchLine } from "@remixicon/react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { z } from "zod"
+import { motion } from "motion/react"
 
+import { useElementSize } from "@/hooks/use-element-size"
 import * as Avatar from "@/components/ui/avatar"
+import * as AvatarGroupCompact from "@/components/ui/avatar-group-compact"
 import * as Badge from "@/components/ui/badge"
 import * as Button from "@/components/ui/button"
-import * as LinkButton from "@/components/ui/link-button"
-import * as Tag from "@/components/ui/tag"
-import DraggableScrollContainer from "@/components/draggable-scroll-container"
+import * as Divider from "@/components/ui/divider"
+import * as Input from "@/components/ui/input"
 import { Grid } from "@/components/grid"
 import Image from "@/components/image"
 import { Section } from "@/components/section"
 
-const tabs = [
-  {
-    label: "All",
-    icon: RiLayoutGridLine,
-  },
-  {
-    label: "Popular",
-    icon: RiLayoutGridLine,
-  },
-  {
-    label: "Recommended",
-    icon: RiLayoutGridLine,
-  },
-  {
-    label: "Explore",
-    icon: RiLayoutGridLine,
-  },
-]
-const chips = [
-  {
-    label: "Navigation",
-    icon: RiCompassLine,
-  },
-  {
-    label: "Finance",
-    icon: RiBankLine,
-  },
-  {
-    label: "Music",
-    icon: RiHeadphoneLine,
-  },
-  {
-    label: "News",
-    icon: RiNewsLine,
-  },
-  {
-    label: "Weather",
-    icon: RiCloudLine,
-  },
-  {
-    label: "Productivity",
-    icon: RiAttachmentLine,
-  },
-  {
-    label: "Food & Drink",
-    icon: RiRestaurantLine,
-  },
-  {
-    label: "Business",
-    icon: RiShakeHandsLine,
-  },
-  {
-    label: "Sports",
-    icon: RiGolfBallLine,
-  },
-  {
-    label: "Shopping",
-    icon: RiShoppingBagLine,
-  },
-  {
-    label: "Lifestyle",
-    icon: RiTreeLine,
-  },
-  {
-    label: "Kids",
-    icon: RiTeamLine,
-  },
-  {
-    label: "Education",
-    icon: RiSchoolLine,
-  },
+const LENGTH = 11
+
+const rows = [
+  [1],
+  [2, 3],
+  [4, 5, 6],
+  [7, 8, 9, 10],
+  [11, 12, 13, 14, 15],
+  [16, 17, 18, 19],
+  [20, 21, 22, 23, 24],
+  [25, 26, 27, 28],
+  [29, 30, 31],
+  [32, 33],
+  [34],
 ]
 
 export const Route = createFileRoute("/_learner/(communities)/communities/")({
   component: RouteComponent,
-  validateSearch: z.object({
-    selectedChips: z
-      .array(z.enum(chips.map((c) => c.label) as [string, ...string[]]))
-      .default([]),
-  }),
   loader: async ({ context }) => {
     await Promise.all([
       context.queryClient.prefetchQuery({
@@ -128,1200 +52,216 @@ function RouteComponent() {
   const communities = useQuery(trpc.communities.all.queryOptions())
   const joined = useQuery(trpc.communities.joined.queryOptions())
   const qc = useQueryClient()
+
+  const { ref, width } = useElementSize()
+  const header = useElementSize()
   return (
     <>
-      <Section className="flex flex-col">
-        <h2 className="gutter mt-8 text-paragraph-sm text-text-sub-600 lg:mt-0">
-          Your Communities
-        </h2>
-        <DraggableScrollContainer>
-          <section className="few no-scrollbar gutter flex w-max items-start space-x-4 py-3">
-            {joined?.data?.map((community, i) => {
-              return (
-                <Link
-                  onMouseOver={() =>
-                    qc.prefetchQuery({
-                      ...trpc.communities.detail.queryOptions({
-                        id: community.id,
-                      }),
-                      staleTime: 1000 * 60 * 2,
-                    })
+      <div className="h-fit w-screen overflow-hidden">
+        <header
+          ref={header.ref}
+          style={{
+            marginTop: `-${width / 4}px`,
+            width: `calc(100vw + ${width}px)`,
+            marginLeft: `-${width / 2}px`,
+          }}
+          className="relative mx-auto flex w-full gap-6"
+        >
+          {rows?.map((row, ri) => (
+            <ul
+              {...(ri === 0 ? { ref } : {})}
+              {...(ri < LENGTH / 2 - 1
+                ? {
+                    style: {
+                      marginTop: `-${Math.round(width / 2) * ri + 1}px`,
+                      // background: "brown",
+                    },
                   }
-                  to="/communities/$id"
-                  params={{
-                    id: community.id,
+                : {})}
+              {...(ri > LENGTH / 2
+                ? {
+                    style: {
+                      marginTop: `-${Math.round(width / 2) * (LENGTH - ri - 1)}px`,
+                      // background: "red",
+                    },
+                  }
+                : {})}
+              {...(Math.ceil(LENGTH / 2) === ri + 1
+                ? {
+                    style: {
+                      marginTop: `-${Math.round(width / 2) * (LENGTH / 2 - 2)}px`,
+                      // background: "blue",
+                    },
+                  }
+                : {})}
+              className="flex grow flex-col gap-6"
+              key={"row" + ri}
+            >
+              {row.map((cell, ci) => (
+                <motion.div
+                  key={"row" + ri + "cell" + ci}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{
+                    duration: 0.5,
+                    delay: (ri + ci) * 0.1, // stagger based on row and column
+                    ease: "easeOut",
                   }}
-                  key={community?.id + "-joined"}
-                  className="flex aspect-[13/16] max-h-[240px] w-[40vw] max-w-[230px] flex-col justify-between gap-2 rounded-10 p-2 pt-4 md:w-[25vw] lg:w-[15vw]"
-                  style={{
-                    backgroundColor: community.meta.colors.DarkVibrant.hex,
-                    color: community.meta.colors.DarkVibrant.titleTextColor,
-                  }}
+                  className="relative aspect-square w-full overflow-hidden rounded-20 bg-bg-soft-200"
                 >
-                  <h3 className="line-clamp-2 px-2 text-left text-title-h6 font-light">
-                    {community?.name}
-                  </h3>
                   <Image
-                    path={`community-${community.id}-image.jpg`}
-                    transformation={[{ quality: 100 }]}
+                    path={`${cell}.${cell == 26 || cell == 27 ? "png" : "webp"}`}
                     lqip={{
                       active: true,
                       quality: 1,
                       blur: 50,
                     }}
-                    sizes="33vw"
-                    className="aspect-video max-h-[115px] w-full overflow-hidden rounded-md object-cover"
-                    alt={`Community ${community.name} image`}
+                    transformation={[
+                      {
+                        height: width,
+                        width,
+                      },
+                    ]}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    loading="lazy"
                   />
-                </Link>
-              )
-            })}
-          </section>
-        </DraggableScrollContainer>
+                </motion.div>
+              ))}
+            </ul>
+          ))}
+        </header>
+      </div>
+      <Section
+        spacer="p"
+        side="t"
+        style={{
+          marginTop: `-${header.height / 2}px`,
+        }}
+        className="relative z-10 rounded-t-20 border-t border-bg-weak-50 bg-white/80 shadow-regular-md backdrop-blur-lg"
+      >
+        <div className="mx-auto flex max-w-screen-lg flex-col gap-2 px-6 2xl:px-0">
+          <h1 className="text-title-h1 font-light">
+            <span className="text-text-sub-600">Discover</span> communities.
+          </h1>
+          <p className="text-pretty text-subheading-sm font-light text-text-soft-400">
+            Looking for a community? We have {communities.data?.length}+
+            communities.
+          </p>
+          <Input.Root>
+            <Input.Wrapper>
+              <Input.Input
+                // value={q}
+                // onInput={(e) => {
+                //   const value = e.currentTarget.value
+                //   setQ(value)
+                //   handleSearch(value)
+                // }}
+                // onInput={(e) =>
+                //   nvaigate({
+                //     search: (old) => ({
+                //       ...old,
+                //       q: e.currentTarget.value,
+                //     }),
+                //     replace: true,
+                //   })
+                // }
+                type="text"
+                placeholder="Search for a community..."
+              />
+              <Input.Icon as={RiSearchLine} />
+            </Input.Wrapper>
+          </Input.Root>
+        </div>
       </Section>
-      <Section className="gutter flex flex-col gap-5">
-        <h3 className="text-title-h3 font-light text-text-strong-950">
-          Editor Picks
-        </h3>
-        <Grid>
-          <Image
-            path="community-wvxnO56olQ8TdQAA0Vco-image.jpg"
-            className="col-span-6 overflow-hidden rounded-20 object-contain"
-            lqip={{
-              active: true,
-              quality: 1,
-              blur: 50,
-            }}
-          />
-          <div className="col-span-6 flex flex-col items-start justify-center gap-6">
-            <div className="flex items-center gap-3">
-              <Avatar.Root size="24">
-                <Avatar.Image src={communities?.data?.[0]?.featureImageUrl} />
-              </Avatar.Root>
-              <span className="text-label-sm font-light">
-                {communities?.data?.[0]?.name}
-              </span>
-              <span className="text-label-sm font-light text-text-sub-600">
-                {" "}
-                • 12 Mins Ago
-              </span>
-            </div>
-            <h3 className="text-pretty text-title-h2 font-light">
-              The Ultimate Digital Detox: How to Unplug Without Falling Behind
+      <Section
+        spacer="p"
+        size="sm"
+        className="relative z-10 bg-bg-white-0 px-6 2xl:px-0"
+      >
+        {/* 1536px */}
+        {/* 1024px */}
+        <Grid className="mx-auto max-w-screen-2xl">
+          <Grid gap="xs" className="col-span-12 gap-8 lg:col-span-9">
+            {communities?.data?.map((c) => (
+              <Link
+                to="/communities/$id"
+                params={{
+                  id: c.id,
+                }}
+                key={"all-" + c.id}
+                className="relative col-span-12 flex flex-col gap-2 lg:col-span-6"
+              >
+                <Image
+                  path={`community-${c.id}-image.jpg`}
+                  lqip={{
+                    active: true,
+                    quality: 1,
+                    blur: 50,
+                  }}
+                  sizes="(min-width: 1536px) 50vw, (min-width: 1024px) 100vw"
+                  className="aspect-video w-full overflow-hidden rounded-10 object-cover"
+                  alt={`Community ${c.name} image`}
+                />
+                <div className="flex items-start justify-between">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <Avatar.Root size="24">
+                        <Avatar.Image
+                          src={c.logoUrl}
+                          alt={`Community ${c.name} image`}
+                        />
+                      </Avatar.Root>
+                      <h2 className="line-clamp-2 text-title-h6 font-light">
+                        {c.name}
+                      </h2>
+                    </div>
+                    <p className="line-clamp-3 text-pretty text-subheading-sm font-light text-text-soft-400">
+                      {c.headline}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {c.tags?.map((t) => (
+                        <Badge.Root
+                          variant="lighter"
+                          size="small"
+                          key={c.id + t}
+                        >
+                          {t}
+                        </Badge.Root>
+                      ))}
+                    </div>
+                  </div>
+                  <AvatarGroupCompact.Root
+                    size="24"
+                    className="bg-bg-weak-50 shadow-regular-sm"
+                  >
+                    <AvatarGroupCompact.Stack>
+                      <Avatar.Root>
+                        <Avatar.Image src="https://www.alignui.com/images/avatar/illustration/emma.png" />
+                      </Avatar.Root>
+                      <Avatar.Root>
+                        <Avatar.Image src="https://www.alignui.com/images/avatar/illustration/james.png" />
+                      </Avatar.Root>
+                      <Avatar.Root>
+                        <Avatar.Image src="https://www.alignui.com/images/avatar/illustration/sophia.png" />
+                      </Avatar.Root>
+                    </AvatarGroupCompact.Stack>
+                    <AvatarGroupCompact.Overflow>
+                      +9
+                    </AvatarGroupCompact.Overflow>
+                  </AvatarGroupCompact.Root>
+                </div>
+              </Link>
+            ))}
+          </Grid>
+          <div className="col-span-12 flex flex-col gap-4 lg:col-span-3">
+            <h3 className="text-title-h6 font-light text-text-soft-400">
+              Your Communities
             </h3>
-            <p className="text-pretty text-paragraph-md text-text-sub-600">
-              Struggling to balance screen time with real life? A digital detox
-              doesn’t mean going off the grid—it’s about using technology
-              intentionally. Learn how to unplug, recharge, and stay productive
-              without missing out. Your mind (and focus) will thank you!
-            </p>
-            <div className="flex items-center gap-2.5">
-              <LinkButton.Root className="text-warning-base">
-                Tech
-              </LinkButton.Root>
-              <span className="text-label-sm text-text-sub-600">
-                {" "}
-                • 4 Min Read
-              </span>
-            </div>
-          </div>
-          <div className="col-span-4 flex flex-col gap-3">
-            <Image
-              path="t0jgshpo6nnllwzg1eq81"
-              className="aspect-video w-full overflow-hidden rounded-20 object-cover"
-              lqip={{
-                active: true,
-                quality: 1,
-                blur: 50,
-              }}
-            />
-            <div className="flex items-center gap-3">
-              <Avatar.Root size="24">
-                <Avatar.Image src={communities?.data?.[0]?.featureImageUrl} />
-              </Avatar.Root>
-              <span className="text-label-sm font-light">
-                {communities?.data?.[0]?.name}
-              </span>
-              <span className="text-label-sm font-light text-text-sub-600">
-                {" "}
-                • 12 Mins Ago
-              </span>
-            </div>
-            <h3 className="text-pretty text-title-h4 font-light">
-              The Ultimate Digital Detox: How to Unplug Without Falling Behind
-            </h3>
-            <p className="text-pretty text-paragraph-xs text-text-sub-600">
-              Struggling to balance screen time with real life? A digital detox
-              doesn’t mean going off the grid—it’s about using technology
-              intentionally. Learn how to unplug, recharge, and stay productive
-              without missing out. Your mind (and focus) will thank you!
-            </p>
-            <div className="flex items-center gap-2.5">
-              <LinkButton.Root className="text-warning-base">
-                Tech
-              </LinkButton.Root>
-              <span className="text-label-sm text-text-sub-600">
-                {" "}
-                • 4 Min Read
-              </span>
-            </div>
-          </div>
-          <div className="col-span-4 flex flex-col gap-3">
-            <Image
-              path="community-tkqBf6PK01T46xXqiI7X-image.jpg"
-              className="aspect-video w-full overflow-hidden rounded-20 object-cover"
-              lqip={{
-                active: true,
-                quality: 1,
-                blur: 50,
-              }}
-            />
-            <div className="flex items-center gap-3">
-              <Avatar.Root size="24">
-                <Avatar.Image src={communities?.data?.[0]?.featureImageUrl} />
-              </Avatar.Root>
-              <span className="text-label-sm font-light">
-                {communities?.data?.[0]?.name}
-              </span>
-              <span className="text-label-sm font-light text-text-sub-600">
-                {" "}
-                • 12 Mins Ago
-              </span>
-            </div>
-            <h3 className="text-pretty text-title-h4 font-light">
-              The Ultimate Digital Detox: How to Unplug Without Falling Behind
-            </h3>
-            <p className="text-pretty text-paragraph-xs text-text-sub-600">
-              Struggling to balance screen time with real life? A digital detox
-              doesn’t mean going off the grid—it’s about using technology
-              intentionally. Learn how to unplug, recharge, and stay productive
-              without missing out. Your mind (and focus) will thank you!
-            </p>
-            <div className="flex items-center gap-2.5">
-              <LinkButton.Root className="text-warning-base">
-                Tech
-              </LinkButton.Root>
-              <span className="text-label-sm text-text-sub-600">
-                {" "}
-                • 4 Min Read
-              </span>
-            </div>
-          </div>
-          <div className="col-span-4 flex flex-col gap-3">
-            <Image
-              path="igcyx1cmgcrce36p32ppu"
-              className="aspect-video w-full overflow-hidden rounded-20 object-cover"
-              lqip={{
-                active: true,
-                quality: 1,
-                blur: 50,
-              }}
-            />
-            <div className="flex items-center gap-3">
-              <Avatar.Root size="24">
-                <Avatar.Image src={communities?.data?.[0]?.featureImageUrl} />
-              </Avatar.Root>
-              <span className="text-label-sm font-light">
-                {communities?.data?.[0]?.name}
-              </span>
-              <span className="text-label-sm font-light text-text-sub-600">
-                {" "}
-                • 12 Mins Ago
-              </span>
-            </div>
-            <h3 className="text-pretty text-title-h4 font-light">
-              The Ultimate Digital Detox: How to Unplug Without Falling Behind
-            </h3>
-            <p className="text-pretty text-paragraph-xs text-text-sub-600">
-              Struggling to balance screen time with real life? A digital detox
-              doesn’t mean going off the grid—it’s about using technology
-              intentionally. Learn how to unplug, recharge, and stay productive
-              without missing out. Your mind (and focus) will thank you!
-            </p>
-            <div className="flex items-center gap-2.5">
-              <LinkButton.Root className="text-warning-base">
-                Tech
-              </LinkButton.Root>
-              <span className="text-label-sm text-text-sub-600">
-                {" "}
-                • 4 Min Read
-              </span>
+            <div className="flex flex-col gap-2">
+              {joined?.data?.map((c) => <div key={c.id}>{c.name}</div>)}
             </div>
           </div>
         </Grid>
-      </Section>
-      <Section className="bg-bg-weak-50" spacer="p">
-        <header className="gutter flex flex-col gap-6">
-          <div className="flex items-center gap-4">
-            <Avatar.Root size="32">
-              <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-              <Avatar.Indicator position="top">
-                <CustomVerifiedIconSVG />
-              </Avatar.Indicator>
-            </Avatar.Root>
-            <h3 className="text-pretty text-title-h4 font-light">
-              Published in: Origami & Paper Crafts
-            </h3>
-          </div>
-
-          <div className="mb-6 flex items-center gap-4">
-            <Button.Root
-              className="w-fit rounded-full"
-              variant="neutral"
-              size="small"
-            >
-              All
-              <Badge.Root square color="green">
-                66
-              </Badge.Root>
-            </Button.Root>
-            <Button.Root
-              className="w-fit rounded-full bg-neutral-200 text-text-strong-950 hover:bg-bg-sub-300 hover:text-text-sub-600"
-              variant="neutral"
-              size="small"
-            >
-              Articles
-            </Button.Root>
-            <Button.Root
-              className="w-fit rounded-full bg-neutral-200 text-text-strong-950 hover:bg-bg-sub-300 hover:text-text-sub-600"
-              variant="neutral"
-              size="small"
-            >
-              Events
-            </Button.Root>
-            <Button.Root
-              className="w-fit rounded-full bg-neutral-200 text-text-strong-950 hover:bg-bg-sub-300 hover:text-text-sub-600"
-              variant="neutral"
-              size="small"
-            >
-              Threads
-            </Button.Root>
-            <Button.Root
-              className="w-fit rounded-full bg-neutral-200 text-text-strong-950 hover:bg-bg-sub-300 hover:text-text-sub-600"
-              variant="neutral"
-              size="small"
-            >
-              Courses
-            </Button.Root>
-          </div>
-        </header>
-        <DraggableScrollContainer>
-          <section className="no-scrollbar gutter flex w-max items-start space-x-8">
-            <div className="flex w-[85dvw] flex-col gap-4 *:select-none md:w-[60dvw] lg:w-[50dvw] xl:w-[35dvw] 2xl:w-[29dvw]">
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-            </div>
-            <div className="flex w-[85dvw] flex-col gap-4 *:select-none md:w-[60dvw] lg:w-[50dvw] xl:w-[35dvw] 2xl:w-[29dvw]">
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-            </div>
-            <div className="flex w-[85dvw] flex-col gap-4 *:select-none md:w-[60dvw] lg:w-[50dvw] xl:w-[35dvw] 2xl:w-[29dvw]">
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-            </div>
-            <div className="flex w-[85dvw] flex-col gap-4 *:select-none md:w-[60dvw] lg:w-[50dvw] xl:w-[35dvw] 2xl:w-[29dvw]">
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-            </div>
-            <div className="flex w-[85dvw] flex-col gap-4 *:select-none md:w-[60dvw] lg:w-[50dvw] xl:w-[35dvw] 2xl:w-[29dvw]">
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-            </div>
-            <div className="flex w-[85dvw] flex-col gap-4 *:select-none md:w-[60dvw] lg:w-[50dvw] xl:w-[35dvw] 2xl:w-[29dvw]">
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-            </div>
-            <div className="flex w-[85dvw] flex-col gap-4 *:select-none md:w-[60dvw] lg:w-[50dvw] xl:w-[35dvw] 2xl:w-[29dvw]">
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-            </div>
-          </section>
-        </DraggableScrollContainer>
-      </Section>
-      <Section className="bg-bg-weak-50" spacer="p" side="b">
-        <header className="gutter flex flex-col gap-6">
-          <div className="flex items-center gap-4">
-            <Avatar.Root size="32">
-              <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-              <Avatar.Indicator position="top">
-                <CustomVerifiedIconSVG />
-              </Avatar.Indicator>
-            </Avatar.Root>
-            <h3 className="text-pretty text-title-h4 font-light">
-              Published in: Origami & Paper Crafts
-            </h3>
-          </div>
-
-          <div className="mb-6 flex items-center gap-4">
-            <Button.Root
-              className="w-fit rounded-full"
-              variant="neutral"
-              size="small"
-            >
-              All
-              <Badge.Root square color="green">
-                66
-              </Badge.Root>
-            </Button.Root>
-            <Button.Root
-              className="w-fit rounded-full bg-neutral-200 text-text-strong-950 hover:bg-bg-sub-300 hover:text-text-sub-600"
-              variant="neutral"
-              size="small"
-            >
-              Articles
-            </Button.Root>
-            <Button.Root
-              className="w-fit rounded-full bg-neutral-200 text-text-strong-950 hover:bg-bg-sub-300 hover:text-text-sub-600"
-              variant="neutral"
-              size="small"
-            >
-              Events
-            </Button.Root>
-            <Button.Root
-              className="w-fit rounded-full bg-neutral-200 text-text-strong-950 hover:bg-bg-sub-300 hover:text-text-sub-600"
-              variant="neutral"
-              size="small"
-            >
-              Threads
-            </Button.Root>
-            <Button.Root
-              className="w-fit rounded-full bg-neutral-200 text-text-strong-950 hover:bg-bg-sub-300 hover:text-text-sub-600"
-              variant="neutral"
-              size="small"
-            >
-              Courses
-            </Button.Root>
-          </div>
-        </header>
-        <DraggableScrollContainer>
-          <section className="no-scrollbar gutter flex w-max items-start space-x-8">
-            <div className="flex w-[85dvw] flex-col gap-4 *:select-none md:w-[60dvw] lg:w-[50dvw] xl:w-[35dvw] 2xl:w-[29dvw]">
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-            </div>
-            <div className="flex w-[85dvw] flex-col gap-4 *:select-none md:w-[60dvw] lg:w-[50dvw] xl:w-[35dvw] 2xl:w-[29dvw]">
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-            </div>
-            <div className="flex w-[85dvw] flex-col gap-4 *:select-none md:w-[60dvw] lg:w-[50dvw] xl:w-[35dvw] 2xl:w-[29dvw]">
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-            </div>
-            <div className="flex w-[85dvw] flex-col gap-4 *:select-none md:w-[60dvw] lg:w-[50dvw] xl:w-[35dvw] 2xl:w-[29dvw]">
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-            </div>
-            <div className="flex w-[85dvw] flex-col gap-4 *:select-none md:w-[60dvw] lg:w-[50dvw] xl:w-[35dvw] 2xl:w-[29dvw]">
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-            </div>
-            <div className="flex w-[85dvw] flex-col gap-4 *:select-none md:w-[60dvw] lg:w-[50dvw] xl:w-[35dvw] 2xl:w-[29dvw]">
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-            </div>
-            <div className="flex w-[85dvw] flex-col gap-4 *:select-none md:w-[60dvw] lg:w-[50dvw] xl:w-[35dvw] 2xl:w-[29dvw]">
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-              <div className="flex w-full items-center gap-4">
-                <Avatar.Root size="56">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/memoji/wei.png" />
-                </Avatar.Root>
-                <div className="flex grow items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <h4 className="line-clamp-1 text-title-h5 font-light">
-                      Lorem, ipsum dolor.
-                    </h4>
-                    <p className="line-clamp-2 text-pretty text-label-xs font-light text-text-soft-400">
-                      Lorem ipsum dolor sit amet consectetur adipisicing.
-                    </p>
-                  </div>
-                  <Button.Root variant="primary" mode="lighter" size="xxsmall">
-                    Open
-                  </Button.Root>
-                </div>
-              </div>
-            </div>
-          </section>
-        </DraggableScrollContainer>
-      </Section>
-      <Section spacer="p" className="gutter flex flex-col gap-8 bg-bg-weak-50">
-        <header className="flex flex-col">
-          <div className="mb-11 flex items-center gap-4">
-            <Button.Root
-              className="w-fit rounded-full"
-              variant="neutral"
-              size="small"
-            >
-              All
-              <Badge.Root square color="green">
-                66
-              </Badge.Root>
-            </Button.Root>
-            <Button.Root
-              className="w-fit rounded-full bg-neutral-200 text-text-strong-950 hover:bg-bg-sub-300 hover:text-text-sub-600"
-              variant="neutral"
-              size="small"
-            >
-              Articles
-            </Button.Root>
-            <Button.Root
-              className="w-fit rounded-full bg-neutral-200 text-text-strong-950 hover:bg-bg-sub-300 hover:text-text-sub-600"
-              variant="neutral"
-              size="small"
-            >
-              Events
-            </Button.Root>
-            <Button.Root
-              className="w-fit rounded-full bg-neutral-200 text-text-strong-950 hover:bg-bg-sub-300 hover:text-text-sub-600"
-              variant="neutral"
-              size="small"
-            >
-              Threads
-            </Button.Root>
-            <Button.Root
-              className="w-fit rounded-full bg-neutral-200 text-text-strong-950 hover:bg-bg-sub-300 hover:text-text-sub-600"
-              variant="neutral"
-              size="small"
-            >
-              Courses
-            </Button.Root>
-          </div>
-          <h2 className="text-pretty text-title-h3 font-light">
-            Everything.{" "}
-            <span className="text-text-soft-400">
-              That happened in your communities
-            </span>
-          </h2>
-        </header>
-        <div className="columns-1 gap-3 md:columns-2 lg:columns-3 xl:columns-4 2xl:columns-5">
-          {communities?.data?.map((community) => (
-            <div
-              className="mb-3 w-full break-inside-avoid"
-              key={community.id + "today"}
-            >
-              <Image
-                path={`community-${community.id}-image.jpg`}
-                lqip={{
-                  active: true,
-                  quality: 1,
-                  blur: 50,
-                }}
-                className="block rounded-10"
-                alt={`Community ${community.name} image`}
-              />
-            </div>
-          ))}
-        </div>
       </Section>
     </>
   )
