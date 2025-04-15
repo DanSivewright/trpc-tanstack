@@ -21,11 +21,14 @@ export const communitySchema = z.object({
     })
     .nullable()
     .optional(),
-  content: z.record(z.string(), z.any()),
+  content: z.record(z.string(), z.any()).nullable().optional(),
   tags: z.array(z.string()).nullable().optional(),
-  meta: z.object({
-    colors: paletteSchema,
-  }),
+  meta: z
+    .object({
+      colors: paletteSchema,
+    })
+    .nullable()
+    .optional(),
 })
 
 const communityArticleSchema = z.object({
