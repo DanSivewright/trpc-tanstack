@@ -4,10 +4,12 @@ import { useTRPC } from "@/integrations/trpc/react"
 import { communitySchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
 import type { paletteSchema } from "@/integrations/trpc/routers/palette/schemas/palette-schema"
 import {
+  RiArrowLeftSLine,
   RiArrowRightLine,
   RiArrowRightSLine,
   RiAwardLine,
   RiBook2Line,
+  RiBookLine,
   RiBriefcaseLine,
   RiBuildingLine,
   RiCameraLine,
@@ -17,6 +19,7 @@ import {
   RiGlobalLine,
   RiGlobeLine,
   RiHammerLine,
+  RiHashtag,
   RiHeartLine,
   RiHomeSmile2Line,
   RiInfinityLine,
@@ -24,10 +27,12 @@ import {
   RiKanbanView,
   RiLoaderLine,
   RiMusic2Line,
+  RiNewsLine,
   RiPaletteLine,
   RiPencilLine,
   RiTranslate,
   RiUploadCloud2Line,
+  RiUserCommunityLine,
   RiUserLine,
   RiUserStarLine,
   RiVideoLine,
@@ -79,105 +84,129 @@ function RouteComponent() {
   const createCommunity = useMutation(trpc.communities.create.mutationOptions())
   const qc = useQueryClient()
   const navigate = Route.useNavigate()
-
   const form = useForm({
     defaultValues: {
-      name: "",
-      headline: import.meta.env.DEV
-        ? "This is the community headline of the stuff that I want you to read at a glance when you first come across my community"
-        : "",
-      tags: [],
-    } as z.infer<typeof schema>,
-    validators: {
-      onChange: schema,
+      type: "",
     },
-    // onSubmitInvalid: (errors) => {
-    //   console.log("errors:::", errors)
-    //   notification({
-    //     title: "Invalid Form",
-    //     description: "Please fill out all fields correctly.",
-    //     variant: "filled",
-    //     status: "error",
-    //   })
-    // },
-    onSubmit: async (data) => {
-      const id = crypto.randomUUID()
-      const [feature, logo] = await Promise.all(
-        files.map(async (file) => {
-          const storageRef = ref(storage, `communities/${id}/${file.name}`)
-          const uploadTask = await uploadBytes(storageRef, file)
-          const url = await getDownloadURL(uploadTask.ref)
-          return url
-        })
-      )
-      const palette = (await qc.ensureQueryData(
-        trpc.palette.get.queryOptions({
-          url: feature,
-        })
-      )) as z.infer<typeof paletteSchema>
-      await createCommunity.mutateAsync(
-        {
-          id,
-          name: data.value.name,
-          headline: data.value.headline,
-          tags: data.value.tags,
-          featureImageUrl: feature,
-          featureImagePath: `communities/${id}/${files[0].name}`,
-          logoUrl: logo,
-          logoPath: `communities/${id}/${files[1].name}`,
-          meta: {
-            colors: palette,
-          },
-        },
-        {
-          onSettled: () => {
-            qc.invalidateQueries({
-              queryKey: trpc.communities.all.queryKey(),
-            })
-            qc.invalidateQueries({
-              queryKey: trpc.communities.joined.queryKey(),
-            })
-          },
-          onSuccess: () => {
-            navigate({
-              to: "/communities/$id/about",
-              params: {
-                id,
-              },
-            })
-          },
-        }
-      )
+    validators: {
+      onSubmit: z.object({
+        type: z.enum(["community", "thread", "article", "course"], {
+          message: "Please choose what you want to create",
+        }),
+      }),
+    },
+    onSubmitInvalid: (errors) => {
+      console.log("errors:::", errors)
+      notification({
+        title: "Invalid Form",
+        description: "Please fill out all fields correctly.",
+        variant: "filled",
+        status: "error",
+      })
+    },
+    onSubmit: (data) => {
+      console.log("data:::", data)
     },
   })
 
-  const filters: {
-    title: string
-    icon: RemixiconComponentType
-  }[] = [
-    { title: "Professional", icon: RiBriefcaseLine },
-    { title: "Creative Arts", icon: RiPaletteLine },
-    { title: "Technology", icon: RiComputerLine },
-    { title: "Business", icon: RiBuildingLine },
-    { title: "Language Learning", icon: RiTranslate },
-    { title: "Health & Wellness", icon: RiHeartLine },
-    { title: "Science", icon: RiInfinityLine },
-    { title: "Music", icon: RiMusic2Line },
-    { title: "Photography", icon: RiCameraLine },
-    { title: "Writing", icon: RiPencilLine },
-    { title: "Digital Marketing", icon: RiComputerLine },
-    { title: "Personal Development", icon: RiUserLine },
-    { title: "Certification Available", icon: RiAwardLine },
-    { title: "Project Based", icon: RiKanbanView },
-    { title: "Mentorship", icon: RiUserLine },
-    { title: "Live Sessions", icon: RiVideoLine },
-    { title: "Self-Paced", icon: RiClockwiseLine },
-    { title: "Discussion Active", icon: RiChat1Line },
-    { title: "Resource Rich", icon: RiBook2Line },
-    { title: "Collaboration", icon: RiUserStarLine },
-    { title: "Workshop Style", icon: RiHammerLine },
-    { title: "International", icon: RiGlobeLine },
-  ]
+  // const form = useForm({
+  //   defaultValues: {
+  //     name: "",
+  //     headline: import.meta.env.DEV
+  //       ? "This is the community headline of the stuff that I want you to read at a glance when you first come across my community"
+  //       : "",
+  //     tags: [],
+  //   } as z.infer<typeof schema>,
+  //   validators: {
+  //     onChange: schema,
+  //   },
+  //   // onSubmitInvalid: (errors) => {
+  //   //   console.log("errors:::", errors)
+  //   //   notification({
+  //   //     title: "Invalid Form",
+  //   //     description: "Please fill out all fields correctly.",
+  //   //     variant: "filled",
+  //   //     status: "error",
+  //   //   })
+  //   // },
+  //   onSubmit: async (data) => {
+  //     const id = crypto.randomUUID()
+  //     const [feature, logo] = await Promise.all(
+  //       files.map(async (file) => {
+  //         const storageRef = ref(storage, `communities/${id}/${file.name}`)
+  //         const uploadTask = await uploadBytes(storageRef, file)
+  //         const url = await getDownloadURL(uploadTask.ref)
+  //         return url
+  //       })
+  //     )
+  //     const palette = (await qc.ensureQueryData(
+  //       trpc.palette.get.queryOptions({
+  //         url: feature,
+  //       })
+  //     )) as z.infer<typeof paletteSchema>
+  //     await createCommunity.mutateAsync(
+  //       {
+  //         id,
+  //         name: data.value.name,
+  //         headline: data.value.headline,
+  //         tags: data.value.tags,
+  //         featureImageUrl: feature,
+  //         featureImagePath: `communities/${id}/${files[0].name}`,
+  //         logoUrl: logo,
+  //         logoPath: `communities/${id}/${files[1].name}`,
+  //         meta: {
+  //           colors: palette,
+  //         },
+  //       },
+  //       {
+  //         onSettled: () => {
+  //           qc.invalidateQueries({
+  //             queryKey: trpc.communities.all.queryKey(),
+  //           })
+  //           qc.invalidateQueries({
+  //             queryKey: trpc.communities.joined.queryKey(),
+  //           })
+  //         },
+  //         onSuccess: () => {
+  //           navigate({
+  //             to: "/communities/$id/about",
+  //             params: {
+  //               id,
+  //             },
+  //           })
+  //         },
+  //       }
+  //     )
+  //   },
+  // })
+
+  // const filters: {
+  //   title: string
+  //   icon: RemixiconComponentType
+  // }[] = [
+  //   { title: "Professional", icon: RiBriefcaseLine },
+  //   { title: "Creative Arts", icon: RiPaletteLine },
+  //   { title: "Technology", icon: RiComputerLine },
+  //   { title: "Business", icon: RiBuildingLine },
+  //   { title: "Language Learning", icon: RiTranslate },
+  //   { title: "Health & Wellness", icon: RiHeartLine },
+  //   { title: "Science", icon: RiInfinityLine },
+  //   { title: "Music", icon: RiMusic2Line },
+  //   { title: "Photography", icon: RiCameraLine },
+  //   { title: "Writing", icon: RiPencilLine },
+  //   { title: "Digital Marketing", icon: RiComputerLine },
+  //   { title: "Personal Development", icon: RiUserLine },
+  //   { title: "Certification Available", icon: RiAwardLine },
+  //   { title: "Project Based", icon: RiKanbanView },
+  //   { title: "Mentorship", icon: RiUserLine },
+  //   { title: "Live Sessions", icon: RiVideoLine },
+  //   { title: "Self-Paced", icon: RiClockwiseLine },
+  //   { title: "Discussion Active", icon: RiChat1Line },
+  //   { title: "Resource Rich", icon: RiBook2Line },
+  //   { title: "Collaboration", icon: RiUserStarLine },
+  //   { title: "Workshop Style", icon: RiHammerLine },
+  //   { title: "International", icon: RiGlobeLine },
+  // ]
 
   const me = useQuery(trpc.people.me.queryOptions())
 
@@ -198,37 +227,178 @@ function RouteComponent() {
           </Breadcrumb.Root>
         </div>
       </NavigationLearnerSubHeader>
-      <div className="h-[calc(100dvh-92px)] w-screen justify-center overflow-x-hidden overflow-y-scroll pt-[30dvh]">
-        <div className="mx-auto flex w-full max-w-screen-xl flex-col gap-5">
-          <h1 className="text-title-h6 font-normal">
-            Hi {me.data?.firstName}! What are you creating today?
-          </h1>
-          <Radio.Group className={cn(gridVariants({ gap: "xs" }), "")}>
-            <Label.Root className="col-span-3 flex aspect-square flex-col justify-between rounded-20 border border-bg-soft-200 bg-bg-white-0 p-6 shadow-regular-md">
-              <Radio.Item value="community" />
-              {/* <Avatar.Root placeholderType="company"></Avatar.Root> */}
-              <div className="flex flex-col gap-1">
-                <p className="text-paragraph-lg font-light">Community</p>
-                <p className="text-paragraph-xs text-text-soft-400">
-                  Create a community to share your ideas, projects, and
-                  collaborate with others.
-                </p>
-              </div>
-            </Label.Root>
-            <Label.Root className="col-span-3 flex aspect-square flex-col justify-between rounded-20 border border-bg-soft-200 bg-bg-white-0 p-6 shadow-regular-md data-[state=checked]:bg-red-400">
-              <Radio.Item value="thread" className="" />
-              {/* <Avatar.Root placeholderType="company"></Avatar.Root> */}
-              <div className="flex flex-col gap-1">
-                <p className="text-paragraph-lg font-light">Thread</p>
-                <p className="text-paragraph-xs text-text-soft-400">
-                  Create a community to share your ideas, projects, and
-                  collaborate with others.
-                </p>
-              </div>
-            </Label.Root>
-          </Radio.Group>
-        </div>
-        {/* <Section className="mx-auto flex w-full max-w-screen-md flex-col">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          form.handleSubmit()
+        }}
+      >
+        <div className="h-[calc(100dvh-92px)] w-screen justify-center overflow-x-hidden overflow-y-scroll pt-12 lg:pt-[25dvh]">
+          <div className="gutter mx-auto flex w-full max-w-screen-xl flex-col gap-5 2xl:px-0">
+            <h1 className="text-title-h6 font-normal">
+              Hi {me.data?.firstName}! What are you creating today?
+            </h1>
+            <form.Field
+              name="type"
+              children={(field) => (
+                <>
+                  <Radio.Group
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onValueChange={(value) => field.handleChange(value)}
+                    className={cn(gridVariants({ gap: "xs" }), "")}
+                  >
+                    <div className="group/radio col-span-12 aspect-video md:col-span-6 xl:col-span-3 xl:aspect-square">
+                      <Radio.Item
+                        checked={field.state.value === "community"}
+                        className="hidden"
+                        value="community"
+                        id="community"
+                      />
+                      <Label.Root
+                        htmlFor="community"
+                        className={cn([
+                          "flex h-full w-full flex-col items-start justify-between rounded-20 border border-bg-soft-200 bg-bg-white-0 p-6 shadow-regular-md",
+                          "group-has-[[data-state=checked]]/radio:border-primary-base",
+                          "group-has-[[data-state=checked]]/radio:shadow-primary-alpha-24",
+                        ])}
+                      >
+                        <Avatar.Root className="hidden sm:flex sm:group-has-[[data-state=checked]]/radio:hidden">
+                          <RiUserCommunityLine className="size-12 opacity-50" />
+                        </Avatar.Root>
+                        <Avatar.Root
+                          className="hidden sm:hidden sm:group-has-[[data-state=checked]]/radio:flex"
+                          color="blue"
+                        >
+                          <RiUserCommunityLine className="size-12 opacity-50" />
+                        </Avatar.Root>
+                        <div className="flex flex-col gap-1">
+                          <p className="text-paragraph-lg font-light group-has-[[data-state=checked]]/radio:text-primary-base">
+                            Community
+                          </p>
+                          <p className="text-paragraph-xs text-text-soft-400 group-has-[[data-state=checked]]/radio:border-primary-alpha-24">
+                            Create a community to share your ideas, projects,
+                            and collaborate with others.
+                          </p>
+                        </div>
+                      </Label.Root>
+                    </div>
+                    <div className="group/radio col-span-12 aspect-video md:col-span-6 xl:col-span-3 xl:aspect-square">
+                      <Radio.Item
+                        className="hidden"
+                        value="thread"
+                        id="thread"
+                      />
+                      <Label.Root
+                        htmlFor="thread"
+                        className={cn([
+                          "flex h-full w-full flex-col items-start justify-between rounded-20 border border-bg-soft-200 bg-bg-white-0 p-6 shadow-regular-md",
+                          "group-has-[[data-state=checked]]/radio:border-primary-base",
+                          "group-has-[[data-state=checked]]/radio:shadow-primary-alpha-24",
+                        ])}
+                      >
+                        <Avatar.Root className="hidden sm:flex sm:group-has-[[data-state=checked]]/radio:hidden">
+                          <RiHashtag className="size-12 opacity-50" />
+                        </Avatar.Root>
+                        <Avatar.Root
+                          className="hidden sm:hidden sm:group-has-[[data-state=checked]]/radio:flex"
+                          color="blue"
+                        >
+                          <RiHashtag className="size-12 opacity-50" />
+                        </Avatar.Root>
+                        <div className="flex flex-col gap-1">
+                          <p className="text-paragraph-lg font-light group-has-[[data-state=checked]]/radio:text-primary-base">
+                            Thread
+                          </p>
+                          <p className="text-paragraph-xs text-text-soft-400 group-has-[[data-state=checked]]/radio:border-primary-alpha-24">
+                            Create a thread to share your ideas, projects, and
+                            collaborate with others.
+                          </p>
+                        </div>
+                      </Label.Root>
+                    </div>
+                    <div className="group/radio col-span-12 aspect-video md:col-span-6 xl:col-span-3 xl:aspect-square">
+                      <Radio.Item
+                        className="hidden"
+                        value="article"
+                        id="article"
+                      />
+                      <Label.Root
+                        htmlFor="article"
+                        className={cn([
+                          "flex h-full w-full flex-col items-start justify-between rounded-20 border border-bg-soft-200 bg-bg-white-0 p-6 shadow-regular-md",
+                          "group-has-[[data-state=checked]]/radio:border-primary-base",
+                          "group-has-[[data-state=checked]]/radio:shadow-primary-alpha-24",
+                        ])}
+                      >
+                        <Avatar.Root className="hidden sm:flex sm:group-has-[[data-state=checked]]/radio:hidden">
+                          <RiNewsLine className="size-12 opacity-50" />
+                        </Avatar.Root>
+                        <Avatar.Root
+                          className="hidden sm:hidden sm:group-has-[[data-state=checked]]/radio:flex"
+                          color="blue"
+                        >
+                          <RiNewsLine className="size-12 opacity-50" />
+                        </Avatar.Root>
+                        <div className="flex flex-col gap-1">
+                          <p className="text-paragraph-lg font-light group-has-[[data-state=checked]]/radio:text-primary-base">
+                            Article
+                          </p>
+                          <p className="text-paragraph-xs text-text-soft-400 group-has-[[data-state=checked]]/radio:border-primary-alpha-24">
+                            Create an article to share your ideas, projects, and
+                            collaborate with others.
+                          </p>
+                        </div>
+                      </Label.Root>
+                    </div>
+                    <div className="group/radio col-span-12 aspect-video md:col-span-6 xl:col-span-3 xl:aspect-square">
+                      <Radio.Item
+                        className="hidden"
+                        value="course"
+                        id="course"
+                      />
+                      <Label.Root
+                        htmlFor="course"
+                        className={cn([
+                          "flex h-full w-full flex-col items-start justify-between rounded-20 border border-bg-soft-200 bg-bg-white-0 p-6 shadow-regular-md",
+                          "group-has-[[data-state=checked]]/radio:border-primary-base",
+                          "group-has-[[data-state=checked]]/radio:shadow-primary-alpha-24",
+                        ])}
+                      >
+                        <Avatar.Root className="hidden sm:flex sm:group-has-[[data-state=checked]]/radio:hidden">
+                          <RiBookLine className="size-12 opacity-50" />
+                        </Avatar.Root>
+                        <Avatar.Root
+                          className="hidden sm:hidden sm:group-has-[[data-state=checked]]/radio:flex"
+                          color="blue"
+                        >
+                          <RiBookLine className="size-12 opacity-50" />
+                        </Avatar.Root>
+                        <div className="flex flex-col gap-1">
+                          <p className="text-paragraph-lg font-light group-has-[[data-state=checked]]/radio:text-primary-base">
+                            Course
+                          </p>
+                          <p className="text-paragraph-xs text-text-soft-400 group-has-[[data-state=checked]]/radio:border-primary-alpha-24">
+                            Create a course to share your ideas, projects, and
+                            collaborate with others.
+                          </p>
+                        </div>
+                      </Label.Root>
+                    </div>
+                  </Radio.Group>
+                  <FieldInfo
+                    field={field}
+                    fallback="Select the type of content you want to create."
+                    fallbackIcon={RiInformationFill}
+                  />
+                </>
+              )}
+            />
+          </div>
+
+          {/* <Section className="mx-auto flex w-full max-w-screen-md flex-col">
         <h1 className="text-title-h1 font-normal">Create Community</h1>
         <Image
           path="/communities/9deedec6-0d0e-43fa-838f-6e9548274b20"
@@ -377,7 +547,31 @@ function RouteComponent() {
           />
         </form>
       </Section> */}
-      </div>
+        </div>
+        <footer className="dark:bg-gray-950/80 gutter fixed inset-x-0 bottom-0 border-t border-bg-soft-200 bg-white/80 backdrop-blur-sm 2xl:px-0">
+          <div className="mx-auto flex w-full max-w-screen-xl items-center justify-between py-3">
+            <span></span>
+            <div className="flex items-center gap-4">
+              <form.Subscribe
+                selector={(state) => [state.canSubmit, state.isSubmitting]}
+                children={([canSubmit, isSubmitting]) => (
+                  <FancyButton.Root
+                    variant="primary"
+                    type="submit"
+                    disabled={!canSubmit}
+                  >
+                    Next
+                    <FancyButton.Icon
+                      className={cn(isSubmitting && "animate-spin")}
+                      as={isSubmitting ? RiLoaderLine : RiArrowRightSLine}
+                    />
+                  </FancyButton.Root>
+                )}
+              />
+            </div>
+          </div>
+        </footer>
+      </form>
     </>
   )
 }
