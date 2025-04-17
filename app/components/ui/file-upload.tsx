@@ -5,15 +5,10 @@ import { cn } from "@/utils/cn"
 import { formatBytes } from "@/utils/format-bytes"
 import { type PolymorphicComponentProps } from "@/utils/polymorphic"
 import { Slot } from "@radix-ui/react-slot"
-import {
-  RiCheckboxCircleFill,
-  RiDeleteBinLine,
-  RiExpandDiagonalLine,
-} from "@remixicon/react"
+import { RiDeleteBinLine, RiExpandDiagonalLine } from "@remixicon/react"
 import { useDropzone, type Accept, type FileWithPath } from "react-dropzone"
 
 import { useNotification } from "@/hooks/use-notification"
-import * as Button from "@/components/ui/button"
 import * as CompactButton from "@/components/ui/compact-button"
 import * as Modal from "@/components/ui/modal"
 import * as Tooltip from "@/components/ui/tooltip"
@@ -273,7 +268,7 @@ function FileUploadIcon<T extends React.ElementType>({
 }
 
 export {
-  FileUpload as Root,
   FileUploadButton as Button,
   FileUploadIcon as Icon,
+  FileUpload as Root,
 }
