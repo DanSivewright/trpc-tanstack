@@ -254,8 +254,8 @@ function RouteComponent() {
                       {row.getVisibleCells().map((cell, cellIndex) => (
                         <Table.Cell
                           className={cn("flex grow", {
-                            "max-w-1/2 bg-blue-50": cellIndex === 0,
-                            "grow bg-pink-50": cellIndex !== 0,
+                            "max-w-1/2": cellIndex === 0,
+                            grow: cellIndex !== 0,
                           })}
                           key={cell.id}
                         >
@@ -337,13 +337,13 @@ const PeopleColumns: ColumnDef<
       )
     },
   },
-  {
-    id: "email",
-    accessorKey: "email",
-    header: "Email",
-    cell: ({ getValue }) => {
-      const value = getValue() as string
-      return <span className="text-paragraph-sm font-normal">{value}</span>
-    },
-  },
+  //   {
+  //     id: "email",
+  //     accessorKey: "email",
+  //     header: "Email",
+  //     cell: ({ getValue }) => {
+  //       const value = getValue() as string
+  //       return <span className="text-paragraph-sm font-normal">{value}</span>
+  //     },
+  //   },
 ]
