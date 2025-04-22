@@ -18,6 +18,7 @@ export const communitySchema = z.object({
   featureImageUrl: z.string().optional().nullable(),
   featureImagePath: z.string().optional().nullable(),
   createdAt: z.string(),
+  updatedAt: z.string(),
   membersCount: z.number(),
   threadsCount: z.number(),
   coursesCount: z.number(),

@@ -1,11 +1,11 @@
 import { cache } from "react"
+import type { TRPCContext } from "@/integrations/trpc/init"
 import { tryCatch } from "@/utils/try-catch"
 import { TRPCError } from "@trpc/server"
 import qs from "qs"
 import { z } from "zod"
 
 import { queryConfig } from "./query-config"
-import type { TRPCContext } from "./trpc/init"
 
 export const fetcher = cache(
   async <K extends keyof typeof queryConfig>({

@@ -1,11 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute(
-  '/_learner/(communities)/communities_/create/thread',
+  '/_learner/(communities)/communities_/create/articles/$id',
 )({
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  return <div>Hello "/_learner/(communities)/communities_/create/thread"!</div>
+  return (
+    <div>Hello "/_learner/(communities)/communities_/create/articles"!</div>
+  )
 }

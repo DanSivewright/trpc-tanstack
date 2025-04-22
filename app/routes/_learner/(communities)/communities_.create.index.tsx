@@ -1,69 +1,32 @@
 import { useState } from "react"
-import { storage } from "@/integrations/firebase/client"
 import { useTRPC } from "@/integrations/trpc/react"
 import { communitySchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
-import type { paletteSchema } from "@/integrations/trpc/routers/palette/schemas/palette-schema"
 import {
-  RiArrowLeftSLine,
-  RiArrowRightLine,
   RiArrowRightSLine,
-  RiAwardLine,
-  RiBook2Line,
   RiBookLine,
-  RiBriefcaseLine,
-  RiBuildingLine,
-  RiCameraLine,
-  RiChat1Line,
-  RiClockwiseLine,
-  RiComputerLine,
-  RiGlobalLine,
-  RiGlobeLine,
-  RiHammerLine,
   RiHashtag,
-  RiHeartLine,
-  RiHomeSmile2Line,
-  RiInfinityLine,
   RiInformationFill,
-  RiKanbanView,
   RiLoaderLine,
-  RiMusic2Line,
   RiNewsLine,
-  RiPaletteLine,
-  RiPencilLine,
-  RiTranslate,
-  RiUploadCloud2Line,
   RiUserCommunityLine,
-  RiUserLine,
-  RiUserStarLine,
-  RiVideoLine,
   type RemixiconComponentType,
 } from "@remixicon/react"
 import { useForm, type AnyFieldApi } from "@tanstack/react-form"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute, Link } from "@tanstack/react-router"
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
+import { createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
 import { cn } from "@/lib/utils"
 import { useNotification } from "@/hooks/use-notification"
 import * as Avatar from "@/components/ui/avatar"
-import * as Breadcrumb from "@/components/ui/breadcrumb"
-import * as Button from "@/components/ui/button"
-import * as Checkbox from "@/components/ui/checkbox"
 import * as FancyButton from "@/components/ui/fancy-button"
-import * as FileUpload from "@/components/ui/file-upload"
 import * as Hint from "@/components/ui/hint"
-import * as Input from "@/components/ui/input"
 import * as Label from "@/components/ui/label"
 import * as Radio from "@/components/ui/radio"
-import * as Textarea from "@/components/ui/textarea"
-import { Grid, gridVariants } from "@/components/grid"
-import Image from "@/components/image"
-import NavigationLearnerSubHeader from "@/components/navigation/navigation-learner/navigation-learner-sub-header"
-import { Section } from "@/components/section"
+import { gridVariants } from "@/components/grid"
 
 export const Route = createFileRoute(
-  "/_learner/(communities)/communities_/create"
+  "/_learner/(communities)/communities_/create/"
 )({
   component: RouteComponent,
 })
@@ -71,18 +34,9 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const { notification } = useNotification()
 
-  const [files, setFiles] = useState<File[]>([])
-
-  const schema = communitySchema.pick({
-    name: true,
-    headline: true,
-    tags: true,
-  })
-
   const trpc = useTRPC()
+  const me = useQuery(trpc.people.me.queryOptions())
 
-  const createCommunity = useMutation(trpc.communities.create.mutationOptions())
-  const qc = useQueryClient()
   const navigate = Route.useNavigate()
   const form = useForm({
     defaultValues: {
@@ -105,128 +59,18 @@ function RouteComponent() {
       })
     },
     onSubmit: (data) => {
-      console.log("data:::", data)
+      const id = crypto.randomUUID()
+      navigate({
+        to: `/communities/create/${data.value.type}/$id`,
+        params: {
+          id,
+        },
+      })
     },
   })
 
-  // const form = useForm({
-  //   defaultValues: {
-  //     name: "",
-  //     headline: import.meta.env.DEV
-  //       ? "This is the community headline of the stuff that I want you to read at a glance when you first come across my community"
-  //       : "",
-  //     tags: [],
-  //   } as z.infer<typeof schema>,
-  //   validators: {
-  //     onChange: schema,
-  //   },
-  //   // onSubmitInvalid: (errors) => {
-  //   //   console.log("errors:::", errors)
-  //   //   notification({
-  //   //     title: "Invalid Form",
-  //   //     description: "Please fill out all fields correctly.",
-  //   //     variant: "filled",
-  //   //     status: "error",
-  //   //   })
-  //   // },
-  //   onSubmit: async (data) => {
-  //     const id = crypto.randomUUID()
-  //     const [feature, logo] = await Promise.all(
-  //       files.map(async (file) => {
-  //         const storageRef = ref(storage, `communities/${id}/${file.name}`)
-  //         const uploadTask = await uploadBytes(storageRef, file)
-  //         const url = await getDownloadURL(uploadTask.ref)
-  //         return url
-  //       })
-  //     )
-  //     const palette = (await qc.ensureQueryData(
-  //       trpc.palette.get.queryOptions({
-  //         url: feature,
-  //       })
-  //     )) as z.infer<typeof paletteSchema>
-  //     await createCommunity.mutateAsync(
-  //       {
-  //         id,
-  //         name: data.value.name,
-  //         headline: data.value.headline,
-  //         tags: data.value.tags,
-  //         featureImageUrl: feature,
-  //         featureImagePath: `communities/${id}/${files[0].name}`,
-  //         logoUrl: logo,
-  //         logoPath: `communities/${id}/${files[1].name}`,
-  //         meta: {
-  //           colors: palette,
-  //         },
-  //       },
-  //       {
-  //         onSettled: () => {
-  //           qc.invalidateQueries({
-  //             queryKey: trpc.communities.all.queryKey(),
-  //           })
-  //           qc.invalidateQueries({
-  //             queryKey: trpc.communities.joined.queryKey(),
-  //           })
-  //         },
-  //         onSuccess: () => {
-  //           navigate({
-  //             to: "/communities/$id/about",
-  //             params: {
-  //               id,
-  //             },
-  //           })
-  //         },
-  //       }
-  //     )
-  //   },
-  // })
-
-  // const filters: {
-  //   title: string
-  //   icon: RemixiconComponentType
-  // }[] = [
-  //   { title: "Professional", icon: RiBriefcaseLine },
-  //   { title: "Creative Arts", icon: RiPaletteLine },
-  //   { title: "Technology", icon: RiComputerLine },
-  //   { title: "Business", icon: RiBuildingLine },
-  //   { title: "Language Learning", icon: RiTranslate },
-  //   { title: "Health & Wellness", icon: RiHeartLine },
-  //   { title: "Science", icon: RiInfinityLine },
-  //   { title: "Music", icon: RiMusic2Line },
-  //   { title: "Photography", icon: RiCameraLine },
-  //   { title: "Writing", icon: RiPencilLine },
-  //   { title: "Digital Marketing", icon: RiComputerLine },
-  //   { title: "Personal Development", icon: RiUserLine },
-  //   { title: "Certification Available", icon: RiAwardLine },
-  //   { title: "Project Based", icon: RiKanbanView },
-  //   { title: "Mentorship", icon: RiUserLine },
-  //   { title: "Live Sessions", icon: RiVideoLine },
-  //   { title: "Self-Paced", icon: RiClockwiseLine },
-  //   { title: "Discussion Active", icon: RiChat1Line },
-  //   { title: "Resource Rich", icon: RiBook2Line },
-  //   { title: "Collaboration", icon: RiUserStarLine },
-  //   { title: "Workshop Style", icon: RiHammerLine },
-  //   { title: "International", icon: RiGlobeLine },
-  // ]
-
-  const me = useQuery(trpc.people.me.queryOptions())
-
   return (
     <>
-      <NavigationLearnerSubHeader
-        hideBreadcrumbs
-        mode="light"
-        className="border-b border-bg-soft-200"
-      >
-        <div className="flex h-12 w-full items-center justify-between">
-          <Breadcrumb.Root>
-            <Breadcrumb.Item>
-              <Breadcrumb.Icon as={RiHomeSmile2Line} />
-            </Breadcrumb.Item>
-            <Breadcrumb.ArrowIcon as={RiArrowRightSLine} />
-            <Breadcrumb.Item active>Create</Breadcrumb.Item>
-          </Breadcrumb.Root>
-        </div>
-      </NavigationLearnerSubHeader>
       <form
         onSubmit={(e) => {
           e.preventDefault()
@@ -234,7 +78,7 @@ function RouteComponent() {
           form.handleSubmit()
         }}
       >
-        <div className="h-[calc(100dvh-92px)] w-screen justify-center overflow-x-hidden overflow-y-scroll pt-12 lg:pt-[25dvh]">
+        <div className="h-[calc(100dvh-92px)] w-screen justify-center overflow-x-hidden overflow-y-scroll pt-12 lg:pt-[calc(20dvh+49px)]">
           <div className="gutter mx-auto flex w-full max-w-screen-xl flex-col gap-5 2xl:px-0">
             <h1 className="text-title-h6 font-normal">
               Hi {me.data?.firstName}! What are you creating today?

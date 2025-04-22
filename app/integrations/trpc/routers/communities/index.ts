@@ -1,11 +1,9 @@
 import { db } from "@/integrations/firebase/server"
-import { Vibrant } from "node-vibrant/node"
 import { z } from "zod"
 
 import { cachedFunction, generateCacheKey } from "@/lib/cache"
 
 import { protectedProcedure } from "../../init"
-import type { paletteSchema } from "../palette/schemas/palette-schema"
 import {
   communitySchema,
   type communitiesAllSchema,
@@ -91,6 +89,9 @@ export const communitiesRouter = {
       const cachedFetcher = cachedFunction(
         async () => {
           const doc = await db.collection("communities").doc(input.id).get()
+          if (!doc.exists) {
+            return null
+          }
           return {
             id: doc.id,
             ...doc.data(),
@@ -142,5 +143,21 @@ export const communitiesRouter = {
           communityId: input.id,
           joinedAt: new Date().toISOString(),
         })
+    }),
+  update: protectedProcedure
+    .input(
+      communitySchema.pick({ id: true }).merge(
+        communitySchema
+          .omit({
+            id: true,
+            createdAt: true,
+          })
+          .partial()
+      )
+    )
+    .mutation(async ({ input }) => {
+      const { id, ...rest } = input
+      const payload = { ...rest, updatedAt: new Date().toISOString() }
+      await db.collection("communities").doc(id).update(payload)
     }),
 }
