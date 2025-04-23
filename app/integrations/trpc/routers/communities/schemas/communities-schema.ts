@@ -26,10 +26,24 @@ export const communitySchema = z.object({
   membership: z
     .object({
       role: z.enum(["admin", "member"]),
-      joinedAt: z.custom<Timestamp>().nullable().optional(),
+      joinedAt: z.string().nullable().optional(),
+      communityId: z.string(),
+      uid: z.string(),
+      firstName: z.string(),
+      lastName: z.string().optional().nullable(),
+      email: z.string().optional().nullable(),
+      avatarUrl: z.string().optional().nullable(),
     })
     .nullable()
     .optional(),
+  authorUid: z.string(),
+  author: z.object({
+    uid: z.string(),
+    firstName: z.string(),
+    lastName: z.string().optional().nullable(),
+    email: z.string().optional().nullable(),
+    avatarUrl: z.string().optional().nullable(),
+  }),
   content: z.record(z.string(), z.any()).nullable().optional(),
   tags: z.array(z.string()).min(1, { message: "At least one tag is required" }),
   status: z.enum(["private", "public"]),

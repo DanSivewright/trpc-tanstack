@@ -31,6 +31,7 @@ import {
 import { useForm } from "@tanstack/react-form"
 import {
   useMutation,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
@@ -107,6 +108,7 @@ function RouteComponent() {
       id,
     })
   )
+  const me = useQuery(trpc.people.me.queryOptions())
 
   const createCommunity = useMutation(trpc.communities.create.mutationOptions())
   const updateCommunity = useMutation(trpc.communities.update.mutationOptions())
@@ -131,7 +133,6 @@ function RouteComponent() {
       const nextStep = communitySteps?.[Number(currentStep?.indicator)]
 
       if (community?.data) {
-        console.log("update:::")
         await updateCommunity.mutateAsync(
           {
             id,
@@ -158,6 +159,14 @@ function RouteComponent() {
         await createCommunity.mutateAsync(
           {
             id,
+            authorUid: me.data?.uid!,
+            author: {
+              uid: me.data?.uid!,
+              firstName: me.data?.firstName!,
+              lastName: me.data?.lastName,
+              email: me.data?.companyPerson?.email,
+              avatarUrl: me.data?.imageUrl,
+            },
             name: data?.value?.name,
             headline: data?.value?.headline,
             tags: data?.value?.tags,

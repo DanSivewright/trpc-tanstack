@@ -64,7 +64,6 @@ function RouteComponent() {
     return "default"
   }
 
-  console.log("step:::", activeStep)
   return (
     <>
       <NavigationLearnerSubHeader

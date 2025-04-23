@@ -116,6 +116,8 @@ export const communitiesRouter = {
         featureImageUrl: true,
         logoPath: true,
         featureImagePath: true,
+        authorUid: true,
+        author: true,
         meta: true,
       })
     )
@@ -137,8 +139,10 @@ export const communitiesRouter = {
         .collection("communities")
         .doc(input.id)
         .collection("members")
-        .add({
-          uid: ctx.uid,
+        .doc(input.authorUid)
+        .set({
+          ...input.author,
+          uid: input.authorUid,
           role: "admin",
           communityId: input.id,
           joinedAt: new Date().toISOString(),
@@ -146,18 +150,39 @@ export const communitiesRouter = {
     }),
   update: protectedProcedure
     .input(
-      communitySchema.pick({ id: true }).merge(
-        communitySchema
-          .omit({
-            id: true,
-            createdAt: true,
-          })
-          .partial()
-      )
+      communitySchema
+        .pick({ id: true })
+        .merge(
+          communitySchema
+            .omit({
+              id: true,
+              createdAt: true,
+            })
+            .partial()
+        )
+        .extend({
+          members: z
+            .array(communitySchema.shape.membership)
+            .optional()
+            .nullable(),
+        })
     )
     .mutation(async ({ input }) => {
-      const { id, ...rest } = input
+      const { id, members, ...rest } = input
       const payload = { ...rest, updatedAt: new Date().toISOString() }
       await db.collection("communities").doc(id).update(payload)
+      if (members) {
+        const membersRef = db
+          .collection("communities")
+          .doc(id)
+          .collection("members")
+        const batch = db.batch()
+
+        for (const member of members) {
+          batch.set(membersRef.doc(member?.uid || ""), member, { merge: true })
+        }
+
+        await batch.commit()
+      }
     }),
 }
