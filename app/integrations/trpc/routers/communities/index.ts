@@ -209,6 +209,12 @@ export const communitiesRouter = {
           },
         ],
       })
+      await storage.remove(
+        generateCacheKey({
+          path: "communities.joined",
+          type: "query",
+        })
+      )
     }),
   update: protectedProcedure
     .input(
@@ -268,6 +274,7 @@ export const communitiesRouter = {
         path: "communities.detail",
         input: { id },
       })
+
       if (cache) {
         let newMembers: any = []
         if (members && members.length > 0) {
@@ -309,6 +316,14 @@ export const communitiesRouter = {
             input: { id },
           })}:.json`,
           update
+        )
+      }
+      if (payload.status === "public") {
+        await storage.remove(
+          generateCacheKey({
+            path: "communities.all",
+            type: "query",
+          })
         )
       }
     }),

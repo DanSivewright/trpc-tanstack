@@ -21,6 +21,7 @@ import {
 } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
+import { Vibrant } from "node-vibrant/browser"
 import { useDropzone, type FileWithPath } from "react-dropzone"
 import { z } from "zod"
 
@@ -129,13 +130,53 @@ function RouteComponent() {
       })
 
       const featureImage = images.find((x) => x.featured)
-      if (featureImage) {
-        console.log("f:::", featureImage)
-        // palette = (await qc.ensureQueryData(
-        //   trpc.palette.get.queryOptions({
-        //     url: featureImage.url,
-        //   })
-        // )) as z.infer<typeof paletteSchema>
+      if (featureImage && "file" in featureImage && featureImage.file) {
+        palette = (await Vibrant.from(URL.createObjectURL(featureImage.file))
+          .getPalette()
+          .then((p) => ({
+            Vibrant: {
+              rgb: p.Vibrant?.rgb,
+              population: p.Vibrant?.population,
+              bodyTextColor: p.Vibrant?.bodyTextColor,
+              titleTextColor: p.Vibrant?.titleTextColor,
+              hex: p.Vibrant?.hex,
+            },
+            DarkVibrant: {
+              rgb: p.DarkVibrant?.rgb,
+              population: p.DarkVibrant?.population,
+              bodyTextColor: p.DarkVibrant?.bodyTextColor,
+              titleTextColor: p.DarkVibrant?.titleTextColor,
+              hex: p.DarkVibrant?.hex,
+            },
+            LightVibrant: {
+              rgb: p.LightVibrant?.rgb,
+              population: p.LightVibrant?.population,
+              bodyTextColor: p.LightVibrant?.bodyTextColor,
+              titleTextColor: p.LightVibrant?.titleTextColor,
+              hex: p.LightVibrant?.hex,
+            },
+            Muted: {
+              rgb: p.Muted?.rgb,
+              population: p.Muted?.population,
+              bodyTextColor: p.Muted?.bodyTextColor,
+              titleTextColor: p.Muted?.titleTextColor,
+              hex: p.Muted?.hex,
+            },
+            DarkMuted: {
+              rgb: p.DarkMuted?.rgb,
+              population: p.DarkMuted?.population,
+              bodyTextColor: p.DarkMuted?.bodyTextColor,
+              titleTextColor: p.DarkMuted?.titleTextColor,
+              hex: p.DarkMuted?.hex,
+            },
+            LightMuted: {
+              rgb: p.LightMuted?.rgb,
+              population: p.LightMuted?.population,
+              bodyTextColor: p.LightMuted?.bodyTextColor,
+              titleTextColor: p.LightMuted?.titleTextColor,
+              hex: p.LightMuted?.hex,
+            },
+          }))) as z.infer<typeof paletteSchema>
       }
       setUploadingImages(false)
       let imagesWithoutFile = images.map((f) => ({
@@ -148,26 +189,22 @@ function RouteComponent() {
         size: f.size,
       }))
 
-      const payload = {
+      await updateCommunity.mutateAsync({
         id,
         images: imagesWithoutFile,
+        status: "public",
         ...(palette && {
           meta: {
             ...community?.data?.meta,
             colors: palette,
           },
         }),
-      }
-      console.log("payload:::", payload)
-      await updateCommunity.mutateAsync(payload, {
-        onError: (error) => {
-          console.log("error:::", error)
-        },
       })
     },
   })
 
   const files = useStore(form.store, (state) => state.values.files)
+  console.log("files:::", files)
 
   const onDrop = useCallback(
     (acceptedFiles: FileWithPath[]) => {
@@ -290,7 +327,7 @@ function RouteComponent() {
     if ("file" in cover && cover.file) {
       return URL.createObjectURL(cover?.file)
     }
-    return cover.path
+    return cover.url
   }, [files])
 
   const logoPreview = useMemo(() => {
@@ -299,7 +336,7 @@ function RouteComponent() {
     if ("file" in logo && logo.file) {
       return URL.createObjectURL(logo.file)
     }
-    return logo.path
+    return logo.url
   }, [files])
 
   return (
@@ -384,19 +421,24 @@ function RouteComponent() {
                     className="bg-bg-weak-50 shadow-regular-sm"
                   >
                     <AvatarGroupCompact.Stack>
-                      <Avatar.Root>
-                        <Avatar.Image src="https://www.alignui.com/images/avatar/illustration/emma.png" />
-                      </Avatar.Root>
-                      <Avatar.Root>
-                        <Avatar.Image src="https://www.alignui.com/images/avatar/illustration/james.png" />
-                      </Avatar.Root>
-                      <Avatar.Root>
-                        <Avatar.Image src="https://www.alignui.com/images/avatar/illustration/sophia.png" />
-                      </Avatar.Root>
+                      {community?.data?.members
+                        ?.slice(0, 3)
+                        .map((m) => (
+                          <Avatar.Root>
+                            {m.avatarUrl ? (
+                              <Avatar.Image src={m.avatarUrl} />
+                            ) : (
+                              m.firstName?.[0]
+                            )}
+                          </Avatar.Root>
+                        ))}
                     </AvatarGroupCompact.Stack>
-                    <AvatarGroupCompact.Overflow>
-                      +9
-                    </AvatarGroupCompact.Overflow>
+                    {community?.data?.members?.length &&
+                      community?.data?.members?.length > 3 && (
+                        <AvatarGroupCompact.Overflow>
+                          +{community?.data?.members?.length - 3}
+                        </AvatarGroupCompact.Overflow>
+                      )}
                   </AvatarGroupCompact.Root>
                 </div>
               </div>
@@ -477,7 +519,7 @@ function RouteComponent() {
                         const previewImage =
                           "file" in fileField && fileField.file
                             ? URL.createObjectURL(fileField.file)
-                            : fileField.path
+                            : fileField.url
 
                         return (
                           <div
