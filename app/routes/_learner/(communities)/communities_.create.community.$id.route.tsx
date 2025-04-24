@@ -44,29 +44,28 @@ export const Route = createFileRoute(
 })
 
 function RouteComponent() {
-  const { id } = Route.useParams()
-  const navigate = useNavigate()
+  // const { id } = Route.useParams()
+  // const navigate = useNavigate()
 
-  const loaderData = Route.useLoaderData()
-  const matches = useMatches()
-  const matchesWithSteps = matches.filter((match) =>
-    isMatch(match, "loaderData.step")
-  )
-  const activeStep = communitySteps.find(
-    (x) =>
-      x.step === matchesWithSteps[matchesWithSteps.length - 1].loaderData?.step
-  )
+  // const matches = useMatches()
+  // const matchesWithSteps = matches.filter((match) =>
+  //   isMatch(match, "loaderData.step")
+  // )
+  // const activeStep = communitySteps.find(
+  //   (x) =>
+  //     x.step === matchesWithSteps[matchesWithSteps.length - 1].loaderData?.step
+  // )
 
-  const getState = (step: (typeof communitySteps)[number]) => {
-    if (step.step === activeStep?.step) return "active"
-    if (Number(step.indicator) < Number(activeStep?.indicator))
-      return "completed"
-    return "default"
-  }
+  // const getState = (step: (typeof communitySteps)[number]) => {
+  //   if (step.step === activeStep?.step) return "active"
+  //   if (Number(step.indicator) < Number(activeStep?.indicator))
+  //     return "completed"
+  //   return "default"
+  // }
 
   return (
     <>
-      <NavigationLearnerSubHeader
+      {/* <NavigationLearnerSubHeader
         hideBreadcrumbs
         mode="light"
         className="border-b border-bg-soft-200"
@@ -101,7 +100,7 @@ function RouteComponent() {
             </React.Fragment>
           ))}
         </HorizontalStepper.Root>
-      </NavigationLearnerSubHeader>
+      </NavigationLearnerSubHeader> */}
       <Outlet />
     </>
   )

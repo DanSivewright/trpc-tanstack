@@ -1,4 +1,6 @@
 import { db } from "@/integrations/firebase/server"
+import { tryCatch } from "@/utils/try-catch"
+import { TRPCError } from "@trpc/server"
 import merge from "lodash.merge"
 import { z } from "zod"
 
@@ -33,6 +35,52 @@ async function getCommunities(options: { type: string; path: string }) {
     }
   )
 
+  return cachedFetcher()
+}
+async function getCommunity(options: {
+  type: string
+  path: string
+  input: any
+}) {
+  const cachedFetcher = cachedFunction(
+    async () => {
+      const [communitySnap, membersSnap] = await Promise.all([
+        db.collection("communities").doc(options.input.id).get(),
+        db
+          .collectionGroup("members")
+          .where("communityId", "==", options.input.uid)
+          .orderBy("joinedAt", "desc")
+          .get(),
+      ])
+
+      if (!communitySnap.exists) {
+        return null
+      }
+      let members: any = []
+      membersSnap.forEach((doc) => {
+        members.push({
+          ...doc.data(),
+          docId: doc.id,
+        })
+      })
+
+      return {
+        id: communitySnap.id,
+        ...communitySnap.data(),
+        membersCount: membersSnap.size,
+        members: members || [],
+      } as z.infer<typeof communitySchema>
+    },
+    {
+      name: generateCacheKey({
+        path: options.path,
+        type: options.type,
+        input: options.input,
+      }),
+      maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
+      group: CACHE_GROUP,
+    }
+  )
   return cachedFetcher()
 }
 
@@ -83,28 +131,12 @@ export const communitiesRouter = {
     )
     return cachedFetcher()
   }),
+
   detail: protectedProcedure
     .input(z.object({ id: z.string() }))
     // @ts-ignore
     .query(async ({ ctx, input, type, path }) => {
-      const cachedFetcher = cachedFunction(
-        async () => {
-          const doc = await db.collection("communities").doc(input.id).get()
-          if (!doc.exists) {
-            return null
-          }
-          return {
-            id: doc.id,
-            ...doc.data(),
-          } as z.infer<typeof communitySchema>
-        },
-        {
-          name: generateCacheKey({ path, type, input }),
-          maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
-          group: CACHE_GROUP,
-        }
-      )
-      return cachedFetcher()
+      return getCommunity({ type, path, input })
     }),
   create: protectedProcedure
     .input(
@@ -113,10 +145,7 @@ export const communitiesRouter = {
         name: true,
         headline: true,
         tags: true,
-        logoUrl: true,
-        featureImageUrl: true,
-        logoPath: true,
-        featureImagePath: true,
+        images: true,
         authorUid: true,
         author: true,
         meta: true,
@@ -130,24 +159,51 @@ export const communitiesRouter = {
         coursesCount: 0,
         threadsCount: 0,
         content: {},
+        images: [],
+        members: [],
         status: "private",
         accessibile: "public",
         createdAt: new Date().toISOString(),
       }
-      await db.collection("communities").doc(input.id).set(payload)
-
-      await db
-        .collection("communities")
-        .doc(input.id)
-        .collection("members")
-        .doc(input.authorUid)
-        .set({
-          ...input.author,
-          uid: input.authorUid,
-          role: "admin",
-          communityId: input.id,
-          joinedAt: new Date().toISOString(),
+      const createCommunity = await tryCatch(
+        db.collection("communities").doc(input.id).set(payload)
+      )
+      if (createCommunity.error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: createCommunity.error.message,
         })
+      }
+
+      const createMember = await tryCatch(
+        db
+          .collection("communities")
+          .doc(input.id)
+          .collection("members")
+          .doc(input.authorUid)
+          .set({
+            ...input.author,
+            uid: input.authorUid,
+            role: "admin",
+            communityId: input.id,
+            joinedAt: new Date().toISOString(),
+          })
+      )
+      if (createMember.error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: createMember.error.message,
+        })
+      }
+
+      const storage = useStorage()
+      await storage.remove(
+        `cache:${CACHE_GROUP}:${generateCacheKey({
+          path: "communities.detail",
+          type: "query",
+          input: { id: input.id },
+        })}:.json`
+      )
     }),
   update: protectedProcedure
     .input(
@@ -174,22 +230,21 @@ export const communitiesRouter = {
       await db.collection("communities").doc(id).update(payload)
 
       const storage = useStorage()
-      const key = `cache:${CACHE_GROUP}:${generateCacheKey({
-        path: "communities.detail",
+      const cache = await getCommunity({
         type: "query",
-        input: {
-          id: input.id,
-        },
-      })}:.json`
-      const cache = await storage.get(key)
-      if (cache?.valueOf()) {
-        const update = merge({}, cache.valueOf(), payload)
-        // console.log("cache update:::", {
-        //   update,
-        //   cache,
-        //   key,
-        // })
-        await storage.set(key, update)
+        path: "communities.detail",
+        input: { id },
+      })
+      if (cache) {
+        const update = merge({}, cache, payload)
+        await storage.set(
+          `cache:${CACHE_GROUP}:${generateCacheKey({
+            path: "communities.detail",
+            type: "query",
+            input: { id },
+          })}:.json`,
+          update
+        )
       }
 
       if (members) {

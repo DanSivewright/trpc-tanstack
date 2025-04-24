@@ -85,6 +85,14 @@ function RouteComponent() {
       const currentStep = communitySteps.find((x) => x.step === step)
       const nextStep = communitySteps?.[Number(currentStep?.indicator)]
 
+      if (!form.state.isDirty) {
+        navigate({
+          to: `/communities/create/community/$id/${nextStep.step}`,
+          params: { id },
+        })
+        return
+      }
+
       await updateCommunity.mutateAsync(
         {
           id,

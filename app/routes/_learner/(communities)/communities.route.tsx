@@ -46,14 +46,14 @@ import NavigationLearnerSubHeader from "@/components/navigation/navigation-learn
 export const Route = createFileRoute("/_learner/(communities)/communities")({
   component: RootComponent,
   loader: async ({ context }) => {
-    await Promise.all([
-      context.queryClient.prefetchQuery(
-        context.trpc.communities.all.queryOptions()
-      ),
-      context.queryClient.prefetchQuery(
-        context.trpc.communities.joined.queryOptions()
-      ),
-    ])
+    // await Promise.all([
+    //   context.queryClient.prefetchQuery(
+    //     context.trpc.communities.all.queryOptions()
+    //   ),
+    //   context.queryClient.prefetchQuery(
+    //     context.trpc.communities.joined.queryOptions()
+    //   ),
+    // ])
     return {
       crumb: "Communities",
     }
@@ -61,23 +61,23 @@ export const Route = createFileRoute("/_learner/(communities)/communities")({
 })
 
 function RootComponent() {
-  const routerState = useRouterState()
-  const matchRoute = useMatchRoute()
-  const communityRouteApi = getRouteApi(
-    "/_learner/(communities)/communities/$id"
-  )
-  const isSingleCommunity = useMemo(() => {
-    return routerState.matches.find(
-      (pattern) => communityRouteApi.id === pattern.routeId
-    )
-  }, [routerState, matchRoute])
+  // const routerState = useRouterState()
+  // const matchRoute = useMatchRoute()
+  // const communityRouteApi = getRouteApi(
+  //   "/_learner/(communities)/communities/$id"
+  // )
+  // const isSingleCommunity = useMemo(() => {
+  //   return routerState.matches.find(
+  //     (pattern) => communityRouteApi.id === pattern.routeId
+  //   )
+  // }, [routerState, matchRoute])
 
   return (
     <>
-      {!isSingleCommunity ? null : (
+      {/* {!isSingleCommunity ? null : (
         //
         <CommunityHeader />
-      )}
+      )} */}
       <Outlet />
     </>
   )

@@ -95,111 +95,133 @@ const tags: {
 ]
 
 function RouteComponent() {
-  const { id } = Route.useParams()
-  const { notification } = useNotification()
-  const navigate = useNavigate()
-  const { step } = Route.useLoaderData()
+  // const { id } = Route.useParams()
+  // const { notification } = useNotification()
+  // const navigate = useNavigate()
+  // const { step } = Route.useLoaderData()
 
-  const qc = useQueryClient()
-  const trpc = useTRPC()
+  // const qc = useQueryClient()
+  // const trpc = useTRPC()
 
-  const community = useSuspenseQuery(
-    trpc.communities.detail.queryOptions({
-      id,
-    })
-  )
-  const me = useQuery(trpc.people.me.queryOptions())
+  // const community = useSuspenseQuery(
+  //   trpc.communities.detail.queryOptions({
+  //     id,
+  //   })
+  // )
+  // const me = useQuery(trpc.people.me.queryOptions())
 
-  const createCommunity = useMutation(trpc.communities.create.mutationOptions())
-  const updateCommunity = useMutation(trpc.communities.update.mutationOptions())
-  const schema = communitySchema.pick({
-    name: true,
-    headline: true,
-    tags: true,
-  })
+  // const createCommunity = useMutation(trpc.communities.create.mutationOptions())
+  // const updateCommunity = useMutation(trpc.communities.update.mutationOptions())
+  // const schema = communitySchema.pick({
+  //   name: true,
+  //   headline: true,
+  //   tags: true,
+  // })
 
-  const form = useForm({
-    defaultValues: {
-      name: community.data?.name || "",
-      headline: community.data?.headline || "",
-      tags: community.data?.tags || [],
-    } as z.infer<typeof schema>,
-    validators: {
-      onSubmit: schema,
-      onChange: schema,
-    },
-    onSubmit: async (data) => {
-      const currentStep = communitySteps.find((x) => x.step === step)
-      const nextStep = communitySteps?.[Number(currentStep?.indicator)]
+  // const form = useForm({
+  //   defaultValues: {
+  //     name: community.data?.name || "",
+  //     headline: community.data?.headline || "",
+  //     tags: community.data?.tags || [],
+  //   } as z.infer<typeof schema>,
+  //   validators: {
+  //     onSubmit: schema,
+  //     onChange: schema,
+  //   },
+  //   onSubmit: async (data) => {
+  //     const currentStep = communitySteps.find((x) => x.step === step)
+  //     const nextStep = communitySteps?.[Number(currentStep?.indicator)]
 
-      if (community?.data) {
-        await updateCommunity.mutateAsync(
-          {
-            id,
-            ...data?.value,
-          },
-          {
-            onSuccess: async () => {
-              await Promise.all([
-                qc.invalidateQueries({
-                  queryKey: trpc.communities.joined.queryKey(),
-                }),
-                qc.invalidateQueries({
-                  queryKey: trpc.communities.detail.queryKey({ id }),
-                }),
-              ])
-              navigate({
-                to: `/communities/create/community/$id/${nextStep.step}`,
-                params: { id },
-              })
-            },
-          }
-        )
-      } else {
-        await createCommunity.mutateAsync(
-          {
-            id,
-            authorUid: me.data?.uid!,
-            author: {
-              uid: me.data?.uid!,
-              firstName: me.data?.firstName!,
-              lastName: me.data?.lastName,
-              email: me.data?.companyPerson?.email,
-              avatarUrl: me.data?.imageUrl,
-            },
-            name: data?.value?.name,
-            headline: data?.value?.headline,
-            tags: data?.value?.tags,
-          },
-          {
-            onSettled: () => {
-              qc.invalidateQueries({
-                queryKey: trpc.communities.joined.queryKey(),
-              })
-            },
-            onSuccess: () => {
-              navigate({
-                to: `/communities/create/community/$id/${nextStep.step}`,
-                params: { id },
-              })
-            },
-            onError: () => {
-              notification({
-                title: "Error",
-                description:
-                  "Something went wrong while creating the community. Please try again",
-                variant: "filled",
-                status: "error",
-              })
-            },
-          }
-        )
-      }
-    },
-  })
+  //     if (community?.data) {
+  //       // if (!form.state.isDirty) {
+  //       //   navigate({
+  //       //     to: `/communities/create/community/$id/${nextStep.step}`,
+  //       //     params: { id },
+  //       //   })
+  //       //   return
+  //       // }
+  //       // await updateCommunity.mutateAsync(
+  //       //   {
+  //       //     id,
+  //       //     ...data?.value,
+  //       //   },
+  //       //   {
+  //       //     onSuccess: async () => {
+  //       //       await Promise.all([
+  //       //         qc.invalidateQueries({
+  //       //           queryKey: trpc.communities.joined.queryKey(),
+  //       //         }),
+  //       //         qc.invalidateQueries({
+  //       //           queryKey: trpc.communities.detail.queryKey({ id }),
+  //       //         }),
+  //       //       ])
+  //       //       navigate({
+  //       //         to: `/communities/create/community/$id/${nextStep.step}`,
+  //       //         params: { id },
+  //       //       })
+  //       //     },
+  //       //   }
+  //       // )
+  //     } else {
+  //       const payload = {
+  //         id,
+  //         authorUid: me.data?.uid!,
+  //         author: {
+  //           uid: me.data?.uid!,
+  //           firstName: me.data?.firstName!,
+  //           lastName: me.data?.lastName,
+  //           email: me.data?.companyPerson?.email,
+  //           avatarUrl: me.data?.imageUrl,
+  //         },
+  //         name: data?.value?.name,
+  //         headline: data?.value?.headline,
+  //         tags: data?.value?.tags,
+  //       }
+  //       console.log("payload:::", payload)
+  //       // await createCommunity.mutateAsync(
+  //       //   {
+  //       //     id,
+  //       //     authorUid: me.data?.uid!,
+  //       //     author: {
+  //       //       uid: me.data?.uid!,
+  //       //       firstName: me.data?.firstName!,
+  //       //       lastName: me.data?.lastName,
+  //       //       email: me.data?.companyPerson?.email,
+  //       //       avatarUrl: me.data?.imageUrl,
+  //       //     },
+  //       //     name: data?.value?.name,
+  //       //     headline: data?.value?.headline,
+  //       //     tags: data?.value?.tags,
+  //       //   },
+  //       //   {
+  //       //     onSettled: () => {
+  //       //       qc.invalidateQueries({
+  //       //         queryKey: trpc.communities.joined.queryKey(),
+  //       //       })
+  //       //     },
+  //       //     onSuccess: () => {
+  //       //       // navigate({
+  //       //       //   to: `/communities/create/community/$id/${nextStep.step}`,
+  //       //       //   params: { id },
+  //       //       // })
+  //       //     },
+  //       //     onError: () => {
+  //       //       notification({
+  //       //         title: "Error",
+  //       //         description:
+  //       //           "Something went wrong while creating the community. Please try again",
+  //       //         variant: "filled",
+  //       //         status: "error",
+  //       //       })
+  //       //     },
+  //       //   }
+  //       // )
+  //     }
+  //   },
+  // })
   return (
     <>
-      <form
+      {/* <form
         onSubmit={(e) => {
           e.preventDefault()
           e.stopPropagation()
@@ -334,7 +356,8 @@ function RouteComponent() {
             </div>
           </div>
         </footer>
-      </form>
+      </form> */}
+      {id}
     </>
   )
 }

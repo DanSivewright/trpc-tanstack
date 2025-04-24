@@ -15,6 +15,7 @@ import { useForm } from "@tanstack/react-form"
 import {
   useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
@@ -90,6 +91,7 @@ function RouteComponent() {
       id,
     })
   )
+  const me = useQuery(trpc.people.me.queryOptions())
   const people = useInfiniteQuery({
     ...trpc.people.all.infiniteQueryOptions({
       query: {
