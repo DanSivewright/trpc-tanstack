@@ -1,7 +1,8 @@
 import { db } from "@/integrations/firebase/server"
+import merge from "lodash.merge"
 import { z } from "zod"
 
-import { cachedFunction, generateCacheKey } from "@/lib/cache"
+import { cachedFunction, generateCacheKey, useStorage } from "@/lib/cache"
 
 import { protectedProcedure } from "../../init"
 import {
@@ -171,6 +172,26 @@ export const communitiesRouter = {
       const { id, members, ...rest } = input
       const payload = { ...rest, updatedAt: new Date().toISOString() }
       await db.collection("communities").doc(id).update(payload)
+
+      const storage = useStorage()
+      const key = `cache:${CACHE_GROUP}:${generateCacheKey({
+        path: "communities.detail",
+        type: "query",
+        input: {
+          id: input.id,
+        },
+      })}:.json`
+      const cache = await storage.get(key)
+      if (cache?.valueOf()) {
+        const update = merge({}, cache.valueOf(), payload)
+        // console.log("cache update:::", {
+        //   update,
+        //   cache,
+        //   key,
+        // })
+        await storage.set(key, update)
+      }
+
       if (members) {
         const membersRef = db
           .collection("communities")

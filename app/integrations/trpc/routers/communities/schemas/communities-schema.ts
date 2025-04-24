@@ -17,6 +17,8 @@ export const communitySchema = z.object({
   logoPath: z.string().optional().nullable(),
   featureImageUrl: z.string().optional().nullable(),
   featureImagePath: z.string().optional().nullable(),
+  featureImages: z.array(z.string()).optional().nullable(),
+  featureImagesPaths: z.array(z.string()).optional().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
   membersCount: z.number(),

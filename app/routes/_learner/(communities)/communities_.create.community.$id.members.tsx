@@ -6,7 +6,6 @@ import { cn } from "@/utils/cn"
 import { filterFn } from "@/utils/filters"
 import {
   RiArrowRightSLine,
-  RiChatSettingsLine,
   RiGlobalLine,
   RiLoaderLine,
   RiUserAddLine,
@@ -17,7 +16,6 @@ import {
   useInfiniteQuery,
   useMutation,
   useQueryClient,
-  useSuspenseInfiniteQuery,
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
@@ -29,12 +27,9 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  sortingFns,
   useReactTable,
   type ColumnFiltersState,
-  type FilterFn,
   type RowSelectionState,
-  type SortingFn,
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table"
@@ -45,16 +40,11 @@ import type { z } from "zod"
 import { useElementSize } from "@/hooks/use-element-size"
 import { useNotification } from "@/hooks/use-notification"
 import * as Avatar from "@/components/ui/avatar"
-import * as Button from "@/components/ui/button"
 import * as FancyButton from "@/components/ui/fancy-button"
 import * as Modal from "@/components/ui/modal"
-import * as SegmentedControl from "@/components/ui/segmented-control"
 import * as Select from "@/components/ui/select"
-import * as Switch from "@/components/ui/switch"
 import * as Table from "@/components/ui/table"
 import IndeterminateCheckbox from "@/components/indeterminate-checkbox"
-import { Section } from "@/components/section"
-import TableFilters from "@/components/table-filters"
 
 import { communitySteps } from "./communities_.create.community.$id.route"
 
