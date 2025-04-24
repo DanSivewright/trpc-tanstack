@@ -3,6 +3,18 @@ import { z } from "zod"
 
 import { paletteSchema } from "../../palette/schemas/palette-schema"
 
+const memberSchema = z.object({
+  id: z.string(),
+  role: z.enum(["admin", "member"]),
+  joinedAt: z.string().nullable().optional(),
+  communityId: z.string(),
+  uid: z.string(),
+  firstName: z.string(),
+  lastName: z.string().optional().nullable(),
+  email: z.string().optional().nullable(),
+  avatarUrl: z.string().optional().nullable(),
+})
+
 export const communitySchema = z.object({
   id: z.string(),
   name: z
@@ -13,31 +25,28 @@ export const communitySchema = z.object({
     .string()
     .min(100, { message: "Headline must be at least 100 characters" })
     .max(200, { message: "Headline must be less than 200 characters" }),
-  logoUrl: z.string().optional().nullable(),
-  logoPath: z.string().optional().nullable(),
-  featureImageUrl: z.string().optional().nullable(),
-  featureImagePath: z.string().optional().nullable(),
-  featureImages: z.array(z.string()).optional().nullable(),
-  featureImagesPaths: z.array(z.string()).optional().nullable(),
+  images: z
+    .array(
+      z.object({
+        id: z.string(),
+        featured: z.boolean(),
+        logo: z.boolean(),
+        name: z.string(),
+        url: z.string().optional().nullable(),
+        path: z.string().optional().nullable(),
+        size: z.number().optional().nullable(),
+      })
+    )
+    .optional()
+    .nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
   membersCount: z.number(),
   threadsCount: z.number(),
   coursesCount: z.number(),
   articlesCount: z.number(),
-  membership: z
-    .object({
-      role: z.enum(["admin", "member"]),
-      joinedAt: z.string().nullable().optional(),
-      communityId: z.string(),
-      uid: z.string(),
-      firstName: z.string(),
-      lastName: z.string().optional().nullable(),
-      email: z.string().optional().nullable(),
-      avatarUrl: z.string().optional().nullable(),
-    })
-    .nullable()
-    .optional(),
+  membership: memberSchema.nullable().optional(),
+  members: z.array(memberSchema).nullable().optional(),
   authorUid: z.string(),
   author: z.object({
     uid: z.string(),

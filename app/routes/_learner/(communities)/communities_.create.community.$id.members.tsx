@@ -15,6 +15,7 @@ import { useForm } from "@tanstack/react-form"
 import {
   useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
@@ -99,11 +100,15 @@ function RouteComponent() {
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   })
+  const me = useQuery(trpc.people.me.queryOptions())
   const { fetchNextPage, isFetching } = people
 
   const flatData = useMemo(
-    () => people?.data?.pages?.flatMap((page) => page.data?.people) ?? [],
-    [people?.data]
+    () =>
+      people?.data?.pages?.flatMap((page) =>
+        page.data?.people?.filter((p) => p.personUid !== me?.data?.uid)
+      ) ?? [],
+    [people?.data, me?.data?.uid]
   )
   const totalDBRowCount = people?.data?.pages?.[0]?.data?.totalPeople ?? 0
   const totalFetched = flatData.length
@@ -145,7 +150,6 @@ function RouteComponent() {
     (containerRefElement?: HTMLDivElement | null) => {
       if (containerRefElement) {
         const { scrollHeight, scrollTop, clientHeight } = containerRefElement
-        //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
         if (
           scrollHeight - scrollTop - clientHeight < 500 &&
           !isFetching &&
@@ -162,6 +166,26 @@ function RouteComponent() {
   useEffect(() => {
     fetchMoreOnBottomReached(tableContainerRef.current)
   }, [fetchMoreOnBottomReached])
+
+  // set the rowSelection to the members that are already in the community
+  useEffect(() => {
+    console.log("flatData:::", { flatData, mem: community?.data?.members })
+    if (
+      community?.data?.members &&
+      flatData.length > 0 &&
+      community?.data?.members?.length > 0
+    ) {
+      community?.data?.members?.forEach((m) => {
+        const foundIndex = flatData.findIndex((p) => p.personUid === m.uid)
+        if (foundIndex !== -1) {
+          setRowSelection((prev) => ({
+            ...prev,
+            [foundIndex]: true,
+          }))
+        }
+      })
+    }
+  }, [flatData.length, community?.data?.members])
 
   const { rows } = table.getRowModel()
 
@@ -185,7 +209,7 @@ function RouteComponent() {
 
   const form = useForm({
     defaultValues: {
-      members: [],
+      members: community?.data?.members,
     } as {
       members: z.infer<typeof communitySchema>["membership"][]
     },
@@ -195,7 +219,6 @@ function RouteComponent() {
     onSubmit: async (data) => {
       const currentStep = communitySteps.find((x) => x.step === step)
       const nextStep = communitySteps?.[Number(currentStep?.indicator)]
-      console.log("nextStep:::", nextStep)
 
       await updateCommunity.mutateAsync(
         {
@@ -230,8 +253,13 @@ function RouteComponent() {
     form.setFieldValue(
       "members",
       selectedData.map((m) => ({
-        role: "member",
-        joinedAt: new Date().toISOString(),
+        id: m.personUid,
+        role:
+          community?.data?.members?.find((x) => x.uid === m.personUid)?.role ||
+          "member",
+        joinedAt:
+          community?.data?.members?.find((x) => x.uid === m.personUid)
+            ?.joinedAt || new Date().toISOString(),
         communityId: id,
         uid: m.personUid,
         firstName: m.person.firstName,

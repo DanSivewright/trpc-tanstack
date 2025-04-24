@@ -1,4 +1,6 @@
 import { db } from "@/integrations/firebase/server"
+import { tryCatch } from "@/utils/try-catch"
+import { TRPCError } from "@trpc/server"
 import merge from "lodash.merge"
 import { z } from "zod"
 
@@ -33,6 +35,66 @@ async function getCommunities(options: { type: string; path: string }) {
     }
   )
 
+  return cachedFetcher()
+}
+
+async function getCommunity(options: {
+  type: string
+  path: string
+  input: any
+}) {
+  const cachedFetcher = cachedFunction(
+    async () => {
+      const [comSnap, memSnap] = await Promise.all([
+        tryCatch(db.collection("communities").doc(options.input.id).get()),
+        tryCatch(
+          db
+            .collectionGroup("members")
+            .where("communityId", "==", options.input.id)
+            .orderBy("joinedAt", "desc")
+            .get()
+        ),
+      ])
+
+      if (comSnap.error || !comSnap.success) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: comSnap.error?.message || "Community not found",
+        })
+      }
+
+      if (!comSnap.data.exists) return null
+
+      let members: any = []
+      if (memSnap.success && memSnap.data && !memSnap.data.empty) {
+        memSnap.data.forEach((doc) => {
+          members.push({
+            ...doc.data(),
+            id: doc.id,
+          })
+        })
+      }
+
+      if (!comSnap.data) {
+        return null
+      }
+      return {
+        id: comSnap.data.id,
+        ...comSnap.data.data(),
+        membersCount: members.length,
+        members: members,
+      } as z.infer<typeof communitySchema>
+    },
+    {
+      name: generateCacheKey({
+        path: options.path,
+        type: options.type,
+        input: options.input,
+      }),
+      maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
+      group: CACHE_GROUP,
+    }
+  )
   return cachedFetcher()
 }
 
@@ -87,24 +149,7 @@ export const communitiesRouter = {
     .input(z.object({ id: z.string() }))
     // @ts-ignore
     .query(async ({ ctx, input, type, path }) => {
-      const cachedFetcher = cachedFunction(
-        async () => {
-          const doc = await db.collection("communities").doc(input.id).get()
-          if (!doc.exists) {
-            return null
-          }
-          return {
-            id: doc.id,
-            ...doc.data(),
-          } as z.infer<typeof communitySchema>
-        },
-        {
-          name: generateCacheKey({ path, type, input }),
-          maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
-          group: CACHE_GROUP,
-        }
-      )
-      return cachedFetcher()
+      return getCommunity({ type, path, input })
     }),
   create: protectedProcedure
     .input(
@@ -113,16 +158,12 @@ export const communitiesRouter = {
         name: true,
         headline: true,
         tags: true,
-        logoUrl: true,
-        featureImageUrl: true,
-        logoPath: true,
-        featureImagePath: true,
         authorUid: true,
         author: true,
         meta: true,
       })
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const payload: Partial<z.infer<typeof communitySchema>> = {
         ...input,
         articlesCount: 0,
@@ -148,6 +189,26 @@ export const communitiesRouter = {
           communityId: input.id,
           joinedAt: new Date().toISOString(),
         })
+      const storage = useStorage()
+      const key = `cache:${CACHE_GROUP}:${generateCacheKey({
+        path: "communities.detail",
+        type: "query",
+        input: {
+          id: input.id,
+        },
+      })}:.json`
+      await storage.set(key, {
+        ...payload,
+        members: [
+          {
+            ...input.author,
+            uid: input.authorUid,
+            role: "admin",
+            communityId: input.id,
+            joinedAt: new Date().toISOString(),
+          },
+        ],
+      })
     }),
   update: protectedProcedure
     .input(
@@ -168,42 +229,87 @@ export const communitiesRouter = {
             .nullable(),
         })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { id, members, ...rest } = input
       const payload = { ...rest, updatedAt: new Date().toISOString() }
       await db.collection("communities").doc(id).update(payload)
-
-      const storage = useStorage()
-      const key = `cache:${CACHE_GROUP}:${generateCacheKey({
-        path: "communities.detail",
-        type: "query",
-        input: {
-          id: input.id,
-        },
-      })}:.json`
-      const cache = await storage.get(key)
-      if (cache?.valueOf()) {
-        const update = merge({}, cache.valueOf(), payload)
-        // console.log("cache update:::", {
-        //   update,
-        //   cache,
-        //   key,
-        // })
-        await storage.set(key, update)
-      }
 
       if (members) {
         const membersRef = db
           .collection("communities")
           .doc(id)
           .collection("members")
+
         const batch = db.batch()
 
+        // First, get all existing members
+        const existingMembers = await membersRef.get()
+
+        // Delete all members except the current user
+        existingMembers.forEach((doc) => {
+          if (doc.id !== ctx.uid) {
+            batch.delete(doc.ref)
+          }
+        })
+
+        // Add new members (excluding the current user)
         for (const member of members) {
-          batch.set(membersRef.doc(member?.uid || ""), member, { merge: true })
+          if (member?.uid && member.uid !== ctx.uid) {
+            batch.set(membersRef.doc(member.uid), member, { merge: true })
+          }
         }
 
         await batch.commit()
+      }
+
+      const storage = useStorage()
+      const cache = await getCommunity({
+        type: "query",
+        path: "communities.detail",
+        input: { id },
+      })
+      if (cache) {
+        let newMembers: any = []
+        if (members && members.length > 0) {
+          const membersSnap = await tryCatch(
+            db
+              .collectionGroup("members")
+              .where("communityId", "==", id)
+              .orderBy("joinedAt", "desc")
+              .get()
+          )
+
+          if (
+            membersSnap.success &&
+            membersSnap.data &&
+            !membersSnap.data.empty
+          ) {
+            membersSnap.data.forEach((doc) => {
+              newMembers.push({
+                ...doc.data(),
+                id: doc.id,
+              })
+            })
+          }
+        }
+
+        const update = merge({}, cache, {
+          ...payload,
+          ...(members &&
+          members.length > 0 &&
+          newMembers &&
+          newMembers.length > 0
+            ? { members: [...members, ...newMembers] }
+            : {}),
+        })
+        await storage.set(
+          `cache:${CACHE_GROUP}:${generateCacheKey({
+            path: "communities.detail",
+            type: "query",
+            input: { id },
+          })}:.json`,
+          update
+        )
       }
     }),
 }

@@ -1,5 +1,6 @@
 import type React from "react"
 import { useEffect, useRef, type ChangeEvent } from "react"
+import db from "@/integrations/firebase/client"
 import { useTRPC } from "@/integrations/trpc/react"
 import { communitySchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
 import {
@@ -36,6 +37,13 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import {
+  collectionGroup,
+  getDocs,
+  orderBy,
+  query,
+  where,
+} from "firebase/firestore"
 import type { z } from "zod"
 
 import { cn } from "@/lib/utils"
@@ -117,7 +125,6 @@ function RouteComponent() {
     headline: true,
     tags: true,
   })
-
   const form = useForm({
     defaultValues: {
       name: community.data?.name || "",
@@ -133,6 +140,13 @@ function RouteComponent() {
       const nextStep = communitySteps?.[Number(currentStep?.indicator)]
 
       if (community?.data) {
+        if (!form.state.isDirty) {
+          navigate({
+            to: `/communities/create/community/$id/${nextStep.step}`,
+            params: { id },
+          })
+          return
+        }
         await updateCommunity.mutateAsync(
           {
             id,

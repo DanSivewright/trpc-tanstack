@@ -1,5 +1,8 @@
 import { useCallback, useMemo, useState } from "react"
+import { storage } from "@/integrations/firebase/client"
 import { useTRPC } from "@/integrations/trpc/react"
+import { communitySchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
+import type { paletteSchema } from "@/integrations/trpc/routers/palette/schemas/palette-schema"
 import { cn } from "@/utils/cn"
 import { formatBytes } from "@/utils/format-bytes"
 import {
@@ -17,6 +20,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
 import { useDropzone, type FileWithPath } from "react-dropzone"
 import { z } from "zod"
 
@@ -60,7 +64,7 @@ function RouteComponent() {
   const MAX_FILES = 5
   const MAX_SIZE = 5 * 1024 * 1024
   const FILE_TYPES = [".png", ".jpg", ".jpeg", ".gif", ".webp"]
-  // const [files, setFiles] = useState<File[]>([])
+  const [uploadingImages, setUploadingImages] = useState(false)
 
   const qc = useQueryClient()
   const trpc = useTRPC()
@@ -75,64 +79,91 @@ function RouteComponent() {
   const schema = z.object({
     files: z
       .array(
-        z
-          .object({
-            file: z.instanceof(File),
-            isLogo: z.boolean(),
-            isCover: z.boolean(),
-          })
-          .or(
-            z.object({
-              path: z.string(),
-              isLogo: z.boolean(),
-              isCover: z.boolean(),
-            })
-          )
+        z.object({
+          file: z.instanceof(File).optional().nullable(),
+          id: z.string(),
+          featured: z.boolean(),
+          logo: z.boolean(),
+          url: z.string(),
+          name: z.string(),
+          path: z.string().optional().nullable(),
+          size: z.number().optional().nullable(),
+        })
       )
       .min(2, { message: "At least 2 files are required" })
       .max(MAX_FILES, { message: `Maximum ${MAX_FILES} files allowed` }),
   })
 
-  const defaultFiles = [
-    ...(
-      community?.data?.featureImages?.filter(
-        (x) =>
-          x !== community?.data?.featureImageUrl &&
-          x !== community?.data?.logoUrl
-      ) ?? []
-    ).map((x) => ({
-      path: x,
-      isLogo: false,
-      isCover: false,
-    })),
-    ...(community?.data?.featureImageUrl
-      ? [
-          {
-            path: community?.data?.featureImageUrl,
-            isLogo: false,
-            isCover: true,
-          },
-        ]
-      : []),
-    ...(community?.data?.logoUrl
-      ? [
-          {
-            path: community?.data?.logoUrl,
-            isLogo: true,
-            isCover: false,
-          },
-        ]
-      : []),
-  ]
   const form = useForm({
     defaultValues: {
-      files: defaultFiles || [],
+      files: community?.data?.images || [],
     } as z.infer<typeof schema>,
     validators: {
       onSubmit: schema,
     },
     onSubmit: async (data) => {
-      console.log("data:::", data)
+      setUploadingImages(true)
+      const images = await Promise.all(
+        data?.value?.files?.map(async (f) => {
+          if ("file" in f && f.file) {
+            const storageRef = ref(storage, `communities/${id}/${f.name}`)
+            const uploadTask = await uploadBytes(storageRef, f.file)
+            const url = await getDownloadURL(uploadTask.ref)
+            return {
+              ...f,
+              url,
+              path: `communities/${id}/${f.name}`,
+            }
+          }
+          return f
+        })
+      )
+
+      let palette = community?.data?.meta?.colors
+        ? community?.data?.meta?.colors
+        : null
+
+      console.log("iam:::", {
+        images,
+        palette,
+      })
+
+      const featureImage = images.find((x) => x.featured)
+      if (featureImage) {
+        console.log("f:::", featureImage)
+        // palette = (await qc.ensureQueryData(
+        //   trpc.palette.get.queryOptions({
+        //     url: featureImage.url,
+        //   })
+        // )) as z.infer<typeof paletteSchema>
+      }
+      setUploadingImages(false)
+      let imagesWithoutFile = images.map((f) => ({
+        id: f.id,
+        featured: f.featured,
+        logo: f.logo,
+        url: f.url,
+        name: f.name,
+        path: f.path,
+        size: f.size,
+      }))
+
+      const payload = {
+        id,
+        images: imagesWithoutFile,
+        ...(palette && {
+          meta: {
+            ...community?.data?.meta,
+            colors: palette,
+          },
+        }),
+      }
+      console.log("payload:::", payload)
+      await updateCommunity.mutateAsync(payload, {
+        onError: (error) => {
+          console.log("error:::", error)
+        },
+      })
     },
   })
 
@@ -156,18 +187,23 @@ function RouteComponent() {
           const newFiles = [
             ...form.getFieldValue("files"),
             ...acceptedFiles.slice(0, diff).map((x) => ({
+              id: crypto.randomUUID(),
               file: x,
-              isLogo: false,
-              isCover: false,
+              featured: false,
+              logo: false,
+              url: "",
+              name: x.name,
+              path: "",
+              size: x.size,
             })),
           ]
 
-          if (!newFiles.some((x) => x.isCover)) {
-            newFiles[0].isCover = true
+          if (!newFiles.some((x) => x.featured)) {
+            newFiles[0].featured = true
           }
 
-          if (!newFiles.some((x) => x.isLogo)) {
-            newFiles[1].isLogo = true
+          if (!newFiles.some((x) => x.logo)) {
+            newFiles[1].logo = true
           }
 
           form.setFieldValue("files", newFiles)
@@ -178,22 +214,27 @@ function RouteComponent() {
       const newFiles = [
         ...form.getFieldValue("files"),
         ...acceptedFiles.map((x) => ({
+          id: crypto.randomUUID(),
           file: x,
-          isLogo: false,
-          isCover: false,
+          featured: false,
+          logo: false,
+          url: "",
+          name: x.name,
+          path: "",
+          size: x.size,
         })),
       ]
 
-      if (!newFiles.some((x) => x.isCover)) {
-        newFiles[0].isCover = true
+      if (!newFiles.some((x) => x.featured)) {
+        newFiles[0].featured = true
       }
 
-      if (!newFiles.some((x) => x.isLogo)) {
+      if (!newFiles.some((x) => x.logo)) {
         const fileAtAtIndexOne = newFiles?.[1]
         if (fileAtAtIndexOne) {
-          newFiles[1].isLogo = true
+          newFiles[1].logo = true
         } else {
-          newFiles[0].isLogo = true
+          newFiles[0].logo = true
         }
       }
 
@@ -244,21 +285,21 @@ function RouteComponent() {
 
   const coverPreview = useMemo(() => {
     // if (!files || ) return null
-    const cover = files?.find((x) => x.isCover)
+    const cover = files?.find((x) => x.featured)
     if (!cover) return null
-    if ("path" in cover) {
-      return cover.path
+    if ("file" in cover && cover.file) {
+      return URL.createObjectURL(cover?.file)
     }
-    return URL.createObjectURL(cover.file)
+    return cover.path
   }, [files])
 
   const logoPreview = useMemo(() => {
-    const logo = files?.find((x) => x.isLogo)
+    const logo = files?.find((x) => x.logo)
     if (!logo) return null
-    if ("path" in logo) {
-      return logo.path
+    if ("file" in logo && logo.file) {
+      return URL.createObjectURL(logo.file)
     }
-    return URL.createObjectURL(logo.file)
+    return logo.path
   }, [files])
 
   return (
@@ -425,24 +466,19 @@ function RouteComponent() {
                         files.length === 1 ? "file" : "files"
                       }, ${formatBytes(
                         files.reduce((acc, file) => {
-                          if ("file" in file) {
-                            return acc + file.file.size
-                          }
-                          return acc
+                          return acc + (file.size || 0)
                         }, 0)
                       )}`}
                       fallbackIcon={RiInformationFill}
                     />
                     <div className="flex w-full flex-col gap-2">
                       {field.state.value?.map((fileField, i) => {
-                        const name =
-                          "path" in fileField
-                            ? fileField.path
-                            : fileField.file.name
+                        const name = fileField.name
                         const previewImage =
-                          "path" in fileField
-                            ? fileField.path
-                            : URL.createObjectURL(fileField.file)
+                          "file" in fileField && fileField.file
+                            ? URL.createObjectURL(fileField.file)
+                            : fileField.path
+
                         return (
                           <div
                             key={name + i}
@@ -457,7 +493,7 @@ function RouteComponent() {
                               />
                               <div className="flex flex-col items-start justify-start">
                                 <Tooltip.Root delayDuration={10}>
-                                  <Tooltip.Trigger>
+                                  <Tooltip.Trigger type="button">
                                     <p className="truncate hover:cursor-help">
                                       {name}
                                     </p>
@@ -468,17 +504,17 @@ function RouteComponent() {
                                 </Tooltip.Root>
                                 <p className="text-label-xs text-text-soft-400">
                                   {"file" in fileField
-                                    ? formatBytes(fileField.file.size)
+                                    ? formatBytes(fileField.size || 0)
                                     : "Already uploaded"}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2 pr-2">
-                              <form.Field name={`files[${i}].isLogo`}>
+                              <form.Field name={`files[${i}].logo`}>
                                 {(subField) => {
                                   return (
                                     <Tooltip.Root delayDuration={10}>
-                                      <Tooltip.Trigger>
+                                      <Tooltip.Trigger type="button">
                                         <Switch.Root
                                           checked={subField.state.value}
                                           onCheckedChange={(checked) => {
@@ -499,10 +535,10 @@ function RouteComponent() {
                                                 (editFile, editFileIndex) => {
                                                   if (
                                                     editFileIndex !== i &&
-                                                    editFile.isLogo
+                                                    editFile.logo
                                                   ) {
                                                     form.setFieldValue(
-                                                      `files[${editFileIndex}].isLogo`,
+                                                      `files[${editFileIndex}].logo`,
                                                       false
                                                     )
                                                   }
@@ -519,11 +555,11 @@ function RouteComponent() {
                                   )
                                 }}
                               </form.Field>
-                              <form.Field name={`files[${i}].isCover`}>
+                              <form.Field name={`files[${i}].featured`}>
                                 {(subField) => {
                                   return (
                                     <Tooltip.Root delayDuration={10}>
-                                      <Tooltip.Trigger>
+                                      <Tooltip.Trigger type="button">
                                         <Switch.Root
                                           checked={subField.state.value}
                                           onCheckedChange={(checked) => {
@@ -544,10 +580,10 @@ function RouteComponent() {
                                                 (editFile, editFileIndex) => {
                                                   if (
                                                     editFileIndex !== i &&
-                                                    editFile.isCover
+                                                    editFile.featured
                                                   ) {
                                                     form.setFieldValue(
-                                                      `files[${editFileIndex}].isCover`,
+                                                      `files[${editFileIndex}].featured`,
                                                       false
                                                     )
                                                   }
@@ -586,7 +622,7 @@ function RouteComponent() {
                                   <Modal.Body className="flex items-start gap-4">
                                     <div className="relative flex h-full min-h-[300px] w-full flex-col items-center justify-center rounded-xl bg-neutral-100">
                                       <img
-                                        src={previewImage}
+                                        src={previewImage ?? undefined}
                                         alt="Image Preview"
                                         className="h-full w-full rounded-md border object-cover"
                                         style={{ objectFit: "cover" }}
@@ -614,7 +650,11 @@ function RouteComponent() {
                 disabled={!canSubmit}
                 className="mt-4 w-full"
               >
-                Publish
+                {uploadingImages
+                  ? "Uploading Images..."
+                  : !uploadingImages && isSubmitting
+                    ? "Publishing..."
+                    : "Publish"}
                 {isSubmitting && (
                   <FancyButton.Icon
                     className={cn(isSubmitting && "animate-spin")}
