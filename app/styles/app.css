@@ -249,6 +249,15 @@
     --text-disabled-300: var(--neutral-300);
     --text-white-0: var(--neutral-0);
 
+    --sidebar-background: var(--bg-white-0);
+    --sidebar-foreground: var(--bg-surface-800);
+    --sidebar-primary: var(--bg-strong-950);
+    --sidebar-primary-foreground: var(--bg-weak-50);
+    --sidebar-accent: var(--bg-soft-200);
+    --sidebar-accent-foreground: var(--text-strong-950);
+    --sidebar-border: var(--stroke-sub-300);
+    --sidebar-ring: var(--primary-base);
+
     --stroke-strong-950: var(--neutral-950);
     --stroke-sub-300: var(--neutral-300);
     --stroke-soft-200: var(--neutral-200);
@@ -318,6 +327,15 @@
     --text-soft-400: var(--neutral-500);
     --text-disabled-300: var(--neutral-600);
     --text-white-0: var(--neutral-950);
+
+    --sidebar-background: var(--bg-white-0);
+    --sidebar-foreground: var(--bg-surface-800);
+    --sidebar-primary: var(--bg-strong-950);
+    --sidebar-primary-foreground: var(--bg-weak-50);
+    --sidebar-accent: var(--bg-soft-200);
+    --sidebar-accent-foreground: var(--text-strong-950);
+    --sidebar-border: var(--stroke-sub-300);
+    --sidebar-ring: var(--primary-base);
 
     --stroke-strong-950: var(--neutral-0);
     --stroke-sub-300: var(--neutral-600);
