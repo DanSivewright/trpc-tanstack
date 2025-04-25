@@ -20,7 +20,6 @@ import { Route as LearnerExploreImport } from './routes/_learner/explore'
 import { Route as LearnerChatImport } from './routes/_learner/chat'
 import { Route as LearnerCalendarImport } from './routes/_learner/calendar'
 import { Route as AuthLoginImport } from './routes/_auth.login'
-import { Route as LearnercommunitiesCommunitiesRouteImport } from './routes/_learner/(communities)/communities.route'
 import { Route as LearnercommunitiesCommunitiesIndexImport } from './routes/_learner/(communities)/communities.index'
 import { Route as LearnercommunitiesCommunitiesCreateRouteImport } from './routes/_learner/(communities)/communities_.create.route'
 import { Route as LearnercommunitiesCommunitiesIdRouteImport } from './routes/_learner/(communities)/communities.$id.route'
@@ -98,18 +97,11 @@ const AuthLoginRoute = AuthLoginImport.update({
   getParentRoute: () => AuthRoute,
 } as any)
 
-const LearnercommunitiesCommunitiesRouteRoute =
-  LearnercommunitiesCommunitiesRouteImport.update({
-    id: '/(communities)/communities',
-    path: '/communities',
-    getParentRoute: () => LearnerRoute,
-  } as any)
-
 const LearnercommunitiesCommunitiesIndexRoute =
   LearnercommunitiesCommunitiesIndexImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => LearnercommunitiesCommunitiesRouteRoute,
+    id: '/(communities)/communities/',
+    path: '/communities/',
+    getParentRoute: () => LearnerRoute,
   } as any)
 
 const LearnercommunitiesCommunitiesCreateRouteRoute =
@@ -121,9 +113,9 @@ const LearnercommunitiesCommunitiesCreateRouteRoute =
 
 const LearnercommunitiesCommunitiesIdRouteRoute =
   LearnercommunitiesCommunitiesIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => LearnercommunitiesCommunitiesRouteRoute,
+    id: '/(communities)/communities/$id',
+    path: '/communities/$id',
+    getParentRoute: () => LearnerRoute,
   } as any)
 
 const LearnercommunitiesCommunitiesCreateIndexRoute =
@@ -330,19 +322,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LearnerIndexImport
       parentRoute: typeof LearnerImport
     }
-    '/_learner/(communities)/communities': {
-      id: '/_learner/(communities)/communities'
-      path: '/communities'
-      fullPath: '/communities'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesRouteImport
-      parentRoute: typeof LearnerImport
-    }
     '/_learner/(communities)/communities/$id': {
       id: '/_learner/(communities)/communities/$id'
-      path: '/$id'
+      path: '/communities/$id'
       fullPath: '/communities/$id'
       preLoaderRoute: typeof LearnercommunitiesCommunitiesIdRouteImport
-      parentRoute: typeof LearnercommunitiesCommunitiesRouteImport
+      parentRoute: typeof LearnerImport
     }
     '/_learner/(communities)/communities_/create': {
       id: '/_learner/(communities)/communities_/create'
@@ -353,10 +338,10 @@ declare module '@tanstack/react-router' {
     }
     '/_learner/(communities)/communities/': {
       id: '/_learner/(communities)/communities/'
-      path: '/'
-      fullPath: '/communities/'
+      path: '/communities'
+      fullPath: '/communities'
       preLoaderRoute: typeof LearnercommunitiesCommunitiesIndexImport
-      parentRoute: typeof LearnercommunitiesCommunitiesRouteImport
+      parentRoute: typeof LearnerImport
     }
     '/_learner/(communities)/communities/$id/about': {
       id: '/_learner/(communities)/communities/$id/about'
@@ -548,24 +533,6 @@ const LearnercommunitiesCommunitiesIdRouteRouteWithChildren =
     LearnercommunitiesCommunitiesIdRouteRouteChildren,
   )
 
-interface LearnercommunitiesCommunitiesRouteRouteChildren {
-  LearnercommunitiesCommunitiesIdRouteRoute: typeof LearnercommunitiesCommunitiesIdRouteRouteWithChildren
-  LearnercommunitiesCommunitiesIndexRoute: typeof LearnercommunitiesCommunitiesIndexRoute
-}
-
-const LearnercommunitiesCommunitiesRouteRouteChildren: LearnercommunitiesCommunitiesRouteRouteChildren =
-  {
-    LearnercommunitiesCommunitiesIdRouteRoute:
-      LearnercommunitiesCommunitiesIdRouteRouteWithChildren,
-    LearnercommunitiesCommunitiesIndexRoute:
-      LearnercommunitiesCommunitiesIndexRoute,
-  }
-
-const LearnercommunitiesCommunitiesRouteRouteWithChildren =
-  LearnercommunitiesCommunitiesRouteRoute._addFileChildren(
-    LearnercommunitiesCommunitiesRouteRouteChildren,
-  )
-
 interface LearnercommunitiesCommunitiesCreateCommunityIdRouteRouteChildren {
   LearnercommunitiesCommunitiesCreateCommunityIdMembersRoute: typeof LearnercommunitiesCommunitiesCreateCommunityIdMembersRoute
   LearnercommunitiesCommunitiesCreateCommunityIdPublishRoute: typeof LearnercommunitiesCommunitiesCreateCommunityIdPublishRoute
@@ -623,8 +590,9 @@ interface LearnerRouteChildren {
   LearnerExploreRoute: typeof LearnerExploreRoute
   LearnerTasksRoute: typeof LearnerTasksRoute
   LearnerIndexRoute: typeof LearnerIndexRoute
-  LearnercommunitiesCommunitiesRouteRoute: typeof LearnercommunitiesCommunitiesRouteRouteWithChildren
+  LearnercommunitiesCommunitiesIdRouteRoute: typeof LearnercommunitiesCommunitiesIdRouteRouteWithChildren
   LearnercommunitiesCommunitiesCreateRouteRoute: typeof LearnercommunitiesCommunitiesCreateRouteRouteWithChildren
+  LearnercommunitiesCommunitiesIndexRoute: typeof LearnercommunitiesCommunitiesIndexRoute
 }
 
 const LearnerRouteChildren: LearnerRouteChildren = {
@@ -633,10 +601,12 @@ const LearnerRouteChildren: LearnerRouteChildren = {
   LearnerExploreRoute: LearnerExploreRoute,
   LearnerTasksRoute: LearnerTasksRoute,
   LearnerIndexRoute: LearnerIndexRoute,
-  LearnercommunitiesCommunitiesRouteRoute:
-    LearnercommunitiesCommunitiesRouteRouteWithChildren,
+  LearnercommunitiesCommunitiesIdRouteRoute:
+    LearnercommunitiesCommunitiesIdRouteRouteWithChildren,
   LearnercommunitiesCommunitiesCreateRouteRoute:
     LearnercommunitiesCommunitiesCreateRouteRouteWithChildren,
+  LearnercommunitiesCommunitiesIndexRoute:
+    LearnercommunitiesCommunitiesIndexRoute,
 }
 
 const LearnerRouteWithChildren =
@@ -651,10 +621,9 @@ export interface FileRoutesByFullPath {
   '/explore': typeof LearnerExploreRoute
   '/tasks': typeof LearnerTasksRoute
   '/': typeof LearnerIndexRoute
-  '/communities': typeof LearnercommunitiesCommunitiesRouteRouteWithChildren
   '/communities/$id': typeof LearnercommunitiesCommunitiesIdRouteRouteWithChildren
   '/communities/create': typeof LearnercommunitiesCommunitiesCreateRouteRouteWithChildren
-  '/communities/': typeof LearnercommunitiesCommunitiesIndexRoute
+  '/communities': typeof LearnercommunitiesCommunitiesIndexRoute
   '/communities/$id/about': typeof LearnercommunitiesCommunitiesIdAboutRoute
   '/communities/$id/articles': typeof LearnercommunitiesCommunitiesIdArticlesRoute
   '/communities/$id/calendar': typeof LearnercommunitiesCommunitiesIdCalendarRoute
@@ -717,7 +686,6 @@ export interface FileRoutesById {
   '/_learner/explore': typeof LearnerExploreRoute
   '/_learner/tasks': typeof LearnerTasksRoute
   '/_learner/': typeof LearnerIndexRoute
-  '/_learner/(communities)/communities': typeof LearnercommunitiesCommunitiesRouteRouteWithChildren
   '/_learner/(communities)/communities/$id': typeof LearnercommunitiesCommunitiesIdRouteRouteWithChildren
   '/_learner/(communities)/communities_/create': typeof LearnercommunitiesCommunitiesCreateRouteRouteWithChildren
   '/_learner/(communities)/communities/': typeof LearnercommunitiesCommunitiesIndexRoute
@@ -753,10 +721,9 @@ export interface FileRouteTypes {
     | '/explore'
     | '/tasks'
     | '/'
-    | '/communities'
     | '/communities/$id'
     | '/communities/create'
-    | '/communities/'
+    | '/communities'
     | '/communities/$id/about'
     | '/communities/$id/articles'
     | '/communities/$id/calendar'
@@ -816,7 +783,6 @@ export interface FileRouteTypes {
     | '/_learner/explore'
     | '/_learner/tasks'
     | '/_learner/'
-    | '/_learner/(communities)/communities'
     | '/_learner/(communities)/communities/$id'
     | '/_learner/(communities)/communities_/create'
     | '/_learner/(communities)/communities/'
@@ -883,8 +849,9 @@ export const routeTree = rootRoute
         "/_learner/explore",
         "/_learner/tasks",
         "/_learner/",
-        "/_learner/(communities)/communities",
-        "/_learner/(communities)/communities_/create"
+        "/_learner/(communities)/communities/$id",
+        "/_learner/(communities)/communities_/create",
+        "/_learner/(communities)/communities/"
       ]
     },
     "/test": {
@@ -914,17 +881,9 @@ export const routeTree = rootRoute
       "filePath": "_learner/index.tsx",
       "parent": "/_learner"
     },
-    "/_learner/(communities)/communities": {
-      "filePath": "_learner/(communities)/communities.route.tsx",
-      "parent": "/_learner",
-      "children": [
-        "/_learner/(communities)/communities/$id",
-        "/_learner/(communities)/communities/"
-      ]
-    },
     "/_learner/(communities)/communities/$id": {
       "filePath": "_learner/(communities)/communities.$id.route.tsx",
-      "parent": "/_learner/(communities)/communities",
+      "parent": "/_learner",
       "children": [
         "/_learner/(communities)/communities/$id/about",
         "/_learner/(communities)/communities/$id/articles",
@@ -951,7 +910,7 @@ export const routeTree = rootRoute
     },
     "/_learner/(communities)/communities/": {
       "filePath": "_learner/(communities)/communities.index.tsx",
-      "parent": "/_learner/(communities)/communities"
+      "parent": "/_learner"
     },
     "/_learner/(communities)/communities/$id/about": {
       "filePath": "_learner/(communities)/communities.$id.about.tsx",
