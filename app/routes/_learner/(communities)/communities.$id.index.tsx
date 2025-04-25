@@ -77,36 +77,38 @@ function RouteComponent() {
           }}
           className="items-start"
         >
-          <Sidebar collapsible="none">
-            <SidebarHeader>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton>Option</SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-              <SidebarGroup>
-                <SidebarGroupContent>
-                  <label htmlFor="">Label</label>
-                  <SidebarInput placeholder="search the dosc" />
-                </SidebarGroupContent>
-              </SidebarGroup>
-            </SidebarHeader>
-            <SidebarContent>
-              <SidebarGroup>
-                <SidebarGroupLabel>Label One</SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton>Button one</SidebarMenuButton>
-                    </SidebarMenuItem>
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            </SidebarContent>
-            <SidebarRail />
+          <Sidebar collapsible="none" className="flex flex-col items-end">
+            <div className="w-3/4 bg-blue-50">
+              <SidebarHeader>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton>Option</SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+                <SidebarGroup>
+                  <SidebarGroupContent>
+                    <label htmlFor="">Label</label>
+                    <SidebarInput placeholder="search the dosc" />
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              </SidebarHeader>
+              <SidebarContent>
+                <SidebarGroup>
+                  <SidebarGroupLabel>Label One</SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton>Button one</SidebarMenuButton>
+                      </SidebarMenuItem>
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              </SidebarContent>
+              <SidebarRail />
+            </div>
           </Sidebar>
-          <main className="flex h-[calc(100svh-48px)] w-full max-w-screen-lg flex-1 flex-col overflow-hidden bg-pink-50">
-            <div className="flex flex-1 flex-col overflow-y-auto">
+          <main className="flex h-[calc(100svh-48px)] w-full max-w-screen-lg flex-1 flex-col overflow-hidden">
+            <div className="flex flex-1 flex-col overflow-y-auto px-2">
               <div className="relative mx-auto mt-2 flex w-full max-w-screen-lg flex-col gap-2 px-6 xl:px-0">
                 <Avatar.Root className="absolute -left-12 top-0" size="40">
                   <Avatar.Image src="https://www.alignui.com/images/avatar/illustration/james.png" />
@@ -162,7 +164,7 @@ function RouteComponent() {
                 </div>
               </div>
 
-              <div className="sticky top-12 z-20 mx-auto flex w-full max-w-screen-lg items-center justify-between bg-red-50 px-6 py-2 xl:px-0">
+              <div className="sticky top-0 z-20 mx-auto flex w-full max-w-screen-lg items-center justify-between bg-red-50 px-6 py-2 xl:px-0">
                 <Link className="flex items-center gap-3" to="/">
                   <h2 className="text-title-h6 font-light text-text-soft-400">
                     <span className="text-text-strong-950">Pinned </span>Threads
