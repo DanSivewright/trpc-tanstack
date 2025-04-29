@@ -11,6 +11,7 @@ import {
   RiDownloadLine,
   RiEyeLine,
   RiHashtag,
+  RiImageLine,
   RiLayoutMasonryLine,
   RiListCheck,
   RiSearchLine,
@@ -21,7 +22,7 @@ import {
 } from "@remixicon/react"
 import { useQueries, useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { formatDistance } from "date-fns"
+import { formatDistance, isLastDayOfMonth } from "date-fns"
 
 import { useElementSize } from "@/hooks/use-element-size"
 import * as Avatar from "@/components/ui/avatar"
@@ -232,13 +233,19 @@ function RouteComponent() {
       type: faker.helpers.arrayElement([
         "text",
         "gallery",
-        "image",
         "attachment",
         "article",
       ]),
-      gallery: Array.from({ length: 4 }, () => ({
-        path: `${faker.number.int({ min: 1, max: 34 })}.webp`,
-      })),
+      gallery: Array.from(
+        { length: faker.number.int({ min: 1, max: 7 }) },
+        () => {
+          const length = faker.number.int({ min: 1, max: 34 })
+          return {
+            id: faker.string.uuid(),
+            path: `${length}.${length === 26 || length === 27 ? "png" : "webp"}`,
+          }
+        }
+      ),
       image: {
         path: `${faker.number.int({ min: 1, max: 34 })}.webp`,
       },
@@ -670,12 +677,155 @@ function RouteComponent() {
                   <p className="text-label-md font-light text-text-sub-600">
                     {c.title}
                   </p>
-                  {c.type}
+                  {c.type === "attachment" && (
+                    <div className="mt-2 flex cursor-pointer items-center justify-between gap-2 rounded-10 border border-stroke-soft-200 bg-bg-weak-50 px-3 py-2 transition-all">
+                      <div className="flex items-center gap-2">
+                        <FileFormatIcon.Root
+                          size="small"
+                          format={c.attachment.status}
+                          color={c.attachment.color}
+                        />
+                        <div className="flex flex-col gap-0.5">
+                          <p className="text-label-sm font-light text-text-sub-600">
+                            {c.attachment.title}
+                          </p>
+                          <p className="text-label-xs font-light text-text-soft-400">
+                            {c.date.toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <RiDownloadLine className="size-4 text-text-soft-400" />
+                    </div>
+                  )}
+                  {c.type === "gallery" && (
+                    <>
+                      {c.gallery.length < 3 && (
+                        <Grid gap="none" className="mt-2 gap-1">
+                          {c.gallery.map((g, gi) => {
+                            const span = {
+                              1: "col-span-12",
+                              2: "col-span-6",
+                            }[c.gallery.length]
+                            return (
+                              <Image
+                                key={g.id}
+                                path={g.path!}
+                                lqip={{
+                                  active: true,
+                                  quality: 1,
+                                  blur: 50,
+                                }}
+                                className={cn(
+                                  "aspect-video w-full overflow-hidden rounded-[4px] object-cover",
+                                  span
+                                )}
+                                // alt={`Community ${c.name} image`}
+                              />
+                            )
+                          })}
+                        </Grid>
+                      )}
+                      {c.gallery.length >= 3 && (
+                        <Grid gap="none" className="mt-2 gap-1">
+                          {c.gallery.slice(0, 4).map((g, gi) => {
+                            let span = ""
+                            if (gi === 0) {
+                              span = "col-span-12"
+                            } else {
+                              if (c.gallery.length - 1 === 2) {
+                                span = "col-span-6"
+                              } else {
+                                span = "col-span-4"
+                              }
+                            }
+
+                            const isLast = gi === 3
+                            const amountExtra = c.gallery.length - 4
+
+                            return (
+                              <div
+                                className={cn(
+                                  "relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-[4px]",
+                                  span
+                                )}
+                                key={g.id}
+                              >
+                                {g.path}
+                                {isLast && amountExtra > 0 && (
+                                  <div className="absolute z-10 flex h-full w-full items-center justify-center bg-black/60">
+                                    <span className="relative z-10 text-title-h4 text-bg-white-0">
+                                      +{amountExtra}
+                                    </span>
+                                  </div>
+                                )}
+                                <Image
+                                  key={g.id}
+                                  path={g.path!}
+                                  lqip={{
+                                    active: true,
+                                    quality: 1,
+                                    blur: 50,
+                                  }}
+                                  className="absolute inset-0 z-0 h-full w-full object-cover"
+                                />
+                              </div>
+                            )
+                            // let span = gi === 0 ? "col-span-12" : "col-span-6"
+                            // const span = {
+                            //   1: "col-span-12",
+                            //   2: "col-span-6",
+                            // }[c.gallery.length]
+                          })}
+                        </Grid>
+                      )}
+                    </>
+                  )}
                 </div>
               </li>
             )
           })}
         </ul>
+        <Section className="gutter">
+          <div className="gutter relative mt-4 flex w-full flex-col gap-2 overflow-hidden rounded-xl bg-bg-weak-50 py-16">
+            <h1 className="relative z-10 text-title-h4">
+              Your community has no posts
+            </h1>
+            <p className="relative z-10 text-label-sm font-light text-text-soft-400">
+              Be the first to post in this community.
+            </p>
+            <div className="flex items-center gap-3">
+              <FancyButton.Root
+                size="xsmall"
+                variant="primary"
+                className="relative z-10"
+              >
+                <FancyButton.Icon as={RiAddLine} />
+                Create a thread
+              </FancyButton.Root>
+              <FancyButton.Root
+                size="xsmall"
+                variant="basic"
+                className="relative z-10"
+              >
+                <FancyButton.Icon as={RiAddLine} />
+                Create a article
+              </FancyButton.Root>
+              <FancyButton.Root
+                size="xsmall"
+                variant="basic"
+                className="relative z-10"
+              >
+                <FancyButton.Icon as={RiAddLine} />
+                Create a course
+              </FancyButton.Root>
+            </div>
+
+            <RiAddLine
+              className="absolute -top-24 right-24 z-0 rotate-[-20deg] text-text-soft-400 opacity-10"
+              size={450}
+            />
+          </div>
+        </Section>
         {Array.from({ length: 10 }).map((_, i) => (
           <div key={i} className="aspect-video w-full rounded-xl bg-pink-100" />
         ))}
