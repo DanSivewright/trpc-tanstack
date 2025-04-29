@@ -4,53 +4,28 @@ import { cn } from "@/utils/cn"
 import { faker } from "@faker-js/faker"
 import {
   RiAddLine,
-  RiArrowRightSLine,
   RiAttachmentLine,
   RiBookmarkLine,
   RiCalendarLine,
   RiDownloadLine,
   RiEyeLine,
   RiHashtag,
-  RiImageLine,
-  RiLayoutMasonryLine,
-  RiListCheck,
   RiSearchLine,
   RiSendPlaneLine,
-  RiThumbUpLine,
   RiVideoAddLine,
   RiVoiceAiLine,
 } from "@remixicon/react"
-import { useQueries, useQuery, useSuspenseQuery } from "@tanstack/react-query"
+import { useQueries, useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { formatDistance, isLastDayOfMonth } from "date-fns"
+import { formatDistance } from "date-fns"
 
 import { useElementSize } from "@/hooks/use-element-size"
 import * as Avatar from "@/components/ui/avatar"
-import * as CompactButton from "@/components/ui/compact-button"
-import * as Divider from "@/components/ui/divider"
 import * as FancyButton from "@/components/ui/fancy-button"
 import * as FileFormatIcon from "@/components/ui/file-format-icon"
 import * as Input from "@/components/ui/input"
-import * as Select from "@/components/ui/select"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarInput,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarRail,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
 import * as Tag from "@/components/ui/tag"
 import * as Tooltip from "@/components/ui/tooltip"
-import { BounceCards } from "@/components/bounce-cards"
 import { Grid } from "@/components/grid"
 import Image from "@/components/image"
 import { Section } from "@/components/section"
@@ -647,117 +622,74 @@ function RouteComponent() {
               )
             }
             return (
-              <li className="flex items-start gap-5" key={c.id}>
-                <Avatar.Root className="mt-1" size="48">
-                  <Avatar.Image src={c.author.avatar} />
+              <Link
+                to="/communities/$id/threads/$threadId"
+                params={{
+                  id,
+                  threadId: c.id,
+                }}
+                key={c.id}
+              >
+                <li className="flex items-start gap-5">
+                  <Avatar.Root className="mt-1" size="48">
+                    <Avatar.Image src={c.author.avatar} />
 
-                  {c.author.admin && (
-                    <Avatar.Indicator position="bottom">
-                      <CustomVerifiedIconSVG />
-                    </Avatar.Indicator>
-                  )}
-                  {c.author.admin && (
-                    <Avatar.Indicator position="top">
-                      <Avatar.Status status="online" />
-                    </Avatar.Indicator>
-                  )}
-                </Avatar.Root>
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center gap-2">
-                    <p className="text-label-lg font-medium">
-                      {c.author.name.split(" ")[0]}{" "}
-                      {c.author.name.split(" ")[1][0]}.
-                    </p>
-                    <p className="mt-0.5 text-label-xs font-light text-text-soft-400">
-                      {formatDistance(c.date, new Date(), {
-                        addSuffix: true,
-                      })}
-                    </p>
-                  </div>
-                  <p className="text-label-md font-light text-text-sub-600">
-                    {c.title}
-                  </p>
-                  {c.type === "attachment" && (
-                    <div className="mt-2 flex cursor-pointer items-center justify-between gap-2 rounded-10 border border-stroke-soft-200 bg-bg-weak-50 px-3 py-2 transition-all">
-                      <div className="flex items-center gap-2">
-                        <FileFormatIcon.Root
-                          size="small"
-                          format={c.attachment.status}
-                          color={c.attachment.color}
-                        />
-                        <div className="flex flex-col gap-0.5">
-                          <p className="text-label-sm font-light text-text-sub-600">
-                            {c.attachment.title}
-                          </p>
-                          <p className="text-label-xs font-light text-text-soft-400">
-                            {c.date.toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      <RiDownloadLine className="size-4 text-text-soft-400" />
+                    {c.author.admin && (
+                      <Avatar.Indicator position="bottom">
+                        <CustomVerifiedIconSVG />
+                      </Avatar.Indicator>
+                    )}
+                    {c.author.admin && (
+                      <Avatar.Indicator position="top">
+                        <Avatar.Status status="online" />
+                      </Avatar.Indicator>
+                    )}
+                  </Avatar.Root>
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-2">
+                      <p className="text-label-lg font-medium">
+                        {c.author.name.split(" ")[0]}{" "}
+                        {c.author.name.split(" ")[1][0]}.
+                      </p>
+                      <p className="mt-0.5 text-label-xs font-light text-text-soft-400">
+                        {formatDistance(c.date, new Date(), {
+                          addSuffix: true,
+                        })}
+                      </p>
                     </div>
-                  )}
-                  {c.type === "gallery" && (
-                    <>
-                      {c.gallery.length < 3 && (
-                        <Grid gap="none" className="mt-2 gap-1">
-                          {c.gallery.map((g, gi) => {
-                            const span = {
-                              1: "col-span-12",
-                              2: "col-span-6",
-                            }[c.gallery.length]
-                            return (
-                              <Image
-                                key={g.id}
-                                path={g.path!}
-                                lqip={{
-                                  active: true,
-                                  quality: 1,
-                                  blur: 50,
-                                }}
-                                className={cn(
-                                  "aspect-video w-full overflow-hidden rounded-[4px] object-cover",
-                                  span
-                                )}
-                                // alt={`Community ${c.name} image`}
-                              />
-                            )
-                          })}
-                        </Grid>
-                      )}
-                      {c.gallery.length >= 3 && (
-                        <Grid gap="none" className="mt-2 gap-1">
-                          {c.gallery.slice(0, 4).map((g, gi) => {
-                            let span = ""
-                            if (gi === 0) {
-                              span = "col-span-12"
-                            } else {
-                              if (c.gallery.length - 1 === 2) {
-                                span = "col-span-6"
-                              } else {
-                                span = "col-span-4"
-                              }
-                            }
-
-                            const isLast = gi === 3
-                            const amountExtra = c.gallery.length - 4
-
-                            return (
-                              <div
-                                className={cn(
-                                  "relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-[4px]",
-                                  span
-                                )}
-                                key={g.id}
-                              >
-                                {g.path}
-                                {isLast && amountExtra > 0 && (
-                                  <div className="absolute z-10 flex h-full w-full items-center justify-center bg-black/60">
-                                    <span className="relative z-10 text-title-h4 text-bg-white-0">
-                                      +{amountExtra}
-                                    </span>
-                                  </div>
-                                )}
+                    <p className="text-label-md font-light text-text-sub-600">
+                      {c.title}
+                    </p>
+                    {c.type === "attachment" && (
+                      <div className="mt-2 flex cursor-pointer items-center justify-between gap-2 rounded-10 border border-stroke-soft-200 bg-bg-weak-50 px-3 py-2 transition-all">
+                        <div className="flex items-center gap-2">
+                          <FileFormatIcon.Root
+                            size="small"
+                            format={c.attachment.status}
+                            color={c.attachment.color}
+                          />
+                          <div className="flex flex-col gap-0.5">
+                            <p className="text-label-sm font-light text-text-sub-600">
+                              {c.attachment.title}
+                            </p>
+                            <p className="text-label-xs font-light text-text-soft-400">
+                              {c.date.toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <RiDownloadLine className="size-4 text-text-soft-400" />
+                      </div>
+                    )}
+                    {c.type === "gallery" && (
+                      <>
+                        {c.gallery.length < 3 && (
+                          <Grid gap="none" className="mt-2 gap-1">
+                            {c.gallery.map((g, gi) => {
+                              const span = {
+                                1: "col-span-12",
+                                2: "col-span-6",
+                              }[c.gallery.length]
+                              return (
                                 <Image
                                   key={g.id}
                                   path={g.path!}
@@ -766,22 +698,74 @@ function RouteComponent() {
                                     quality: 1,
                                     blur: 50,
                                   }}
-                                  className="absolute inset-0 z-0 h-full w-full object-cover"
+                                  className={cn(
+                                    "aspect-video w-full overflow-hidden rounded-[4px] object-cover",
+                                    span
+                                  )}
+                                  // alt={`Community ${c.name} image`}
                                 />
-                              </div>
-                            )
-                            // let span = gi === 0 ? "col-span-12" : "col-span-6"
-                            // const span = {
-                            //   1: "col-span-12",
-                            //   2: "col-span-6",
-                            // }[c.gallery.length]
-                          })}
-                        </Grid>
-                      )}
-                    </>
-                  )}
-                </div>
-              </li>
+                              )
+                            })}
+                          </Grid>
+                        )}
+                        {c.gallery.length >= 3 && (
+                          <Grid gap="none" className="mt-2 gap-1">
+                            {c.gallery.slice(0, 4).map((g, gi) => {
+                              let span = ""
+                              if (gi === 0) {
+                                span = "col-span-12"
+                              } else {
+                                if (c.gallery.length - 1 === 2) {
+                                  span = "col-span-6"
+                                } else {
+                                  span = "col-span-4"
+                                }
+                              }
+
+                              const isLast = gi === 3
+                              const amountExtra = c.gallery.length - 4
+
+                              return (
+                                <div
+                                  className={cn(
+                                    "relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-[4px]",
+                                    span
+                                  )}
+                                  key={g.id}
+                                >
+                                  {g.path}
+                                  {isLast && amountExtra > 0 && (
+                                    <div className="absolute z-10 flex h-full w-full items-center justify-center bg-black/60">
+                                      <span className="relative z-10 text-title-h4 text-bg-white-0">
+                                        +{amountExtra}
+                                      </span>
+                                    </div>
+                                  )}
+                                  <Image
+                                    key={g.id}
+                                    path={g.path!}
+                                    lqip={{
+                                      active: true,
+                                      quality: 1,
+                                      blur: 50,
+                                    }}
+                                    className="absolute inset-0 z-0 h-full w-full object-cover"
+                                  />
+                                </div>
+                              )
+                              // let span = gi === 0 ? "col-span-12" : "col-span-6"
+                              // const span = {
+                              //   1: "col-span-12",
+                              //   2: "col-span-6",
+                              // }[c.gallery.length]
+                            })}
+                          </Grid>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </li>
+              </Link>
             )
           })}
         </ul>
@@ -830,162 +814,6 @@ function RouteComponent() {
           <div key={i} className="aspect-video w-full rounded-xl bg-pink-100" />
         ))}
       </div>
-
-      {/* <div className="h-[calc(100svh-48px)] max-h-[calc(100svh-48px)] w-screen overflow-hidden">
-        <SidebarProvider
-          style={{
-            "--sidebar-width": `${Math.floor((window.innerWidth - 1024) / 2)}px`,
-          }}
-          className="items-start"
-        >
-          <Sidebar collapsible="none" className="flex flex-col items-end">
-            <div className="w-3/4 bg-blue-50">
-              <SidebarHeader>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton>Option</SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-                <SidebarGroup>
-                  <SidebarGroupContent>
-                    <label htmlFor="">Label</label>
-                    <SidebarInput placeholder="search the dosc" />
-                  </SidebarGroupContent>
-                </SidebarGroup>
-              </SidebarHeader>
-              <SidebarContent>
-                <SidebarGroup>
-                  <SidebarGroupLabel>Label One</SidebarGroupLabel>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton>Button one</SidebarMenuButton>
-                      </SidebarMenuItem>
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
-              </SidebarContent>
-              <SidebarRail />
-            </div>
-          </Sidebar>
-          <main className="flex h-[calc(100svh-48px)] w-full max-w-screen-lg flex-1 flex-col overflow-hidden">
-            <div className="flex flex-1 flex-col overflow-y-auto px-2">
-              <div className="relative mx-auto mt-2 flex w-full max-w-screen-lg flex-col gap-2 px-6 xl:px-0">
-                <Avatar.Root className="absolute -left-12 top-0" size="40">
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/illustration/james.png" />
-                </Avatar.Root>
-                <div className="flex w-full flex-col gap-1 rounded-10 bg-bg-soft-200 p-1 pb-1.5 shadow-regular-md">
-                  <Input.Root className="shadow-none">
-                    <Input.Wrapper>
-                      <Input.Icon as={RiSearchLine} />
-                      <Input.Input
-                        type="text"
-                        placeholder="What's on your mind?"
-                      />
-                    </Input.Wrapper>
-                  </Input.Root>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <Tooltip.Root>
-                        <Tooltip.Trigger asChild>
-                          <FancyButton.Root size="xsmall" variant="basic">
-                            <FancyButton.Icon as={RiAttachmentLine} />
-                          </FancyButton.Root>
-                        </Tooltip.Trigger>
-                        <Tooltip.Content>
-                          <span>Attach</span>
-                        </Tooltip.Content>
-                      </Tooltip.Root>
-                      <Tooltip.Root>
-                        <Tooltip.Trigger asChild>
-                          <FancyButton.Root size="xsmall" variant="basic">
-                            <FancyButton.Icon as={RiVideoAddLine} />
-                          </FancyButton.Root>
-                        </Tooltip.Trigger>
-                        <Tooltip.Content>
-                          <span>Video</span>
-                        </Tooltip.Content>
-                      </Tooltip.Root>
-                      <Tooltip.Root>
-                        <Tooltip.Trigger asChild>
-                          <FancyButton.Root size="xsmall" variant="basic">
-                            <FancyButton.Icon as={RiVoiceAiLine} />
-                          </FancyButton.Root>
-                        </Tooltip.Trigger>
-                        <Tooltip.Content>
-                          <span>Voice</span>
-                        </Tooltip.Content>
-                      </Tooltip.Root>
-                    </div>
-                    <FancyButton.Root size="xsmall" variant="neutral">
-                      Share
-                      <FancyButton.Icon as={RiSendPlaneLine} />
-                    </FancyButton.Root>
-                  </div>
-                </div>
-              </div>
-
-              <div className="sticky top-0 z-20 mx-auto flex w-full max-w-screen-lg items-center justify-between bg-red-50 px-6 py-2 xl:px-0">
-                <Link className="flex items-center gap-3" to="/">
-                  <h2 className="text-title-h6 font-light text-text-soft-400">
-                    <span className="text-text-strong-950">Pinned </span>Threads
-                  </h2>
-                  <RiArrowRightSLine className="size-5" />
-                </Link>
-              </div>
-
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="aspect-video max-w-3xl rounded-xl bg-pink-100"
-                />
-              ))}
-
-              <Section className="gutter">
-                <div className="gutter relative mt-4 flex w-full flex-col gap-2 overflow-hidden rounded-xl bg-bg-weak-50 py-16">
-                  <h1 className="relative z-10 text-title-h4">
-                    Your community has no posts
-                  </h1>
-                  <p className="relative z-10 text-label-sm font-light text-text-soft-400">
-                    Be the first to post in this community.
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <FancyButton.Root
-                      size="xsmall"
-                      variant="primary"
-                      className="relative z-10"
-                    >
-                      <FancyButton.Icon as={RiAddLine} />
-                      Create a thread
-                    </FancyButton.Root>
-                    <FancyButton.Root
-                      size="xsmall"
-                      variant="basic"
-                      className="relative z-10"
-                    >
-                      <FancyButton.Icon as={RiAddLine} />
-                      Create a article
-                    </FancyButton.Root>
-                    <FancyButton.Root
-                      size="xsmall"
-                      variant="basic"
-                      className="relative z-10"
-                    >
-                      <FancyButton.Icon as={RiAddLine} />
-                      Create a course
-                    </FancyButton.Root>
-                  </div>
-
-                  <RiAddLine
-                    className="absolute -top-24 right-24 z-0 rotate-[-20deg] text-text-soft-400 opacity-10"
-                    size={450}
-                  />
-                </div>
-              </Section>
-            </div>
-          </main>
-        </SidebarProvider>
-      </div> */}
     </>
   )
 }

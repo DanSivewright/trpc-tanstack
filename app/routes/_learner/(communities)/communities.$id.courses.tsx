@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
 
 export const Route = createFileRoute(
   "/_learner/(communities)/communities/$id/courses"
@@ -10,5 +10,18 @@ export const Route = createFileRoute(
 })
 
 function RouteComponent() {
-  return <div>Hello "/_learner/(communities)/communities/$id/courses"!</div>
+  const params = Route.useParams()
+  return (
+    <>
+      <Link
+        to="/communities/$id/threads/$threadId"
+        params={{
+          id: params.id,
+          threadId: crypto.randomUUID(),
+        }}
+      >
+        Go to test thread
+      </Link>
+    </>
+  )
 }
