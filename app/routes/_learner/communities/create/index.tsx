@@ -9,7 +9,7 @@ import {
   RiUserCommunityLine,
 } from "@remixicon/react"
 import { useForm } from "@tanstack/react-form"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
@@ -30,6 +30,7 @@ function RouteComponent() {
   const { notification } = useNotification()
 
   const trpc = useTRPC()
+  const qc = useQueryClient()
   const me = useQuery(trpc.people.me.queryOptions())
 
   const navigate = Route.useNavigate()
@@ -59,6 +60,14 @@ function RouteComponent() {
         case "community":
           navigate({
             to: "/communities/create/$id/community",
+            params: {
+              id,
+            },
+          })
+          break
+        case "course":
+          navigate({
+            to: "/communities/create/course",
             params: {
               id,
             },
@@ -96,7 +105,14 @@ function RouteComponent() {
                     id={field.name}
                     name={field.name}
                     value={field.state.value}
-                    onValueChange={(value) => field.handleChange(value)}
+                    onValueChange={(value) => {
+                      if (value === "course") {
+                        qc.prefetchQuery(
+                          trpc.communities.adminOf.queryOptions()
+                        )
+                      }
+                      field.handleChange(value)
+                    }}
                     className={cn(gridVariants({ gap: "xs" }), "")}
                   >
                     <div className="group/radio col-span-12 aspect-video md:col-span-6 xl:col-span-3 xl:aspect-square">

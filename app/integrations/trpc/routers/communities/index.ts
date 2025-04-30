@@ -6,7 +6,7 @@ import { z } from "zod"
 
 import { cachedFunction, generateCacheKey, useStorage } from "@/lib/cache"
 
-import { protectedProcedure, publicProcedure } from "../../init"
+import { protectedProcedure } from "../../init"
 import {
   communitySchema,
   type communitiesAllSchema,
@@ -130,7 +130,10 @@ export const communitiesRouter = {
   }),
   // @ts-ignore
   joined: protectedProcedure.query(async ({ ctx, sin, type, path }) => {
-    const communities = await getCommunities({ type, path })
+    const communities = await getCommunities({
+      type: "query",
+      path: "communities.all",
+    })
 
     const joinedCommunities = communities
       .filter((com) => com.members?.some((m) => m.uid === ctx.uid))
@@ -140,6 +143,21 @@ export const communitiesRouter = {
       }))
 
     return joinedCommunities as z.infer<typeof communitiesJoinedSchema>
+  }),
+  adminOf: protectedProcedure.query(async ({ ctx }) => {
+    const communities = await getCommunities({
+      type: "query",
+      path: "communities.all",
+    })
+    const adminOfCommunities = communities
+      .filter((com) =>
+        com.members?.some((m) => m.uid === ctx.uid && m.role === "admin")
+      )
+      .map((com) => ({
+        ...com,
+        membership: com.members?.find((m) => m.uid === ctx.uid),
+      }))
+    return adminOfCommunities as z.infer<typeof communitiesJoinedSchema>
   }),
   detail: protectedProcedure
     .input(z.object({ id: z.string() }))

@@ -115,3 +115,5 @@ export {
   AvatarGroupCompactStack as Stack,
   AvatarGroupCompactOverflow as Overflow,
 }
+
+export * as AvatarGroupCompact from "@/components/ui/avatar-group-compact"

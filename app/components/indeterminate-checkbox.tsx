@@ -16,7 +16,7 @@ const IndeterminateCheckbox: React.FC<Props> = ({
 
   useEffect(() => {
     if (typeof indeterminate === "boolean") {
-      ref.current.indeterminate = !rest.checked && indeterminate
+      ref.current.indeterminate = !rest?.checked && indeterminate
     }
   }, [ref, indeterminate])
 

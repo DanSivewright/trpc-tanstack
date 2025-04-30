@@ -135,3 +135,4 @@ export {
   TableCell as Cell,
   TableCaption as Caption,
 }
+export * as Table from "@/components/ui/table"

@@ -98,7 +98,6 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const { id } = Route.useParams()
   const { notification } = useNotification()
-  const navigate = useNavigate()
   const { step } = Route.useLoaderData()
   const { goToStep } = useGoToNextStep({ id })
 
