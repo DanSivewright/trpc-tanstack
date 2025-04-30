@@ -79,3 +79,4 @@ function HintIcon<T extends React.ElementType>({
 HintIcon.displayName = HINT_ICON_NAME
 
 export { HintRoot as Root, HintIcon as Icon }
+export * as Hint from "./hint"

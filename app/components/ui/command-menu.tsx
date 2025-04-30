@@ -203,3 +203,5 @@ export {
   CommandFooter as Footer,
   CommandFooterKeyBox as FooterKeyBox,
 }
+
+export * as CommandMenu from "./command-menu"

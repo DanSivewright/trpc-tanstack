@@ -85,3 +85,5 @@ export {
   PopoverContent as Content,
   PopoverClose as Close,
 }
+
+export * as Popover from "./popover"

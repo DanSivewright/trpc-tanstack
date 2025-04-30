@@ -156,3 +156,5 @@ export {
   ButtonGroupItem as Item,
   ButtonGroupIcon as Icon,
 }
+
+export * as ButtonGroup from "./button-group"

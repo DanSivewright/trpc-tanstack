@@ -4,7 +4,7 @@ import {
 } from "@remixicon/react"
 import type { AnyFieldApi } from "@tanstack/react-form"
 
-import * as Hint from "@/components/ui/hint"
+import { Hint } from "@/components/ui/hint"
 
 type Props = {
   field: AnyFieldApi

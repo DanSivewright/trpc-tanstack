@@ -97,3 +97,5 @@ export {
   SegmentedControlTrigger as Trigger,
   SegmentedControlContent as Content,
 }
+
+export * as SegmentedControl from "./segmented-control"

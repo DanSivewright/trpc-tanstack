@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react"
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
 
-import * as Checkbox from "@/components/ui/checkbox"
+import { Checkbox } from "@/components/ui/checkbox"
 
 type Props = {
   indeterminate?: boolean

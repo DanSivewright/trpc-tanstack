@@ -50,3 +50,5 @@ const SliderThumb = React.forwardRef<
 SliderThumb.displayName = SLIDER_THUMB_NAME
 
 export { SliderRoot as Root, SliderThumb as Thumb }
+
+export * as Slider from "./slider"

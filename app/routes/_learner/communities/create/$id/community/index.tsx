@@ -40,7 +40,7 @@ import type { z } from "zod"
 
 import { cn } from "@/lib/utils"
 import { useNotification } from "@/hooks/use-notification"
-import * as Checkbox from "@/components/ui/checkbox"
+import { Checkbox } from "@/components/ui/checkbox"
 import { FancyButton } from "@/components/ui/fancy-button"
 import { Label } from "@/components/ui/label"
 import * as Textarea from "@/components/ui/textarea"
