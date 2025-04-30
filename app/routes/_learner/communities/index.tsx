@@ -33,7 +33,7 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import { motion } from "motion/react"
 
 import { useElementSize } from "@/hooks/use-element-size"
-import * as Avatar from "@/components/ui/avatar"
+import { Avatar } from "@/components/ui/avatar"
 import * as AvatarGroupCompact from "@/components/ui/avatar-group-compact"
 import * as Badge from "@/components/ui/badge"
 import {
@@ -43,7 +43,7 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel"
 import * as DotStepper from "@/components/ui/dot-stepper"
-import * as Input from "@/components/ui/input"
+import { Input } from "@/components/ui/input"
 import DraggableScrollContainer from "@/components/draggable-scroll-container"
 import { Grid } from "@/components/grid"
 import Image from "@/components/image"
@@ -95,7 +95,7 @@ const filters: {
   { title: "International", icon: RiGlobeLine },
 ]
 
-export const Route = createFileRoute("/_learner/(communities)/communities/")({
+export const Route = createFileRoute("/_learner/communities/")({
   component: RouteComponent,
   loader: async ({ context }) => {
     await Promise.all([
@@ -231,7 +231,7 @@ function RouteComponent() {
           </p>
           <Input.Root>
             <Input.Wrapper>
-              <Input.Input
+              <Input.Field
                 type="text"
                 placeholder="Search for a community..."
               />

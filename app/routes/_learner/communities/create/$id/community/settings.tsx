@@ -20,18 +20,19 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import type { z } from "zod"
 
 import { useNotification } from "@/hooks/use-notification"
-import * as Avatar from "@/components/ui/avatar"
-import * as FancyButton from "@/components/ui/fancy-button"
-import * as Label from "@/components/ui/label"
-import * as Radio from "@/components/ui/radio"
+import { Avatar } from "@/components/ui/avatar"
+import { FancyButton } from "@/components/ui/fancy-button"
+import { Label } from "@/components/ui/label"
+import { Radio } from "@/components/ui/radio"
 import FieldInfo from "@/components/field-info"
 import { gridVariants } from "@/components/grid"
 import { Section } from "@/components/section"
 
-import { communitySteps } from "./communities_.create.community.$id.route"
+import { useGoToNextStep } from "./-hooks/use-go-to-next-step"
+import { communitySteps } from "./route"
 
 export const Route = createFileRoute(
-  "/_learner/(communities)/communities_/create/community/$id/settings"
+  "/_learner/communities/create/$id/community/settings"
 )({
   loader: async ({ context, params: { id } }) => {
     await context.queryClient.ensureQueryData(
@@ -51,6 +52,7 @@ function RouteComponent() {
   const { notification } = useNotification()
   const navigate = useNavigate()
   const { step } = Route.useLoaderData()
+  const { goToStep } = useGoToNextStep({ id })
 
   const qc = useQueryClient()
   const trpc = useTRPC()
@@ -86,10 +88,7 @@ function RouteComponent() {
       const nextStep = communitySteps?.[Number(currentStep?.indicator)]
 
       if (!form.state.isDirty) {
-        navigate({
-          to: `/communities/create/community/$id/${nextStep.step}`,
-          params: { id },
-        })
+        goToStep(nextStep.step)
         return
       }
 
@@ -108,10 +107,7 @@ function RouteComponent() {
                 queryKey: trpc.communities.detail.queryKey({ id }),
               }),
             ])
-            navigate({
-              to: `/communities/create/community/$id/${nextStep.step}`,
-              params: { id },
-            })
+            goToStep(nextStep.step)
           },
         }
       )

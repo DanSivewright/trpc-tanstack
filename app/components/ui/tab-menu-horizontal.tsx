@@ -164,3 +164,5 @@ export {
   TabMenuHorizontalArrowIcon as ArrowIcon,
   TabMenuHorizontalContent as Content,
 }
+
+export * as TabMenuHorizontal from "./tab-menu-horizontal"

@@ -185,3 +185,5 @@ export {
   TagDismissButton as DismissButton,
   TagDismissIcon as DismissIcon,
 }
+
+export * as Tag from "./tag"

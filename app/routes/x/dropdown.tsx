@@ -3,11 +3,11 @@ import { RiEmojiStickerLine, RiMore2Line, RiPencilLine } from "@remixicon/react"
 import { createFileRoute } from "@tanstack/react-router"
 import { formatDistance } from "date-fns"
 
-import * as Avatar from "@/components/ui/avatar"
+import { Avatar } from "@/components/ui/avatar"
 import * as CompactButton from "@/components/ui/compact-button"
 import * as Divider from "@/components/ui/divider"
 import * as Dropdown from "@/components/ui/dropdown"
-import * as Input from "@/components/ui/input"
+import { Input } from "@/components/ui/input"
 
 export const Route = createFileRoute("/x/dropdown")({
   component: RouteComponent,
@@ -104,7 +104,7 @@ function RouteComponent() {
               </div>
               <Input.Root size="small">
                 <Input.Wrapper className="bg-bg-soft-200">
-                  <Input.Input type="text" placeholder="Message" />
+                  <Input.Field type="text" placeholder="Message" />
                 </Input.Wrapper>
               </Input.Root>
             </div>

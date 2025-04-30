@@ -161,3 +161,4 @@ export {
   HorizontalStepperItem as Item,
   HorizontalStepperItemIndicator as ItemIndicator,
 }
+export * as HorizontalStepper from "./horizontal-stepper"

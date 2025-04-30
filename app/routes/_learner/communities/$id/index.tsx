@@ -20,35 +20,17 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import { formatDistance } from "date-fns"
 
 import { useElementSize } from "@/hooks/use-element-size"
-import * as Avatar from "@/components/ui/avatar"
-import * as FancyButton from "@/components/ui/fancy-button"
+import { Avatar } from "@/components/ui/avatar"
+import { FancyButton } from "@/components/ui/fancy-button"
 import * as FileFormatIcon from "@/components/ui/file-format-icon"
-import * as Input from "@/components/ui/input"
-import * as Tag from "@/components/ui/tag"
-import * as Tooltip from "@/components/ui/tooltip"
+import { Input } from "@/components/ui/input"
+import { Tag } from "@/components/ui/tag"
+import { Tooltip } from "@/components/ui/tooltip"
 import { Grid } from "@/components/grid"
 import Image from "@/components/image"
 import { Section } from "@/components/section"
 
-const images = [
-  "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=500&auto=format",
-  "https://images.unsplash.com/photo-1480074568708-e7b720bb3f09?q=80&w=500&auto=format",
-  "https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=500&auto=format",
-  "https://images.unsplash.com/photo-1452626212852-811d58933cae?q=80&w=500&auto=format",
-  "https://images.unsplash.com/photo-1572120360610-d971b9d7767c?q=80&w=500&auto=format",
-]
-
-const transformStyles = [
-  "rotate(5deg) translate(-200px, 0)",
-  "rotate(0deg) translate(-100px, 0)",
-  "rotate(-5deg) translate(0, 0)",
-  "rotate(5deg) translate(100px, 0)",
-  "rotate(-5deg) translate(200px, 0)",
-]
-
-export const Route = createFileRoute(
-  "/_learner/(communities)/communities/$id/"
-)({
+export const Route = createFileRoute("/_learner/communities/$id/")({
   loader: async ({ context, params: { id } }) => {
     await context.queryClient.ensureQueryData(
       context.trpc.communities.detail.queryOptions({
@@ -413,7 +395,7 @@ function RouteComponent() {
           <Input.Root className="shadow-none">
             <Input.Wrapper>
               <Input.Icon as={RiSearchLine} />
-              <Input.Input type="text" placeholder="What's on your mind?" />
+              <Input.Field type="text" placeholder="What's on your mind?" />
             </Input.Wrapper>
           </Input.Root>
           <div className="flex items-center justify-between">

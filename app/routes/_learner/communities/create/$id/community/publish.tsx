@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from "react"
 import { storage } from "@/integrations/firebase/client"
 import { useTRPC } from "@/integrations/trpc/react"
-import { communitySchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
 import type { paletteSchema } from "@/integrations/trpc/routers/palette/schemas/palette-schema"
 import { cn } from "@/utils/cn"
 import { formatBytes } from "@/utils/format-bytes"
@@ -9,7 +8,6 @@ import {
   RiDeleteBinLine,
   RiExpandDiagonalLine,
   RiImageAddLine,
-  RiImageEditLine,
   RiInformationFill,
   RiLoaderLine,
 } from "@remixicon/react"
@@ -26,22 +24,20 @@ import { useDropzone, type FileWithPath } from "react-dropzone"
 import { z } from "zod"
 
 import { useNotification } from "@/hooks/use-notification"
-import * as Avatar from "@/components/ui/avatar"
+import { Avatar } from "@/components/ui/avatar"
 import * as AvatarGroupCompact from "@/components/ui/avatar-group-compact"
 import * as Badge from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import * as CompactButton from "@/components/ui/compact-button"
-import * as FancyButton from "@/components/ui/fancy-button"
-import * as Hint from "@/components/ui/hint"
+import { FancyButton } from "@/components/ui/fancy-button"
 import * as Modal from "@/components/ui/modal"
 import * as Switch from "@/components/ui/switch"
-import * as Tooltip from "@/components/ui/tooltip"
+import { Tooltip } from "@/components/ui/tooltip"
 import { DotPattern } from "@/components/dot-pattern"
 import FieldInfo from "@/components/field-info"
-import { Grid } from "@/components/grid"
 
 export const Route = createFileRoute(
-  "/_learner/(communities)/communities_/create/community/$id/publish"
+  "/_learner/communities/create/$id/community/publish"
 )({
   loader: async ({ context, params: { id } }) => {
     await context.queryClient.ensureQueryData(
@@ -59,8 +55,6 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const { id } = Route.useParams()
   const { notification } = useNotification()
-  const navigate = useNavigate()
-  const { step } = Route.useLoaderData()
 
   const MAX_FILES = 5
   const MAX_SIZE = 5 * 1024 * 1024

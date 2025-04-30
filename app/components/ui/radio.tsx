@@ -130,3 +130,4 @@ const RadioGroupItem = React.forwardRef<
 RadioGroupItem.displayName = "RadioGroupItem"
 
 export { RadioGroup as Group, RadioGroupItem as Item }
+export * as Radio from "./radio"

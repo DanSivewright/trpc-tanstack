@@ -131,3 +131,5 @@ export {
   TooltipTrigger as Trigger,
   TooltipContent as Content,
 }
+
+export * as Tooltip from "./tooltip"

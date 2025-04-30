@@ -1,6 +1,4 @@
-import { useState } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
-import { communitySchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
 import {
   RiArrowRightSLine,
   RiBookLine,
@@ -9,25 +7,22 @@ import {
   RiLoaderLine,
   RiNewsLine,
   RiUserCommunityLine,
-  type RemixiconComponentType,
 } from "@remixicon/react"
-import { useForm, type AnyFieldApi } from "@tanstack/react-form"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useForm } from "@tanstack/react-form"
+import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
 
 import { cn } from "@/lib/utils"
 import { useNotification } from "@/hooks/use-notification"
-import * as Avatar from "@/components/ui/avatar"
-import * as FancyButton from "@/components/ui/fancy-button"
-import * as Hint from "@/components/ui/hint"
-import * as Label from "@/components/ui/label"
-import * as Radio from "@/components/ui/radio"
+import { Avatar } from "@/components/ui/avatar"
+import { FancyButton } from "@/components/ui/fancy-button"
+import { Label } from "@/components/ui/label"
+import { Radio } from "@/components/ui/radio"
+import FieldInfo from "@/components/field-info"
 import { gridVariants } from "@/components/grid"
 
-export const Route = createFileRoute(
-  "/_learner/(communities)/communities_/create/"
-)({
+export const Route = createFileRoute("/_learner/communities/create/")({
   component: RouteComponent,
 })
 
@@ -60,15 +55,25 @@ function RouteComponent() {
     },
     onSubmit: (data) => {
       const id = crypto.randomUUID()
-      navigate({
-        to: `/communities/create/${data.value.type}/$id`,
-        params: {
-          id,
-        },
-      })
+      switch (data.value.type) {
+        case "community":
+          navigate({
+            to: "/communities/create/$id/community",
+            params: {
+              id,
+            },
+          })
+          break
+        default:
+          notification({
+            title: "Support coming soon",
+            description: "We are working on this feature.",
+            variant: "light",
+            status: "information",
+          })
+      }
     },
   })
-
   return (
     <>
       <form
@@ -241,156 +246,6 @@ function RouteComponent() {
               )}
             />
           </div>
-
-          {/* <Section className="mx-auto flex w-full max-w-screen-md flex-col">
-        <h1 className="text-title-h1 font-normal">Create Community</h1>
-        <Image
-          path="/communities/9deedec6-0d0e-43fa-838f-6e9548274b20"
-          width={100}
-          height={100}
-        />
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            form.handleSubmit()
-          }}
-          className="flex flex-col gap-8"
-        >
-          <form.Field
-            name="name"
-            children={(field) => {
-              return (
-                <div className="flex flex-col gap-1">
-                  <Label.Root htmlFor="email">
-                    Name
-                    <Label.Asterisk />
-                  </Label.Root>
-
-                  <Input.Root>
-                    <Input.Wrapper>
-                      <Input.Icon as={RiGlobalLine} />
-                      <Input.Input
-                        id={field.name}
-                        name={field.name}
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        placeholder="Community"
-                      />
-                    </Input.Wrapper>
-                  </Input.Root>
-
-                  <FieldInfo
-                    field={field}
-                    fallback="This is the name of the community. Pick a good one!"
-                    fallbackIcon={RiInformationFill}
-                  />
-                </div>
-              )
-            }}
-          />
-          <form.Field
-            name="headline"
-            children={(field) => {
-              return (
-                <div className="flex flex-col gap-1">
-                  <Label.Root htmlFor="email">
-                    Community Headline
-                    <Label.Asterisk />
-                  </Label.Root>
-
-                  <Textarea.Root
-                    placeholder="Community Headline"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    id={field.name}
-                    name={field.name}
-                  >
-                    <Textarea.CharCounter
-                      current={field.state.value.length}
-                      max={200}
-                    />
-                  </Textarea.Root>
-
-                  <FieldInfo
-                    field={field}
-                    fallback="Tell us what the community is about in 1 - 2 sentences."
-                    fallbackIcon={RiInformationFill}
-                  />
-                </div>
-              )
-            }}
-          />
-          <form.Field
-            name="tags"
-            mode="array"
-            children={(field) => {
-              return (
-                <div className="flex flex-col gap-2">
-                  <Label.Root>Tags</Label.Root>
-                  <FieldInfo
-                    field={field}
-                    fallback="Select the tags that best describe the community. At least 1 tag is required."
-                    fallbackIcon={RiInformationFill}
-                  />
-                  <Grid gap="xs">
-                    {filters.map((f) => (
-                      <Label.Root className="col-span-4 flex items-center gap-2">
-                        <Checkbox.Root
-                          checked={field.state.value.includes(f.title)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              field.pushValue(f.title)
-                            } else {
-                              const index = field.state.value.indexOf(f.title)
-                              if (index !== -1) {
-                                field.removeValue(index)
-                              }
-                            }
-                          }}
-                        />
-                        {f.title}
-                      </Label.Root>
-                    ))}
-                  </Grid>
-                </div>
-              )
-            }}
-          />
-          <FileUpload.Root
-            files={files}
-            setFiles={setFiles}
-            fileTypes={["images"]}
-            maxFiles={2}
-          >
-            <input multiple type="file" tabIndex={-1} className="hidden" />
-            <FileUpload.Icon as={RiUploadCloud2Line} />
-
-            <div className="space-y-1.5">
-              <div className="text-label-sm text-text-strong-950">
-                Choose your feature image and logo and drop it here
-              </div>
-              <div className="text-paragraph-xs text-text-sub-600">
-                Only images are supported.
-              </div>
-            </div>
-            <FileUpload.Button>Browse File</FileUpload.Button>
-          </FileUpload.Root>
-          <form.Subscribe
-            selector={(state) => [state.canSubmit, state.isSubmitting]}
-            children={([canSubmit, isSubmitting]) => (
-              <FancyButton.Root type="submit" disabled={!canSubmit}>
-                Submit
-                <FancyButton.Icon
-                  className={cn(isSubmitting && "animate-spin")}
-                  as={isSubmitting ? RiLoaderLine : RiArrowRightLine}
-                />
-              </FancyButton.Root>
-            )}
-          />
-        </form>
-      </Section> */}
         </div>
         <footer className="dark:bg-gray-950/80 gutter fixed inset-x-0 bottom-0 border-t border-bg-soft-200 bg-white/80 backdrop-blur-sm 2xl:px-0">
           <div className="mx-auto flex w-full max-w-screen-xl items-center justify-between py-3">
@@ -416,32 +271,6 @@ function RouteComponent() {
           </div>
         </footer>
       </form>
-    </>
-  )
-}
-
-function FieldInfo({
-  field,
-  fallback,
-  fallbackIcon,
-}: {
-  field: AnyFieldApi
-  fallback?: string
-  fallbackIcon?: RemixiconComponentType
-}) {
-  return (
-    <>
-      {field.state.meta.isTouched && field.state.meta.errors.length ? (
-        <Hint.Root hasError>
-          <Hint.Icon as={RiInformationFill} />
-          {field.state.meta.errors.map((err) => err.message).join(",")}
-        </Hint.Root>
-      ) : fallback ? (
-        <Hint.Root>
-          {fallbackIcon && <Hint.Icon as={fallbackIcon} />}
-          {fallback}
-        </Hint.Root>
-      ) : null}
     </>
   )
 }

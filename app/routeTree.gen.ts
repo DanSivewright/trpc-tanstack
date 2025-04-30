@@ -22,29 +22,20 @@ import { Route as LearnerExploreImport } from './routes/_learner/explore'
 import { Route as LearnerChatImport } from './routes/_learner/chat'
 import { Route as LearnerCalendarImport } from './routes/_learner/calendar'
 import { Route as AuthLoginImport } from './routes/_auth.login'
-import { Route as LearnercommunitiesCreateIndexImport } from './routes/_learner/(communities)/create/index'
-import { Route as LearnercommunitiesCommunitiesIndexImport } from './routes/_learner/(communities)/communities.index'
-import { Route as LearnercommunitiesCommunitiesCreateRouteImport } from './routes/_learner/(communities)/communities_.create.route'
-import { Route as LearnercommunitiesCommunitiesIdRouteImport } from './routes/_learner/(communities)/communities.$id.route'
-import { Route as LearnercommunitiesCommunitiesCreateIndexImport } from './routes/_learner/(communities)/communities_.create.index'
-import { Route as LearnercommunitiesCommunitiesIdIndexImport } from './routes/_learner/(communities)/communities.$id.index'
-import { Route as LearnercommunitiesCommunitiesIdWorkflowsImport } from './routes/_learner/(communities)/communities.$id.workflows'
-import { Route as LearnercommunitiesCommunitiesIdTasksImport } from './routes/_learner/(communities)/communities.$id.tasks'
-import { Route as LearnercommunitiesCommunitiesIdResourcesImport } from './routes/_learner/(communities)/communities.$id.resources'
-import { Route as LearnercommunitiesCommunitiesIdMembersImport } from './routes/_learner/(communities)/communities.$id.members'
-import { Route as LearnercommunitiesCommunitiesIdCoursesImport } from './routes/_learner/(communities)/communities.$id.courses'
-import { Route as LearnercommunitiesCommunitiesIdCalendarImport } from './routes/_learner/(communities)/communities.$id.calendar'
-import { Route as LearnercommunitiesCommunitiesIdArticlesImport } from './routes/_learner/(communities)/communities.$id.articles'
-import { Route as LearnercommunitiesCommunitiesIdAboutImport } from './routes/_learner/(communities)/communities.$id.about'
-import { Route as LearnercommunitiesCommunitiesCreateThreadIdImport } from './routes/_learner/(communities)/communities_.create.thread.$id'
-import { Route as LearnercommunitiesCommunitiesCreateCourseIdImport } from './routes/_learner/(communities)/communities_.create.course.$id'
-import { Route as LearnercommunitiesCommunitiesCreateArticlesIdImport } from './routes/_learner/(communities)/communities_.create.articles.$id'
-import { Route as LearnercommunitiesCommunitiesIdThreadsThreadIdImport } from './routes/_learner/(communities)/communities.$id.threads.$threadId'
-import { Route as LearnercommunitiesCommunitiesCreateCommunityIdRouteImport } from './routes/_learner/(communities)/communities_.create.community.$id.route'
-import { Route as LearnercommunitiesCommunitiesCreateCommunityIdIndexImport } from './routes/_learner/(communities)/communities_.create.community.$id.index'
-import { Route as LearnercommunitiesCommunitiesCreateCommunityIdSettingsImport } from './routes/_learner/(communities)/communities_.create.community.$id.settings'
-import { Route as LearnercommunitiesCommunitiesCreateCommunityIdPublishImport } from './routes/_learner/(communities)/communities_.create.community.$id.publish'
-import { Route as LearnercommunitiesCommunitiesCreateCommunityIdMembersImport } from './routes/_learner/(communities)/communities_.create.community.$id.members'
+import { Route as LearnerCommunitiesIndexImport } from './routes/_learner/communities/index'
+import { Route as LearnerCommunitiesIdRouteImport } from './routes/_learner/communities/$id/route'
+import { Route as LearnerCommunitiesCreateIndexImport } from './routes/_learner/communities/create/index'
+import { Route as LearnerCommunitiesIdIndexImport } from './routes/_learner/communities/$id/index'
+import { Route as LearnerCommunitiesIdThreadsIndexImport } from './routes/_learner/communities/$id/threads.index'
+import { Route as LearnerCommunitiesIdCoursesIndexImport } from './routes/_learner/communities/$id/courses.index'
+import { Route as LearnerCommunitiesIdArticlesIndexImport } from './routes/_learner/communities/$id/articles.index'
+import { Route as LearnerCommunitiesIdThreadsThreadIdImport } from './routes/_learner/communities/$id/threads.$threadId'
+import { Route as LearnerCommunitiesCreateIdCourseRouteImport } from './routes/_learner/communities/create/$id/course/route'
+import { Route as LearnerCommunitiesCreateIdCommunityRouteImport } from './routes/_learner/communities/create/$id/community/route'
+import { Route as LearnerCommunitiesCreateIdCommunityIndexImport } from './routes/_learner/communities/create/$id/community/index'
+import { Route as LearnerCommunitiesCreateIdCommunitySettingsImport } from './routes/_learner/communities/create/$id/community/settings'
+import { Route as LearnerCommunitiesCreateIdCommunityPublishImport } from './routes/_learner/communities/create/$id/community/publish'
+import { Route as LearnerCommunitiesCreateIdCommunityMembersImport } from './routes/_learner/communities/create/$id/community/members'
 
 // Create/Update Routes
 
@@ -112,169 +103,99 @@ const AuthLoginRoute = AuthLoginImport.update({
   getParentRoute: () => AuthRoute,
 } as any)
 
-const LearnercommunitiesCreateIndexRoute =
-  LearnercommunitiesCreateIndexImport.update({
-    id: '/(communities)/create/',
-    path: '/create/',
+const LearnerCommunitiesIndexRoute = LearnerCommunitiesIndexImport.update({
+  id: '/communities/',
+  path: '/communities/',
+  getParentRoute: () => LearnerRoute,
+} as any)
+
+const LearnerCommunitiesIdRouteRoute = LearnerCommunitiesIdRouteImport.update({
+  id: '/communities/$id',
+  path: '/communities/$id',
+  getParentRoute: () => LearnerRoute,
+} as any)
+
+const LearnerCommunitiesCreateIndexRoute =
+  LearnerCommunitiesCreateIndexImport.update({
+    id: '/communities/create/',
+    path: '/communities/create/',
     getParentRoute: () => LearnerRoute,
   } as any)
 
-const LearnercommunitiesCommunitiesIndexRoute =
-  LearnercommunitiesCommunitiesIndexImport.update({
-    id: '/(communities)/communities/',
-    path: '/communities/',
-    getParentRoute: () => LearnerRoute,
+const LearnerCommunitiesIdIndexRoute = LearnerCommunitiesIdIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LearnerCommunitiesIdRouteRoute,
+} as any)
+
+const LearnerCommunitiesIdThreadsIndexRoute =
+  LearnerCommunitiesIdThreadsIndexImport.update({
+    id: '/threads/',
+    path: '/threads/',
+    getParentRoute: () => LearnerCommunitiesIdRouteRoute,
   } as any)
 
-const LearnercommunitiesCommunitiesCreateRouteRoute =
-  LearnercommunitiesCommunitiesCreateRouteImport.update({
-    id: '/(communities)/communities_/create',
-    path: '/communities/create',
-    getParentRoute: () => LearnerRoute,
+const LearnerCommunitiesIdCoursesIndexRoute =
+  LearnerCommunitiesIdCoursesIndexImport.update({
+    id: '/courses/',
+    path: '/courses/',
+    getParentRoute: () => LearnerCommunitiesIdRouteRoute,
   } as any)
 
-const LearnercommunitiesCommunitiesIdRouteRoute =
-  LearnercommunitiesCommunitiesIdRouteImport.update({
-    id: '/(communities)/communities/$id',
-    path: '/communities/$id',
-    getParentRoute: () => LearnerRoute,
+const LearnerCommunitiesIdArticlesIndexRoute =
+  LearnerCommunitiesIdArticlesIndexImport.update({
+    id: '/articles/',
+    path: '/articles/',
+    getParentRoute: () => LearnerCommunitiesIdRouteRoute,
   } as any)
 
-const LearnercommunitiesCommunitiesCreateIndexRoute =
-  LearnercommunitiesCommunitiesCreateIndexImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => LearnercommunitiesCommunitiesCreateRouteRoute,
-  } as any)
-
-const LearnercommunitiesCommunitiesIdIndexRoute =
-  LearnercommunitiesCommunitiesIdIndexImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => LearnercommunitiesCommunitiesIdRouteRoute,
-  } as any)
-
-const LearnercommunitiesCommunitiesIdWorkflowsRoute =
-  LearnercommunitiesCommunitiesIdWorkflowsImport.update({
-    id: '/workflows',
-    path: '/workflows',
-    getParentRoute: () => LearnercommunitiesCommunitiesIdRouteRoute,
-  } as any)
-
-const LearnercommunitiesCommunitiesIdTasksRoute =
-  LearnercommunitiesCommunitiesIdTasksImport.update({
-    id: '/tasks',
-    path: '/tasks',
-    getParentRoute: () => LearnercommunitiesCommunitiesIdRouteRoute,
-  } as any)
-
-const LearnercommunitiesCommunitiesIdResourcesRoute =
-  LearnercommunitiesCommunitiesIdResourcesImport.update({
-    id: '/resources',
-    path: '/resources',
-    getParentRoute: () => LearnercommunitiesCommunitiesIdRouteRoute,
-  } as any)
-
-const LearnercommunitiesCommunitiesIdMembersRoute =
-  LearnercommunitiesCommunitiesIdMembersImport.update({
-    id: '/members',
-    path: '/members',
-    getParentRoute: () => LearnercommunitiesCommunitiesIdRouteRoute,
-  } as any)
-
-const LearnercommunitiesCommunitiesIdCoursesRoute =
-  LearnercommunitiesCommunitiesIdCoursesImport.update({
-    id: '/courses',
-    path: '/courses',
-    getParentRoute: () => LearnercommunitiesCommunitiesIdRouteRoute,
-  } as any)
-
-const LearnercommunitiesCommunitiesIdCalendarRoute =
-  LearnercommunitiesCommunitiesIdCalendarImport.update({
-    id: '/calendar',
-    path: '/calendar',
-    getParentRoute: () => LearnercommunitiesCommunitiesIdRouteRoute,
-  } as any)
-
-const LearnercommunitiesCommunitiesIdArticlesRoute =
-  LearnercommunitiesCommunitiesIdArticlesImport.update({
-    id: '/articles',
-    path: '/articles',
-    getParentRoute: () => LearnercommunitiesCommunitiesIdRouteRoute,
-  } as any)
-
-const LearnercommunitiesCommunitiesIdAboutRoute =
-  LearnercommunitiesCommunitiesIdAboutImport.update({
-    id: '/about',
-    path: '/about',
-    getParentRoute: () => LearnercommunitiesCommunitiesIdRouteRoute,
-  } as any)
-
-const LearnercommunitiesCommunitiesCreateThreadIdRoute =
-  LearnercommunitiesCommunitiesCreateThreadIdImport.update({
-    id: '/thread/$id',
-    path: '/thread/$id',
-    getParentRoute: () => LearnercommunitiesCommunitiesCreateRouteRoute,
-  } as any)
-
-const LearnercommunitiesCommunitiesCreateCourseIdRoute =
-  LearnercommunitiesCommunitiesCreateCourseIdImport.update({
-    id: '/course/$id',
-    path: '/course/$id',
-    getParentRoute: () => LearnercommunitiesCommunitiesCreateRouteRoute,
-  } as any)
-
-const LearnercommunitiesCommunitiesCreateArticlesIdRoute =
-  LearnercommunitiesCommunitiesCreateArticlesIdImport.update({
-    id: '/articles/$id',
-    path: '/articles/$id',
-    getParentRoute: () => LearnercommunitiesCommunitiesCreateRouteRoute,
-  } as any)
-
-const LearnercommunitiesCommunitiesIdThreadsThreadIdRoute =
-  LearnercommunitiesCommunitiesIdThreadsThreadIdImport.update({
+const LearnerCommunitiesIdThreadsThreadIdRoute =
+  LearnerCommunitiesIdThreadsThreadIdImport.update({
     id: '/threads/$threadId',
     path: '/threads/$threadId',
-    getParentRoute: () => LearnercommunitiesCommunitiesIdRouteRoute,
+    getParentRoute: () => LearnerCommunitiesIdRouteRoute,
   } as any)
 
-const LearnercommunitiesCommunitiesCreateCommunityIdRouteRoute =
-  LearnercommunitiesCommunitiesCreateCommunityIdRouteImport.update({
-    id: '/community/$id',
-    path: '/community/$id',
-    getParentRoute: () => LearnercommunitiesCommunitiesCreateRouteRoute,
+const LearnerCommunitiesCreateIdCourseRouteRoute =
+  LearnerCommunitiesCreateIdCourseRouteImport.update({
+    id: '/communities/create/$id/course',
+    path: '/communities/create/$id/course',
+    getParentRoute: () => LearnerRoute,
   } as any)
 
-const LearnercommunitiesCommunitiesCreateCommunityIdIndexRoute =
-  LearnercommunitiesCommunitiesCreateCommunityIdIndexImport.update({
+const LearnerCommunitiesCreateIdCommunityRouteRoute =
+  LearnerCommunitiesCreateIdCommunityRouteImport.update({
+    id: '/communities/create/$id/community',
+    path: '/communities/create/$id/community',
+    getParentRoute: () => LearnerRoute,
+  } as any)
+
+const LearnerCommunitiesCreateIdCommunityIndexRoute =
+  LearnerCommunitiesCreateIdCommunityIndexImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () =>
-      LearnercommunitiesCommunitiesCreateCommunityIdRouteRoute,
+    getParentRoute: () => LearnerCommunitiesCreateIdCommunityRouteRoute,
   } as any)
 
-const LearnercommunitiesCommunitiesCreateCommunityIdSettingsRoute =
-  LearnercommunitiesCommunitiesCreateCommunityIdSettingsImport.update({
+const LearnerCommunitiesCreateIdCommunitySettingsRoute =
+  LearnerCommunitiesCreateIdCommunitySettingsImport.update({
     id: '/settings',
     path: '/settings',
-    getParentRoute: () =>
-      LearnercommunitiesCommunitiesCreateCommunityIdRouteRoute,
+    getParentRoute: () => LearnerCommunitiesCreateIdCommunityRouteRoute,
   } as any)
 
-const LearnercommunitiesCommunitiesCreateCommunityIdPublishRoute =
-  LearnercommunitiesCommunitiesCreateCommunityIdPublishImport.update({
+const LearnerCommunitiesCreateIdCommunityPublishRoute =
+  LearnerCommunitiesCreateIdCommunityPublishImport.update({
     id: '/publish',
     path: '/publish',
-    getParentRoute: () =>
-      LearnercommunitiesCommunitiesCreateCommunityIdRouteRoute,
+    getParentRoute: () => LearnerCommunitiesCreateIdCommunityRouteRoute,
   } as any)
 
-const LearnercommunitiesCommunitiesCreateCommunityIdMembersRoute =
-  LearnercommunitiesCommunitiesCreateCommunityIdMembersImport.update({
+const LearnerCommunitiesCreateIdCommunityMembersRoute =
+  LearnerCommunitiesCreateIdCommunityMembersImport.update({
     id: '/members',
     path: '/members',
-    getParentRoute: () =>
-      LearnercommunitiesCommunitiesCreateCommunityIdRouteRoute,
+    getParentRoute: () => LearnerCommunitiesCreateIdCommunityRouteRoute,
   } as any)
 
 // Populate the FileRoutesByPath interface
@@ -358,166 +279,103 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LearnerIndexImport
       parentRoute: typeof LearnerImport
     }
-    '/_learner/(communities)/communities/$id': {
-      id: '/_learner/(communities)/communities/$id'
+    '/_learner/communities/$id': {
+      id: '/_learner/communities/$id'
       path: '/communities/$id'
       fullPath: '/communities/$id'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesIdRouteImport
+      preLoaderRoute: typeof LearnerCommunitiesIdRouteImport
       parentRoute: typeof LearnerImport
     }
-    '/_learner/(communities)/communities_/create': {
-      id: '/_learner/(communities)/communities_/create'
-      path: '/communities/create'
-      fullPath: '/communities/create'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesCreateRouteImport
-      parentRoute: typeof LearnerImport
-    }
-    '/_learner/(communities)/communities/': {
-      id: '/_learner/(communities)/communities/'
+    '/_learner/communities/': {
+      id: '/_learner/communities/'
       path: '/communities'
       fullPath: '/communities'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesIndexImport
+      preLoaderRoute: typeof LearnerCommunitiesIndexImport
       parentRoute: typeof LearnerImport
     }
-    '/_learner/(communities)/create/': {
-      id: '/_learner/(communities)/create/'
-      path: '/create'
-      fullPath: '/create'
-      preLoaderRoute: typeof LearnercommunitiesCreateIndexImport
-      parentRoute: typeof LearnerImport
-    }
-    '/_learner/(communities)/communities/$id/about': {
-      id: '/_learner/(communities)/communities/$id/about'
-      path: '/about'
-      fullPath: '/communities/$id/about'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesIdAboutImport
-      parentRoute: typeof LearnercommunitiesCommunitiesIdRouteImport
-    }
-    '/_learner/(communities)/communities/$id/articles': {
-      id: '/_learner/(communities)/communities/$id/articles'
-      path: '/articles'
-      fullPath: '/communities/$id/articles'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesIdArticlesImport
-      parentRoute: typeof LearnercommunitiesCommunitiesIdRouteImport
-    }
-    '/_learner/(communities)/communities/$id/calendar': {
-      id: '/_learner/(communities)/communities/$id/calendar'
-      path: '/calendar'
-      fullPath: '/communities/$id/calendar'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesIdCalendarImport
-      parentRoute: typeof LearnercommunitiesCommunitiesIdRouteImport
-    }
-    '/_learner/(communities)/communities/$id/courses': {
-      id: '/_learner/(communities)/communities/$id/courses'
-      path: '/courses'
-      fullPath: '/communities/$id/courses'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesIdCoursesImport
-      parentRoute: typeof LearnercommunitiesCommunitiesIdRouteImport
-    }
-    '/_learner/(communities)/communities/$id/members': {
-      id: '/_learner/(communities)/communities/$id/members'
-      path: '/members'
-      fullPath: '/communities/$id/members'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesIdMembersImport
-      parentRoute: typeof LearnercommunitiesCommunitiesIdRouteImport
-    }
-    '/_learner/(communities)/communities/$id/resources': {
-      id: '/_learner/(communities)/communities/$id/resources'
-      path: '/resources'
-      fullPath: '/communities/$id/resources'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesIdResourcesImport
-      parentRoute: typeof LearnercommunitiesCommunitiesIdRouteImport
-    }
-    '/_learner/(communities)/communities/$id/tasks': {
-      id: '/_learner/(communities)/communities/$id/tasks'
-      path: '/tasks'
-      fullPath: '/communities/$id/tasks'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesIdTasksImport
-      parentRoute: typeof LearnercommunitiesCommunitiesIdRouteImport
-    }
-    '/_learner/(communities)/communities/$id/workflows': {
-      id: '/_learner/(communities)/communities/$id/workflows'
-      path: '/workflows'
-      fullPath: '/communities/$id/workflows'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesIdWorkflowsImport
-      parentRoute: typeof LearnercommunitiesCommunitiesIdRouteImport
-    }
-    '/_learner/(communities)/communities/$id/': {
-      id: '/_learner/(communities)/communities/$id/'
+    '/_learner/communities/$id/': {
+      id: '/_learner/communities/$id/'
       path: '/'
       fullPath: '/communities/$id/'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesIdIndexImport
-      parentRoute: typeof LearnercommunitiesCommunitiesIdRouteImport
+      preLoaderRoute: typeof LearnerCommunitiesIdIndexImport
+      parentRoute: typeof LearnerCommunitiesIdRouteImport
     }
-    '/_learner/(communities)/communities_/create/': {
-      id: '/_learner/(communities)/communities_/create/'
-      path: '/'
-      fullPath: '/communities/create/'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesCreateIndexImport
-      parentRoute: typeof LearnercommunitiesCommunitiesCreateRouteImport
+    '/_learner/communities/create/': {
+      id: '/_learner/communities/create/'
+      path: '/communities/create'
+      fullPath: '/communities/create'
+      preLoaderRoute: typeof LearnerCommunitiesCreateIndexImport
+      parentRoute: typeof LearnerImport
     }
-    '/_learner/(communities)/communities_/create/community/$id': {
-      id: '/_learner/(communities)/communities_/create/community/$id'
-      path: '/community/$id'
-      fullPath: '/communities/create/community/$id'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesCreateCommunityIdRouteImport
-      parentRoute: typeof LearnercommunitiesCommunitiesCreateRouteImport
+    '/_learner/communities/create/$id/community': {
+      id: '/_learner/communities/create/$id/community'
+      path: '/communities/create/$id/community'
+      fullPath: '/communities/create/$id/community'
+      preLoaderRoute: typeof LearnerCommunitiesCreateIdCommunityRouteImport
+      parentRoute: typeof LearnerImport
     }
-    '/_learner/(communities)/communities/$id/threads/$threadId': {
-      id: '/_learner/(communities)/communities/$id/threads/$threadId'
+    '/_learner/communities/create/$id/course': {
+      id: '/_learner/communities/create/$id/course'
+      path: '/communities/create/$id/course'
+      fullPath: '/communities/create/$id/course'
+      preLoaderRoute: typeof LearnerCommunitiesCreateIdCourseRouteImport
+      parentRoute: typeof LearnerImport
+    }
+    '/_learner/communities/$id/threads/$threadId': {
+      id: '/_learner/communities/$id/threads/$threadId'
       path: '/threads/$threadId'
       fullPath: '/communities/$id/threads/$threadId'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesIdThreadsThreadIdImport
-      parentRoute: typeof LearnercommunitiesCommunitiesIdRouteImport
+      preLoaderRoute: typeof LearnerCommunitiesIdThreadsThreadIdImport
+      parentRoute: typeof LearnerCommunitiesIdRouteImport
     }
-    '/_learner/(communities)/communities_/create/articles/$id': {
-      id: '/_learner/(communities)/communities_/create/articles/$id'
-      path: '/articles/$id'
-      fullPath: '/communities/create/articles/$id'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesCreateArticlesIdImport
-      parentRoute: typeof LearnercommunitiesCommunitiesCreateRouteImport
+    '/_learner/communities/$id/articles/': {
+      id: '/_learner/communities/$id/articles/'
+      path: '/articles'
+      fullPath: '/communities/$id/articles'
+      preLoaderRoute: typeof LearnerCommunitiesIdArticlesIndexImport
+      parentRoute: typeof LearnerCommunitiesIdRouteImport
     }
-    '/_learner/(communities)/communities_/create/course/$id': {
-      id: '/_learner/(communities)/communities_/create/course/$id'
-      path: '/course/$id'
-      fullPath: '/communities/create/course/$id'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesCreateCourseIdImport
-      parentRoute: typeof LearnercommunitiesCommunitiesCreateRouteImport
+    '/_learner/communities/$id/courses/': {
+      id: '/_learner/communities/$id/courses/'
+      path: '/courses'
+      fullPath: '/communities/$id/courses'
+      preLoaderRoute: typeof LearnerCommunitiesIdCoursesIndexImport
+      parentRoute: typeof LearnerCommunitiesIdRouteImport
     }
-    '/_learner/(communities)/communities_/create/thread/$id': {
-      id: '/_learner/(communities)/communities_/create/thread/$id'
-      path: '/thread/$id'
-      fullPath: '/communities/create/thread/$id'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesCreateThreadIdImport
-      parentRoute: typeof LearnercommunitiesCommunitiesCreateRouteImport
+    '/_learner/communities/$id/threads/': {
+      id: '/_learner/communities/$id/threads/'
+      path: '/threads'
+      fullPath: '/communities/$id/threads'
+      preLoaderRoute: typeof LearnerCommunitiesIdThreadsIndexImport
+      parentRoute: typeof LearnerCommunitiesIdRouteImport
     }
-    '/_learner/(communities)/communities_/create/community/$id/members': {
-      id: '/_learner/(communities)/communities_/create/community/$id/members'
+    '/_learner/communities/create/$id/community/members': {
+      id: '/_learner/communities/create/$id/community/members'
       path: '/members'
-      fullPath: '/communities/create/community/$id/members'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesCreateCommunityIdMembersImport
-      parentRoute: typeof LearnercommunitiesCommunitiesCreateCommunityIdRouteImport
+      fullPath: '/communities/create/$id/community/members'
+      preLoaderRoute: typeof LearnerCommunitiesCreateIdCommunityMembersImport
+      parentRoute: typeof LearnerCommunitiesCreateIdCommunityRouteImport
     }
-    '/_learner/(communities)/communities_/create/community/$id/publish': {
-      id: '/_learner/(communities)/communities_/create/community/$id/publish'
+    '/_learner/communities/create/$id/community/publish': {
+      id: '/_learner/communities/create/$id/community/publish'
       path: '/publish'
-      fullPath: '/communities/create/community/$id/publish'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesCreateCommunityIdPublishImport
-      parentRoute: typeof LearnercommunitiesCommunitiesCreateCommunityIdRouteImport
+      fullPath: '/communities/create/$id/community/publish'
+      preLoaderRoute: typeof LearnerCommunitiesCreateIdCommunityPublishImport
+      parentRoute: typeof LearnerCommunitiesCreateIdCommunityRouteImport
     }
-    '/_learner/(communities)/communities_/create/community/$id/settings': {
-      id: '/_learner/(communities)/communities_/create/community/$id/settings'
+    '/_learner/communities/create/$id/community/settings': {
+      id: '/_learner/communities/create/$id/community/settings'
       path: '/settings'
-      fullPath: '/communities/create/community/$id/settings'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesCreateCommunityIdSettingsImport
-      parentRoute: typeof LearnercommunitiesCommunitiesCreateCommunityIdRouteImport
+      fullPath: '/communities/create/$id/community/settings'
+      preLoaderRoute: typeof LearnerCommunitiesCreateIdCommunitySettingsImport
+      parentRoute: typeof LearnerCommunitiesCreateIdCommunityRouteImport
     }
-    '/_learner/(communities)/communities_/create/community/$id/': {
-      id: '/_learner/(communities)/communities_/create/community/$id/'
+    '/_learner/communities/create/$id/community/': {
+      id: '/_learner/communities/create/$id/community/'
       path: '/'
-      fullPath: '/communities/create/community/$id/'
-      preLoaderRoute: typeof LearnercommunitiesCommunitiesCreateCommunityIdIndexImport
-      parentRoute: typeof LearnercommunitiesCommunitiesCreateCommunityIdRouteImport
+      fullPath: '/communities/create/$id/community/'
+      preLoaderRoute: typeof LearnerCommunitiesCreateIdCommunityIndexImport
+      parentRoute: typeof LearnerCommunitiesCreateIdCommunityRouteImport
     }
   }
 }
@@ -534,97 +392,54 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
-interface LearnercommunitiesCommunitiesIdRouteRouteChildren {
-  LearnercommunitiesCommunitiesIdAboutRoute: typeof LearnercommunitiesCommunitiesIdAboutRoute
-  LearnercommunitiesCommunitiesIdArticlesRoute: typeof LearnercommunitiesCommunitiesIdArticlesRoute
-  LearnercommunitiesCommunitiesIdCalendarRoute: typeof LearnercommunitiesCommunitiesIdCalendarRoute
-  LearnercommunitiesCommunitiesIdCoursesRoute: typeof LearnercommunitiesCommunitiesIdCoursesRoute
-  LearnercommunitiesCommunitiesIdMembersRoute: typeof LearnercommunitiesCommunitiesIdMembersRoute
-  LearnercommunitiesCommunitiesIdResourcesRoute: typeof LearnercommunitiesCommunitiesIdResourcesRoute
-  LearnercommunitiesCommunitiesIdTasksRoute: typeof LearnercommunitiesCommunitiesIdTasksRoute
-  LearnercommunitiesCommunitiesIdWorkflowsRoute: typeof LearnercommunitiesCommunitiesIdWorkflowsRoute
-  LearnercommunitiesCommunitiesIdIndexRoute: typeof LearnercommunitiesCommunitiesIdIndexRoute
-  LearnercommunitiesCommunitiesIdThreadsThreadIdRoute: typeof LearnercommunitiesCommunitiesIdThreadsThreadIdRoute
+interface LearnerCommunitiesIdRouteRouteChildren {
+  LearnerCommunitiesIdIndexRoute: typeof LearnerCommunitiesIdIndexRoute
+  LearnerCommunitiesIdThreadsThreadIdRoute: typeof LearnerCommunitiesIdThreadsThreadIdRoute
+  LearnerCommunitiesIdArticlesIndexRoute: typeof LearnerCommunitiesIdArticlesIndexRoute
+  LearnerCommunitiesIdCoursesIndexRoute: typeof LearnerCommunitiesIdCoursesIndexRoute
+  LearnerCommunitiesIdThreadsIndexRoute: typeof LearnerCommunitiesIdThreadsIndexRoute
 }
 
-const LearnercommunitiesCommunitiesIdRouteRouteChildren: LearnercommunitiesCommunitiesIdRouteRouteChildren =
+const LearnerCommunitiesIdRouteRouteChildren: LearnerCommunitiesIdRouteRouteChildren =
   {
-    LearnercommunitiesCommunitiesIdAboutRoute:
-      LearnercommunitiesCommunitiesIdAboutRoute,
-    LearnercommunitiesCommunitiesIdArticlesRoute:
-      LearnercommunitiesCommunitiesIdArticlesRoute,
-    LearnercommunitiesCommunitiesIdCalendarRoute:
-      LearnercommunitiesCommunitiesIdCalendarRoute,
-    LearnercommunitiesCommunitiesIdCoursesRoute:
-      LearnercommunitiesCommunitiesIdCoursesRoute,
-    LearnercommunitiesCommunitiesIdMembersRoute:
-      LearnercommunitiesCommunitiesIdMembersRoute,
-    LearnercommunitiesCommunitiesIdResourcesRoute:
-      LearnercommunitiesCommunitiesIdResourcesRoute,
-    LearnercommunitiesCommunitiesIdTasksRoute:
-      LearnercommunitiesCommunitiesIdTasksRoute,
-    LearnercommunitiesCommunitiesIdWorkflowsRoute:
-      LearnercommunitiesCommunitiesIdWorkflowsRoute,
-    LearnercommunitiesCommunitiesIdIndexRoute:
-      LearnercommunitiesCommunitiesIdIndexRoute,
-    LearnercommunitiesCommunitiesIdThreadsThreadIdRoute:
-      LearnercommunitiesCommunitiesIdThreadsThreadIdRoute,
+    LearnerCommunitiesIdIndexRoute: LearnerCommunitiesIdIndexRoute,
+    LearnerCommunitiesIdThreadsThreadIdRoute:
+      LearnerCommunitiesIdThreadsThreadIdRoute,
+    LearnerCommunitiesIdArticlesIndexRoute:
+      LearnerCommunitiesIdArticlesIndexRoute,
+    LearnerCommunitiesIdCoursesIndexRoute:
+      LearnerCommunitiesIdCoursesIndexRoute,
+    LearnerCommunitiesIdThreadsIndexRoute:
+      LearnerCommunitiesIdThreadsIndexRoute,
   }
 
-const LearnercommunitiesCommunitiesIdRouteRouteWithChildren =
-  LearnercommunitiesCommunitiesIdRouteRoute._addFileChildren(
-    LearnercommunitiesCommunitiesIdRouteRouteChildren,
+const LearnerCommunitiesIdRouteRouteWithChildren =
+  LearnerCommunitiesIdRouteRoute._addFileChildren(
+    LearnerCommunitiesIdRouteRouteChildren,
   )
 
-interface LearnercommunitiesCommunitiesCreateCommunityIdRouteRouteChildren {
-  LearnercommunitiesCommunitiesCreateCommunityIdMembersRoute: typeof LearnercommunitiesCommunitiesCreateCommunityIdMembersRoute
-  LearnercommunitiesCommunitiesCreateCommunityIdPublishRoute: typeof LearnercommunitiesCommunitiesCreateCommunityIdPublishRoute
-  LearnercommunitiesCommunitiesCreateCommunityIdSettingsRoute: typeof LearnercommunitiesCommunitiesCreateCommunityIdSettingsRoute
-  LearnercommunitiesCommunitiesCreateCommunityIdIndexRoute: typeof LearnercommunitiesCommunitiesCreateCommunityIdIndexRoute
+interface LearnerCommunitiesCreateIdCommunityRouteRouteChildren {
+  LearnerCommunitiesCreateIdCommunityMembersRoute: typeof LearnerCommunitiesCreateIdCommunityMembersRoute
+  LearnerCommunitiesCreateIdCommunityPublishRoute: typeof LearnerCommunitiesCreateIdCommunityPublishRoute
+  LearnerCommunitiesCreateIdCommunitySettingsRoute: typeof LearnerCommunitiesCreateIdCommunitySettingsRoute
+  LearnerCommunitiesCreateIdCommunityIndexRoute: typeof LearnerCommunitiesCreateIdCommunityIndexRoute
 }
 
-const LearnercommunitiesCommunitiesCreateCommunityIdRouteRouteChildren: LearnercommunitiesCommunitiesCreateCommunityIdRouteRouteChildren =
+const LearnerCommunitiesCreateIdCommunityRouteRouteChildren: LearnerCommunitiesCreateIdCommunityRouteRouteChildren =
   {
-    LearnercommunitiesCommunitiesCreateCommunityIdMembersRoute:
-      LearnercommunitiesCommunitiesCreateCommunityIdMembersRoute,
-    LearnercommunitiesCommunitiesCreateCommunityIdPublishRoute:
-      LearnercommunitiesCommunitiesCreateCommunityIdPublishRoute,
-    LearnercommunitiesCommunitiesCreateCommunityIdSettingsRoute:
-      LearnercommunitiesCommunitiesCreateCommunityIdSettingsRoute,
-    LearnercommunitiesCommunitiesCreateCommunityIdIndexRoute:
-      LearnercommunitiesCommunitiesCreateCommunityIdIndexRoute,
+    LearnerCommunitiesCreateIdCommunityMembersRoute:
+      LearnerCommunitiesCreateIdCommunityMembersRoute,
+    LearnerCommunitiesCreateIdCommunityPublishRoute:
+      LearnerCommunitiesCreateIdCommunityPublishRoute,
+    LearnerCommunitiesCreateIdCommunitySettingsRoute:
+      LearnerCommunitiesCreateIdCommunitySettingsRoute,
+    LearnerCommunitiesCreateIdCommunityIndexRoute:
+      LearnerCommunitiesCreateIdCommunityIndexRoute,
   }
 
-const LearnercommunitiesCommunitiesCreateCommunityIdRouteRouteWithChildren =
-  LearnercommunitiesCommunitiesCreateCommunityIdRouteRoute._addFileChildren(
-    LearnercommunitiesCommunitiesCreateCommunityIdRouteRouteChildren,
-  )
-
-interface LearnercommunitiesCommunitiesCreateRouteRouteChildren {
-  LearnercommunitiesCommunitiesCreateIndexRoute: typeof LearnercommunitiesCommunitiesCreateIndexRoute
-  LearnercommunitiesCommunitiesCreateCommunityIdRouteRoute: typeof LearnercommunitiesCommunitiesCreateCommunityIdRouteRouteWithChildren
-  LearnercommunitiesCommunitiesCreateArticlesIdRoute: typeof LearnercommunitiesCommunitiesCreateArticlesIdRoute
-  LearnercommunitiesCommunitiesCreateCourseIdRoute: typeof LearnercommunitiesCommunitiesCreateCourseIdRoute
-  LearnercommunitiesCommunitiesCreateThreadIdRoute: typeof LearnercommunitiesCommunitiesCreateThreadIdRoute
-}
-
-const LearnercommunitiesCommunitiesCreateRouteRouteChildren: LearnercommunitiesCommunitiesCreateRouteRouteChildren =
-  {
-    LearnercommunitiesCommunitiesCreateIndexRoute:
-      LearnercommunitiesCommunitiesCreateIndexRoute,
-    LearnercommunitiesCommunitiesCreateCommunityIdRouteRoute:
-      LearnercommunitiesCommunitiesCreateCommunityIdRouteRouteWithChildren,
-    LearnercommunitiesCommunitiesCreateArticlesIdRoute:
-      LearnercommunitiesCommunitiesCreateArticlesIdRoute,
-    LearnercommunitiesCommunitiesCreateCourseIdRoute:
-      LearnercommunitiesCommunitiesCreateCourseIdRoute,
-    LearnercommunitiesCommunitiesCreateThreadIdRoute:
-      LearnercommunitiesCommunitiesCreateThreadIdRoute,
-  }
-
-const LearnercommunitiesCommunitiesCreateRouteRouteWithChildren =
-  LearnercommunitiesCommunitiesCreateRouteRoute._addFileChildren(
-    LearnercommunitiesCommunitiesCreateRouteRouteChildren,
+const LearnerCommunitiesCreateIdCommunityRouteRouteWithChildren =
+  LearnerCommunitiesCreateIdCommunityRouteRoute._addFileChildren(
+    LearnerCommunitiesCreateIdCommunityRouteRouteChildren,
   )
 
 interface LearnerRouteChildren {
@@ -633,10 +448,11 @@ interface LearnerRouteChildren {
   LearnerExploreRoute: typeof LearnerExploreRoute
   LearnerTasksRoute: typeof LearnerTasksRoute
   LearnerIndexRoute: typeof LearnerIndexRoute
-  LearnercommunitiesCommunitiesIdRouteRoute: typeof LearnercommunitiesCommunitiesIdRouteRouteWithChildren
-  LearnercommunitiesCommunitiesCreateRouteRoute: typeof LearnercommunitiesCommunitiesCreateRouteRouteWithChildren
-  LearnercommunitiesCommunitiesIndexRoute: typeof LearnercommunitiesCommunitiesIndexRoute
-  LearnercommunitiesCreateIndexRoute: typeof LearnercommunitiesCreateIndexRoute
+  LearnerCommunitiesIdRouteRoute: typeof LearnerCommunitiesIdRouteRouteWithChildren
+  LearnerCommunitiesIndexRoute: typeof LearnerCommunitiesIndexRoute
+  LearnerCommunitiesCreateIndexRoute: typeof LearnerCommunitiesCreateIndexRoute
+  LearnerCommunitiesCreateIdCommunityRouteRoute: typeof LearnerCommunitiesCreateIdCommunityRouteRouteWithChildren
+  LearnerCommunitiesCreateIdCourseRouteRoute: typeof LearnerCommunitiesCreateIdCourseRouteRoute
 }
 
 const LearnerRouteChildren: LearnerRouteChildren = {
@@ -645,13 +461,13 @@ const LearnerRouteChildren: LearnerRouteChildren = {
   LearnerExploreRoute: LearnerExploreRoute,
   LearnerTasksRoute: LearnerTasksRoute,
   LearnerIndexRoute: LearnerIndexRoute,
-  LearnercommunitiesCommunitiesIdRouteRoute:
-    LearnercommunitiesCommunitiesIdRouteRouteWithChildren,
-  LearnercommunitiesCommunitiesCreateRouteRoute:
-    LearnercommunitiesCommunitiesCreateRouteRouteWithChildren,
-  LearnercommunitiesCommunitiesIndexRoute:
-    LearnercommunitiesCommunitiesIndexRoute,
-  LearnercommunitiesCreateIndexRoute: LearnercommunitiesCreateIndexRoute,
+  LearnerCommunitiesIdRouteRoute: LearnerCommunitiesIdRouteRouteWithChildren,
+  LearnerCommunitiesIndexRoute: LearnerCommunitiesIndexRoute,
+  LearnerCommunitiesCreateIndexRoute: LearnerCommunitiesCreateIndexRoute,
+  LearnerCommunitiesCreateIdCommunityRouteRoute:
+    LearnerCommunitiesCreateIdCommunityRouteRouteWithChildren,
+  LearnerCommunitiesCreateIdCourseRouteRoute:
+    LearnerCommunitiesCreateIdCourseRouteRoute,
 }
 
 const LearnerRouteWithChildren =
@@ -668,29 +484,20 @@ export interface FileRoutesByFullPath {
   '/x/dropdown': typeof XDropdownRoute
   '/x/editor-demo': typeof XEditorDemoRoute
   '/': typeof LearnerIndexRoute
-  '/communities/$id': typeof LearnercommunitiesCommunitiesIdRouteRouteWithChildren
-  '/communities/create': typeof LearnercommunitiesCommunitiesCreateRouteRouteWithChildren
-  '/communities': typeof LearnercommunitiesCommunitiesIndexRoute
-  '/create': typeof LearnercommunitiesCreateIndexRoute
-  '/communities/$id/about': typeof LearnercommunitiesCommunitiesIdAboutRoute
-  '/communities/$id/articles': typeof LearnercommunitiesCommunitiesIdArticlesRoute
-  '/communities/$id/calendar': typeof LearnercommunitiesCommunitiesIdCalendarRoute
-  '/communities/$id/courses': typeof LearnercommunitiesCommunitiesIdCoursesRoute
-  '/communities/$id/members': typeof LearnercommunitiesCommunitiesIdMembersRoute
-  '/communities/$id/resources': typeof LearnercommunitiesCommunitiesIdResourcesRoute
-  '/communities/$id/tasks': typeof LearnercommunitiesCommunitiesIdTasksRoute
-  '/communities/$id/workflows': typeof LearnercommunitiesCommunitiesIdWorkflowsRoute
-  '/communities/$id/': typeof LearnercommunitiesCommunitiesIdIndexRoute
-  '/communities/create/': typeof LearnercommunitiesCommunitiesCreateIndexRoute
-  '/communities/create/community/$id': typeof LearnercommunitiesCommunitiesCreateCommunityIdRouteRouteWithChildren
-  '/communities/$id/threads/$threadId': typeof LearnercommunitiesCommunitiesIdThreadsThreadIdRoute
-  '/communities/create/articles/$id': typeof LearnercommunitiesCommunitiesCreateArticlesIdRoute
-  '/communities/create/course/$id': typeof LearnercommunitiesCommunitiesCreateCourseIdRoute
-  '/communities/create/thread/$id': typeof LearnercommunitiesCommunitiesCreateThreadIdRoute
-  '/communities/create/community/$id/members': typeof LearnercommunitiesCommunitiesCreateCommunityIdMembersRoute
-  '/communities/create/community/$id/publish': typeof LearnercommunitiesCommunitiesCreateCommunityIdPublishRoute
-  '/communities/create/community/$id/settings': typeof LearnercommunitiesCommunitiesCreateCommunityIdSettingsRoute
-  '/communities/create/community/$id/': typeof LearnercommunitiesCommunitiesCreateCommunityIdIndexRoute
+  '/communities/$id': typeof LearnerCommunitiesIdRouteRouteWithChildren
+  '/communities': typeof LearnerCommunitiesIndexRoute
+  '/communities/$id/': typeof LearnerCommunitiesIdIndexRoute
+  '/communities/create': typeof LearnerCommunitiesCreateIndexRoute
+  '/communities/create/$id/community': typeof LearnerCommunitiesCreateIdCommunityRouteRouteWithChildren
+  '/communities/create/$id/course': typeof LearnerCommunitiesCreateIdCourseRouteRoute
+  '/communities/$id/threads/$threadId': typeof LearnerCommunitiesIdThreadsThreadIdRoute
+  '/communities/$id/articles': typeof LearnerCommunitiesIdArticlesIndexRoute
+  '/communities/$id/courses': typeof LearnerCommunitiesIdCoursesIndexRoute
+  '/communities/$id/threads': typeof LearnerCommunitiesIdThreadsIndexRoute
+  '/communities/create/$id/community/members': typeof LearnerCommunitiesCreateIdCommunityMembersRoute
+  '/communities/create/$id/community/publish': typeof LearnerCommunitiesCreateIdCommunityPublishRoute
+  '/communities/create/$id/community/settings': typeof LearnerCommunitiesCreateIdCommunitySettingsRoute
+  '/communities/create/$id/community/': typeof LearnerCommunitiesCreateIdCommunityIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -704,26 +511,18 @@ export interface FileRoutesByTo {
   '/x/dropdown': typeof XDropdownRoute
   '/x/editor-demo': typeof XEditorDemoRoute
   '/': typeof LearnerIndexRoute
-  '/communities': typeof LearnercommunitiesCommunitiesIndexRoute
-  '/create': typeof LearnercommunitiesCreateIndexRoute
-  '/communities/$id/about': typeof LearnercommunitiesCommunitiesIdAboutRoute
-  '/communities/$id/articles': typeof LearnercommunitiesCommunitiesIdArticlesRoute
-  '/communities/$id/calendar': typeof LearnercommunitiesCommunitiesIdCalendarRoute
-  '/communities/$id/courses': typeof LearnercommunitiesCommunitiesIdCoursesRoute
-  '/communities/$id/members': typeof LearnercommunitiesCommunitiesIdMembersRoute
-  '/communities/$id/resources': typeof LearnercommunitiesCommunitiesIdResourcesRoute
-  '/communities/$id/tasks': typeof LearnercommunitiesCommunitiesIdTasksRoute
-  '/communities/$id/workflows': typeof LearnercommunitiesCommunitiesIdWorkflowsRoute
-  '/communities/$id': typeof LearnercommunitiesCommunitiesIdIndexRoute
-  '/communities/create': typeof LearnercommunitiesCommunitiesCreateIndexRoute
-  '/communities/$id/threads/$threadId': typeof LearnercommunitiesCommunitiesIdThreadsThreadIdRoute
-  '/communities/create/articles/$id': typeof LearnercommunitiesCommunitiesCreateArticlesIdRoute
-  '/communities/create/course/$id': typeof LearnercommunitiesCommunitiesCreateCourseIdRoute
-  '/communities/create/thread/$id': typeof LearnercommunitiesCommunitiesCreateThreadIdRoute
-  '/communities/create/community/$id/members': typeof LearnercommunitiesCommunitiesCreateCommunityIdMembersRoute
-  '/communities/create/community/$id/publish': typeof LearnercommunitiesCommunitiesCreateCommunityIdPublishRoute
-  '/communities/create/community/$id/settings': typeof LearnercommunitiesCommunitiesCreateCommunityIdSettingsRoute
-  '/communities/create/community/$id': typeof LearnercommunitiesCommunitiesCreateCommunityIdIndexRoute
+  '/communities': typeof LearnerCommunitiesIndexRoute
+  '/communities/$id': typeof LearnerCommunitiesIdIndexRoute
+  '/communities/create': typeof LearnerCommunitiesCreateIndexRoute
+  '/communities/create/$id/course': typeof LearnerCommunitiesCreateIdCourseRouteRoute
+  '/communities/$id/threads/$threadId': typeof LearnerCommunitiesIdThreadsThreadIdRoute
+  '/communities/$id/articles': typeof LearnerCommunitiesIdArticlesIndexRoute
+  '/communities/$id/courses': typeof LearnerCommunitiesIdCoursesIndexRoute
+  '/communities/$id/threads': typeof LearnerCommunitiesIdThreadsIndexRoute
+  '/communities/create/$id/community/members': typeof LearnerCommunitiesCreateIdCommunityMembersRoute
+  '/communities/create/$id/community/publish': typeof LearnerCommunitiesCreateIdCommunityPublishRoute
+  '/communities/create/$id/community/settings': typeof LearnerCommunitiesCreateIdCommunitySettingsRoute
+  '/communities/create/$id/community': typeof LearnerCommunitiesCreateIdCommunityIndexRoute
 }
 
 export interface FileRoutesById {
@@ -739,29 +538,20 @@ export interface FileRoutesById {
   '/x/dropdown': typeof XDropdownRoute
   '/x/editor-demo': typeof XEditorDemoRoute
   '/_learner/': typeof LearnerIndexRoute
-  '/_learner/(communities)/communities/$id': typeof LearnercommunitiesCommunitiesIdRouteRouteWithChildren
-  '/_learner/(communities)/communities_/create': typeof LearnercommunitiesCommunitiesCreateRouteRouteWithChildren
-  '/_learner/(communities)/communities/': typeof LearnercommunitiesCommunitiesIndexRoute
-  '/_learner/(communities)/create/': typeof LearnercommunitiesCreateIndexRoute
-  '/_learner/(communities)/communities/$id/about': typeof LearnercommunitiesCommunitiesIdAboutRoute
-  '/_learner/(communities)/communities/$id/articles': typeof LearnercommunitiesCommunitiesIdArticlesRoute
-  '/_learner/(communities)/communities/$id/calendar': typeof LearnercommunitiesCommunitiesIdCalendarRoute
-  '/_learner/(communities)/communities/$id/courses': typeof LearnercommunitiesCommunitiesIdCoursesRoute
-  '/_learner/(communities)/communities/$id/members': typeof LearnercommunitiesCommunitiesIdMembersRoute
-  '/_learner/(communities)/communities/$id/resources': typeof LearnercommunitiesCommunitiesIdResourcesRoute
-  '/_learner/(communities)/communities/$id/tasks': typeof LearnercommunitiesCommunitiesIdTasksRoute
-  '/_learner/(communities)/communities/$id/workflows': typeof LearnercommunitiesCommunitiesIdWorkflowsRoute
-  '/_learner/(communities)/communities/$id/': typeof LearnercommunitiesCommunitiesIdIndexRoute
-  '/_learner/(communities)/communities_/create/': typeof LearnercommunitiesCommunitiesCreateIndexRoute
-  '/_learner/(communities)/communities_/create/community/$id': typeof LearnercommunitiesCommunitiesCreateCommunityIdRouteRouteWithChildren
-  '/_learner/(communities)/communities/$id/threads/$threadId': typeof LearnercommunitiesCommunitiesIdThreadsThreadIdRoute
-  '/_learner/(communities)/communities_/create/articles/$id': typeof LearnercommunitiesCommunitiesCreateArticlesIdRoute
-  '/_learner/(communities)/communities_/create/course/$id': typeof LearnercommunitiesCommunitiesCreateCourseIdRoute
-  '/_learner/(communities)/communities_/create/thread/$id': typeof LearnercommunitiesCommunitiesCreateThreadIdRoute
-  '/_learner/(communities)/communities_/create/community/$id/members': typeof LearnercommunitiesCommunitiesCreateCommunityIdMembersRoute
-  '/_learner/(communities)/communities_/create/community/$id/publish': typeof LearnercommunitiesCommunitiesCreateCommunityIdPublishRoute
-  '/_learner/(communities)/communities_/create/community/$id/settings': typeof LearnercommunitiesCommunitiesCreateCommunityIdSettingsRoute
-  '/_learner/(communities)/communities_/create/community/$id/': typeof LearnercommunitiesCommunitiesCreateCommunityIdIndexRoute
+  '/_learner/communities/$id': typeof LearnerCommunitiesIdRouteRouteWithChildren
+  '/_learner/communities/': typeof LearnerCommunitiesIndexRoute
+  '/_learner/communities/$id/': typeof LearnerCommunitiesIdIndexRoute
+  '/_learner/communities/create/': typeof LearnerCommunitiesCreateIndexRoute
+  '/_learner/communities/create/$id/community': typeof LearnerCommunitiesCreateIdCommunityRouteRouteWithChildren
+  '/_learner/communities/create/$id/course': typeof LearnerCommunitiesCreateIdCourseRouteRoute
+  '/_learner/communities/$id/threads/$threadId': typeof LearnerCommunitiesIdThreadsThreadIdRoute
+  '/_learner/communities/$id/articles/': typeof LearnerCommunitiesIdArticlesIndexRoute
+  '/_learner/communities/$id/courses/': typeof LearnerCommunitiesIdCoursesIndexRoute
+  '/_learner/communities/$id/threads/': typeof LearnerCommunitiesIdThreadsIndexRoute
+  '/_learner/communities/create/$id/community/members': typeof LearnerCommunitiesCreateIdCommunityMembersRoute
+  '/_learner/communities/create/$id/community/publish': typeof LearnerCommunitiesCreateIdCommunityPublishRoute
+  '/_learner/communities/create/$id/community/settings': typeof LearnerCommunitiesCreateIdCommunitySettingsRoute
+  '/_learner/communities/create/$id/community/': typeof LearnerCommunitiesCreateIdCommunityIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -778,28 +568,19 @@ export interface FileRouteTypes {
     | '/x/editor-demo'
     | '/'
     | '/communities/$id'
-    | '/communities/create'
     | '/communities'
-    | '/create'
-    | '/communities/$id/about'
-    | '/communities/$id/articles'
-    | '/communities/$id/calendar'
-    | '/communities/$id/courses'
-    | '/communities/$id/members'
-    | '/communities/$id/resources'
-    | '/communities/$id/tasks'
-    | '/communities/$id/workflows'
     | '/communities/$id/'
-    | '/communities/create/'
-    | '/communities/create/community/$id'
+    | '/communities/create'
+    | '/communities/create/$id/community'
+    | '/communities/create/$id/course'
     | '/communities/$id/threads/$threadId'
-    | '/communities/create/articles/$id'
-    | '/communities/create/course/$id'
-    | '/communities/create/thread/$id'
-    | '/communities/create/community/$id/members'
-    | '/communities/create/community/$id/publish'
-    | '/communities/create/community/$id/settings'
-    | '/communities/create/community/$id/'
+    | '/communities/$id/articles'
+    | '/communities/$id/courses'
+    | '/communities/$id/threads'
+    | '/communities/create/$id/community/members'
+    | '/communities/create/$id/community/publish'
+    | '/communities/create/$id/community/settings'
+    | '/communities/create/$id/community/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | ''
@@ -813,25 +594,17 @@ export interface FileRouteTypes {
     | '/x/editor-demo'
     | '/'
     | '/communities'
-    | '/create'
-    | '/communities/$id/about'
-    | '/communities/$id/articles'
-    | '/communities/$id/calendar'
-    | '/communities/$id/courses'
-    | '/communities/$id/members'
-    | '/communities/$id/resources'
-    | '/communities/$id/tasks'
-    | '/communities/$id/workflows'
     | '/communities/$id'
     | '/communities/create'
+    | '/communities/create/$id/course'
     | '/communities/$id/threads/$threadId'
-    | '/communities/create/articles/$id'
-    | '/communities/create/course/$id'
-    | '/communities/create/thread/$id'
-    | '/communities/create/community/$id/members'
-    | '/communities/create/community/$id/publish'
-    | '/communities/create/community/$id/settings'
-    | '/communities/create/community/$id'
+    | '/communities/$id/articles'
+    | '/communities/$id/courses'
+    | '/communities/$id/threads'
+    | '/communities/create/$id/community/members'
+    | '/communities/create/$id/community/publish'
+    | '/communities/create/$id/community/settings'
+    | '/communities/create/$id/community'
   id:
     | '__root__'
     | '/_auth'
@@ -845,29 +618,20 @@ export interface FileRouteTypes {
     | '/x/dropdown'
     | '/x/editor-demo'
     | '/_learner/'
-    | '/_learner/(communities)/communities/$id'
-    | '/_learner/(communities)/communities_/create'
-    | '/_learner/(communities)/communities/'
-    | '/_learner/(communities)/create/'
-    | '/_learner/(communities)/communities/$id/about'
-    | '/_learner/(communities)/communities/$id/articles'
-    | '/_learner/(communities)/communities/$id/calendar'
-    | '/_learner/(communities)/communities/$id/courses'
-    | '/_learner/(communities)/communities/$id/members'
-    | '/_learner/(communities)/communities/$id/resources'
-    | '/_learner/(communities)/communities/$id/tasks'
-    | '/_learner/(communities)/communities/$id/workflows'
-    | '/_learner/(communities)/communities/$id/'
-    | '/_learner/(communities)/communities_/create/'
-    | '/_learner/(communities)/communities_/create/community/$id'
-    | '/_learner/(communities)/communities/$id/threads/$threadId'
-    | '/_learner/(communities)/communities_/create/articles/$id'
-    | '/_learner/(communities)/communities_/create/course/$id'
-    | '/_learner/(communities)/communities_/create/thread/$id'
-    | '/_learner/(communities)/communities_/create/community/$id/members'
-    | '/_learner/(communities)/communities_/create/community/$id/publish'
-    | '/_learner/(communities)/communities_/create/community/$id/settings'
-    | '/_learner/(communities)/communities_/create/community/$id/'
+    | '/_learner/communities/$id'
+    | '/_learner/communities/'
+    | '/_learner/communities/$id/'
+    | '/_learner/communities/create/'
+    | '/_learner/communities/create/$id/community'
+    | '/_learner/communities/create/$id/course'
+    | '/_learner/communities/$id/threads/$threadId'
+    | '/_learner/communities/$id/articles/'
+    | '/_learner/communities/$id/courses/'
+    | '/_learner/communities/$id/threads/'
+    | '/_learner/communities/create/$id/community/members'
+    | '/_learner/communities/create/$id/community/publish'
+    | '/_learner/communities/create/$id/community/settings'
+    | '/_learner/communities/create/$id/community/'
   fileRoutesById: FileRoutesById
 }
 
@@ -918,10 +682,11 @@ export const routeTree = rootRoute
         "/_learner/explore",
         "/_learner/tasks",
         "/_learner/",
-        "/_learner/(communities)/communities/$id",
-        "/_learner/(communities)/communities_/create",
-        "/_learner/(communities)/communities/",
-        "/_learner/(communities)/create/"
+        "/_learner/communities/$id",
+        "/_learner/communities/",
+        "/_learner/communities/create/",
+        "/_learner/communities/create/$id/community",
+        "/_learner/communities/create/$id/course"
       ]
     },
     "/test": {
@@ -957,122 +722,74 @@ export const routeTree = rootRoute
       "filePath": "_learner/index.tsx",
       "parent": "/_learner"
     },
-    "/_learner/(communities)/communities/$id": {
-      "filePath": "_learner/(communities)/communities.$id.route.tsx",
+    "/_learner/communities/$id": {
+      "filePath": "_learner/communities/$id/route.tsx",
       "parent": "/_learner",
       "children": [
-        "/_learner/(communities)/communities/$id/about",
-        "/_learner/(communities)/communities/$id/articles",
-        "/_learner/(communities)/communities/$id/calendar",
-        "/_learner/(communities)/communities/$id/courses",
-        "/_learner/(communities)/communities/$id/members",
-        "/_learner/(communities)/communities/$id/resources",
-        "/_learner/(communities)/communities/$id/tasks",
-        "/_learner/(communities)/communities/$id/workflows",
-        "/_learner/(communities)/communities/$id/",
-        "/_learner/(communities)/communities/$id/threads/$threadId"
+        "/_learner/communities/$id/",
+        "/_learner/communities/$id/threads/$threadId",
+        "/_learner/communities/$id/articles/",
+        "/_learner/communities/$id/courses/",
+        "/_learner/communities/$id/threads/"
       ]
     },
-    "/_learner/(communities)/communities_/create": {
-      "filePath": "_learner/(communities)/communities_.create.route.tsx",
+    "/_learner/communities/": {
+      "filePath": "_learner/communities/index.tsx",
+      "parent": "/_learner"
+    },
+    "/_learner/communities/$id/": {
+      "filePath": "_learner/communities/$id/index.tsx",
+      "parent": "/_learner/communities/$id"
+    },
+    "/_learner/communities/create/": {
+      "filePath": "_learner/communities/create/index.tsx",
+      "parent": "/_learner"
+    },
+    "/_learner/communities/create/$id/community": {
+      "filePath": "_learner/communities/create/$id/community/route.tsx",
       "parent": "/_learner",
       "children": [
-        "/_learner/(communities)/communities_/create/",
-        "/_learner/(communities)/communities_/create/community/$id",
-        "/_learner/(communities)/communities_/create/articles/$id",
-        "/_learner/(communities)/communities_/create/course/$id",
-        "/_learner/(communities)/communities_/create/thread/$id"
+        "/_learner/communities/create/$id/community/members",
+        "/_learner/communities/create/$id/community/publish",
+        "/_learner/communities/create/$id/community/settings",
+        "/_learner/communities/create/$id/community/"
       ]
     },
-    "/_learner/(communities)/communities/": {
-      "filePath": "_learner/(communities)/communities.index.tsx",
+    "/_learner/communities/create/$id/course": {
+      "filePath": "_learner/communities/create/$id/course/route.tsx",
       "parent": "/_learner"
     },
-    "/_learner/(communities)/create/": {
-      "filePath": "_learner/(communities)/create/index.tsx",
-      "parent": "/_learner"
+    "/_learner/communities/$id/threads/$threadId": {
+      "filePath": "_learner/communities/$id/threads.$threadId.tsx",
+      "parent": "/_learner/communities/$id"
     },
-    "/_learner/(communities)/communities/$id/about": {
-      "filePath": "_learner/(communities)/communities.$id.about.tsx",
-      "parent": "/_learner/(communities)/communities/$id"
+    "/_learner/communities/$id/articles/": {
+      "filePath": "_learner/communities/$id/articles.index.tsx",
+      "parent": "/_learner/communities/$id"
     },
-    "/_learner/(communities)/communities/$id/articles": {
-      "filePath": "_learner/(communities)/communities.$id.articles.tsx",
-      "parent": "/_learner/(communities)/communities/$id"
+    "/_learner/communities/$id/courses/": {
+      "filePath": "_learner/communities/$id/courses.index.tsx",
+      "parent": "/_learner/communities/$id"
     },
-    "/_learner/(communities)/communities/$id/calendar": {
-      "filePath": "_learner/(communities)/communities.$id.calendar.tsx",
-      "parent": "/_learner/(communities)/communities/$id"
+    "/_learner/communities/$id/threads/": {
+      "filePath": "_learner/communities/$id/threads.index.tsx",
+      "parent": "/_learner/communities/$id"
     },
-    "/_learner/(communities)/communities/$id/courses": {
-      "filePath": "_learner/(communities)/communities.$id.courses.tsx",
-      "parent": "/_learner/(communities)/communities/$id"
+    "/_learner/communities/create/$id/community/members": {
+      "filePath": "_learner/communities/create/$id/community/members.tsx",
+      "parent": "/_learner/communities/create/$id/community"
     },
-    "/_learner/(communities)/communities/$id/members": {
-      "filePath": "_learner/(communities)/communities.$id.members.tsx",
-      "parent": "/_learner/(communities)/communities/$id"
+    "/_learner/communities/create/$id/community/publish": {
+      "filePath": "_learner/communities/create/$id/community/publish.tsx",
+      "parent": "/_learner/communities/create/$id/community"
     },
-    "/_learner/(communities)/communities/$id/resources": {
-      "filePath": "_learner/(communities)/communities.$id.resources.tsx",
-      "parent": "/_learner/(communities)/communities/$id"
+    "/_learner/communities/create/$id/community/settings": {
+      "filePath": "_learner/communities/create/$id/community/settings.tsx",
+      "parent": "/_learner/communities/create/$id/community"
     },
-    "/_learner/(communities)/communities/$id/tasks": {
-      "filePath": "_learner/(communities)/communities.$id.tasks.tsx",
-      "parent": "/_learner/(communities)/communities/$id"
-    },
-    "/_learner/(communities)/communities/$id/workflows": {
-      "filePath": "_learner/(communities)/communities.$id.workflows.tsx",
-      "parent": "/_learner/(communities)/communities/$id"
-    },
-    "/_learner/(communities)/communities/$id/": {
-      "filePath": "_learner/(communities)/communities.$id.index.tsx",
-      "parent": "/_learner/(communities)/communities/$id"
-    },
-    "/_learner/(communities)/communities_/create/": {
-      "filePath": "_learner/(communities)/communities_.create.index.tsx",
-      "parent": "/_learner/(communities)/communities_/create"
-    },
-    "/_learner/(communities)/communities_/create/community/$id": {
-      "filePath": "_learner/(communities)/communities_.create.community.$id.route.tsx",
-      "parent": "/_learner/(communities)/communities_/create",
-      "children": [
-        "/_learner/(communities)/communities_/create/community/$id/members",
-        "/_learner/(communities)/communities_/create/community/$id/publish",
-        "/_learner/(communities)/communities_/create/community/$id/settings",
-        "/_learner/(communities)/communities_/create/community/$id/"
-      ]
-    },
-    "/_learner/(communities)/communities/$id/threads/$threadId": {
-      "filePath": "_learner/(communities)/communities.$id.threads.$threadId.tsx",
-      "parent": "/_learner/(communities)/communities/$id"
-    },
-    "/_learner/(communities)/communities_/create/articles/$id": {
-      "filePath": "_learner/(communities)/communities_.create.articles.$id.tsx",
-      "parent": "/_learner/(communities)/communities_/create"
-    },
-    "/_learner/(communities)/communities_/create/course/$id": {
-      "filePath": "_learner/(communities)/communities_.create.course.$id.tsx",
-      "parent": "/_learner/(communities)/communities_/create"
-    },
-    "/_learner/(communities)/communities_/create/thread/$id": {
-      "filePath": "_learner/(communities)/communities_.create.thread.$id.tsx",
-      "parent": "/_learner/(communities)/communities_/create"
-    },
-    "/_learner/(communities)/communities_/create/community/$id/members": {
-      "filePath": "_learner/(communities)/communities_.create.community.$id.members.tsx",
-      "parent": "/_learner/(communities)/communities_/create/community/$id"
-    },
-    "/_learner/(communities)/communities_/create/community/$id/publish": {
-      "filePath": "_learner/(communities)/communities_.create.community.$id.publish.tsx",
-      "parent": "/_learner/(communities)/communities_/create/community/$id"
-    },
-    "/_learner/(communities)/communities_/create/community/$id/settings": {
-      "filePath": "_learner/(communities)/communities_.create.community.$id.settings.tsx",
-      "parent": "/_learner/(communities)/communities_/create/community/$id"
-    },
-    "/_learner/(communities)/communities_/create/community/$id/": {
-      "filePath": "_learner/(communities)/communities_.create.community.$id.index.tsx",
-      "parent": "/_learner/(communities)/communities_/create/community/$id"
+    "/_learner/communities/create/$id/community/": {
+      "filePath": "_learner/communities/create/$id/community/index.tsx",
+      "parent": "/_learner/communities/create/$id/community"
     }
   }
 }

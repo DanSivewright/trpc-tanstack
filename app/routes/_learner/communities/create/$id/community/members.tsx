@@ -19,7 +19,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 import {
   flexRender,
   getCoreRowModel,
@@ -39,20 +39,20 @@ import type { ColumnDef, Row } from "@tanstack/table-core"
 import type { z } from "zod"
 
 import { useElementSize } from "@/hooks/use-element-size"
-import { useNotification } from "@/hooks/use-notification"
-import * as Avatar from "@/components/ui/avatar"
-import * as FancyButton from "@/components/ui/fancy-button"
+import { Avatar } from "@/components/ui/avatar"
+import { FancyButton } from "@/components/ui/fancy-button"
 import * as Modal from "@/components/ui/modal"
 import * as Select from "@/components/ui/select"
 import * as Table from "@/components/ui/table"
 import IndeterminateCheckbox from "@/components/indeterminate-checkbox"
 
-import { communitySteps } from "./communities_.create.community.$id.route"
+import { useGoToNextStep } from "./-hooks/use-go-to-next-step"
+import { communitySteps } from "./route"
 
 const LIMIT = 100
 
 export const Route = createFileRoute(
-  "/_learner/(communities)/communities_/create/community/$id/members"
+  "/_learner/communities/create/$id/community/members"
 )({
   loader: async ({ context, params: { id } }) => {
     await Promise.all([
@@ -79,9 +79,8 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const { id } = Route.useParams()
-  const { notification } = useNotification()
-  const navigate = useNavigate()
   const { step } = Route.useLoaderData()
+  const { goToStep } = useGoToNextStep({ id })
 
   const qc = useQueryClient()
   const trpc = useTRPC()
@@ -235,10 +234,7 @@ function RouteComponent() {
                 queryKey: trpc.communities.detail.queryKey({ id }),
               }),
             ])
-            navigate({
-              to: `/communities/create/community/$id/${nextStep.step}`,
-              params: { id },
-            })
+            goToStep(nextStep.step)
           },
         }
       )

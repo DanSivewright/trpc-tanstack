@@ -3,9 +3,9 @@ import { RiCheckboxCircleFill, RiSparklingLine } from "@remixicon/react"
 import { createFileRoute } from "@tanstack/react-router"
 
 import * as Badge from "@/components/ui/badge"
-import * as FancyButton from "@/components/ui/fancy-button"
-import * as Label from "@/components/ui/label"
-import * as Radio from "@/components/ui/radio"
+import { FancyButton } from "@/components/ui/fancy-button"
+import { Label } from "@/components/ui/label"
+import { Radio } from "@/components/ui/radio"
 import * as StatusBadge from "@/components/ui/status-badge"
 import * as Switch from "@/components/ui/switch"
 

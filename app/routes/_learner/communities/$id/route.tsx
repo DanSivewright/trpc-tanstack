@@ -14,28 +14,26 @@ import {
 } from "@tanstack/react-router"
 
 import { Button } from "@/components/ui/button"
-import * as TabMenuHorizontal from "@/components/ui/tab-menu-horizontal"
+import { TabMenuHorizontal } from "@/components/ui/tab-menu-horizontal"
 import NavigationLearnerSubHeader from "@/components/navigation/navigation-learner/navigation-learner-sub-header"
 
-export const Route = createFileRoute("/_learner/(communities)/communities/$id")(
-  {
-    loader: async ({ context, params: { id } }) => {
-      const community = await context.queryClient.ensureQueryData(
-        context.trpc.communities.detail.queryOptions({
-          id,
-        })
-      )
-      context.queryClient.prefetchQuery(
-        context.trpc.communities.joined.queryOptions()
-      )
-      return {
-        community,
-        crumb: community?.name,
-      }
-    },
-    component: RouteComponent,
-  }
-)
+export const Route = createFileRoute("/_learner/communities/$id")({
+  loader: async ({ context, params: { id } }) => {
+    const community = await context.queryClient.ensureQueryData(
+      context.trpc.communities.detail.queryOptions({
+        id,
+      })
+    )
+    context.queryClient.prefetchQuery(
+      context.trpc.communities.joined.queryOptions()
+    )
+    return {
+      community,
+      crumb: community?.name,
+    }
+  },
+  component: RouteComponent,
+})
 
 function RouteComponent() {
   const location = useLocation()

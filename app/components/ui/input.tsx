@@ -308,8 +308,10 @@ InputInlineAffix.displayName = INPUT_INLINE_AFFIX_NAME
 export {
   InputRoot as Root,
   InputWrapper as Wrapper,
-  Input,
+  Input as Field,
   InputIcon as Icon,
   InputAffix as Affix,
   InputInlineAffix as InlineAffix,
 }
+
+export * as Input from "./input"

@@ -25,39 +25,25 @@ import {
 import { formatDistance } from "date-fns"
 import { AnimatePresence, motion, useInView } from "motion/react"
 
-import * as Avatar from "@/components/ui/avatar"
+import { Avatar } from "@/components/ui/avatar"
 import * as Badge from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import * as FancyButton from "@/components/ui/fancy-button"
+import { FancyButton } from "@/components/ui/fancy-button"
 import * as FileFormatIcon from "@/components/ui/file-format-icon"
-import * as Input from "@/components/ui/input"
-import * as Tag from "@/components/ui/tag"
-import * as Tooltip from "@/components/ui/tooltip"
+import { Input } from "@/components/ui/input"
+import { Tag } from "@/components/ui/tag"
+import { Tooltip } from "@/components/ui/tooltip"
 import { Grid } from "@/components/grid"
 import Image from "@/components/image"
 import { Section } from "@/components/section"
 
-import { commentsData } from "./-components/comments-data"
+import { commentsData } from "../-components/comments-data"
 
 export const Route = createFileRoute(
-  "/_learner/(communities)/communities/$id/threads/$threadId"
+  "/_learner/communities/$id/threads/$threadId"
 )({
   component: RouteComponent,
 })
-
-type Comment = {
-  id: string
-  author: {
-    name: string
-    avatar: string
-    admin: boolean
-    online: boolean
-  }
-  date: Date
-  content: string
-  likes: number
-  replies?: Comment[]
-}
 
 function RouteComponent() {
   const router = useRouter()
@@ -178,63 +164,6 @@ function RouteComponent() {
       },
     }
   }, [])
-
-  // const comments = useMemo<Comment[]>(() => {
-  //   const generateComment = (depth = 0): Comment => {
-  //     const intro = faker.helpers.arrayElement([
-  //       "How to",
-  //       "Why You Should",
-  //       "The Ultimate Guide to",
-  //       "Top 10 Ways to",
-  //       "Understanding",
-  //       "What You Need to Know About",
-  //       "The Hidden Secrets of",
-  //     ])
-
-  //     const topic = faker.hacker.noun()
-  //     const detail = faker.company.catchPhrase()
-
-  //     const paragraphs = Array.from({
-  //       length: faker.number.int({ min: 1, max: 4 }),
-  //     })
-  //       .map(
-  //         () =>
-  //           faker.hacker.phrase() +
-  //           " " +
-  //           faker.company.buzzPhrase() +
-  //           " " +
-  //           faker.commerce.productDescription()
-  //       )
-  //       .join("\n\n")
-
-  //     const comment = {
-  //       id: faker.string.uuid(),
-  //       author: {
-  //         name: faker.person.fullName(),
-  //         avatar: faker.image.avatar(),
-  //         admin: faker.number.int({ min: 0, max: 10 }) <= 2,
-  //         online: faker.number.int({ min: 0, max: 10 }) <= 2,
-  //       },
-  //       date: faker.date.recent(),
-  //       content: `${intro} ${topic}: ${detail}. ${paragraphs}`,
-  //       likes: faker.number.int({ min: 0, max: 1000 }),
-  //       replies: [],
-  //     }
-
-  //     // Generate replies if we haven't reached max depth
-  //     if (depth < 2) {
-  //       const numReplies = faker.number.int({ min: 0, max: 3 })
-  //       comment.replies = Array.from({ length: numReplies }, () =>
-  //         generateComment(depth + 1)
-  //       )
-  //     }
-
-  //     return comment
-  //   }
-
-  //   return Array.from({ length: 2 }, () => generateComment())
-  // }, [])
-  // console.log("comments:::", comments)
 
   const titleRef = useRef(null)
   const isFirstRender = useRef(true)
@@ -503,7 +432,7 @@ function RouteComponent() {
           <Input.Root className="shadow-none">
             <Input.Wrapper>
               <Input.Icon as={RiSearchLine} />
-              <Input.Input type="text" placeholder="Join the conversation" />
+              <Input.Field type="text" placeholder="Join the conversation" />
             </Input.Wrapper>
           </Input.Root>
           <div className="flex items-center justify-between">

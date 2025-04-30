@@ -1,6 +1,5 @@
 import type React from "react"
 import { useEffect, useRef, type ChangeEvent } from "react"
-import db from "@/integrations/firebase/client"
 import { useTRPC } from "@/integrations/trpc/react"
 import { communitySchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
 import {
@@ -37,42 +36,20 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import {
-  collectionGroup,
-  getDocs,
-  orderBy,
-  query,
-  where,
-} from "firebase/firestore"
 import type { z } from "zod"
 
 import { cn } from "@/lib/utils"
 import { useNotification } from "@/hooks/use-notification"
 import * as Checkbox from "@/components/ui/checkbox"
-import * as FancyButton from "@/components/ui/fancy-button"
-import * as Label from "@/components/ui/label"
+import { FancyButton } from "@/components/ui/fancy-button"
+import { Label } from "@/components/ui/label"
 import * as Textarea from "@/components/ui/textarea"
 import FieldInfo from "@/components/field-info"
 import { Grid } from "@/components/grid"
 import { Section } from "@/components/section"
 
-import { communitySteps } from "./communities_.create.community.$id.route"
-
-export const Route = createFileRoute(
-  "/_learner/(communities)/communities_/create/community/$id/"
-)({
-  loader: async ({ context, params: { id } }) => {
-    await context.queryClient.ensureQueryData(
-      context.trpc.communities.detail.queryOptions({
-        id,
-      })
-    )
-    return {
-      step: "details",
-    }
-  },
-  component: RouteComponent,
-})
+import { useGoToNextStep } from "./-hooks/use-go-to-next-step"
+import { communitySteps } from "./route"
 
 const tags: {
   title: string
@@ -102,11 +79,28 @@ const tags: {
   { title: "International", icon: RiGlobeLine },
 ]
 
+export const Route = createFileRoute(
+  "/_learner/communities/create/$id/community/"
+)({
+  loader: async ({ context, params: { id } }) => {
+    await context.queryClient.ensureQueryData(
+      context.trpc.communities.detail.queryOptions({
+        id,
+      })
+    )
+    return {
+      step: "details",
+    }
+  },
+  component: RouteComponent,
+})
+
 function RouteComponent() {
   const { id } = Route.useParams()
   const { notification } = useNotification()
   const navigate = useNavigate()
   const { step } = Route.useLoaderData()
+  const { goToStep } = useGoToNextStep({ id })
 
   const qc = useQueryClient()
   const trpc = useTRPC()
@@ -141,10 +135,7 @@ function RouteComponent() {
 
       if (community?.data) {
         if (!form.state.isDirty) {
-          navigate({
-            to: `/communities/create/community/$id/${nextStep.step}`,
-            params: { id },
-          })
+          goToStep(nextStep.step)
           return
         }
         await updateCommunity.mutateAsync(
@@ -162,10 +153,8 @@ function RouteComponent() {
                   queryKey: trpc.communities.detail.queryKey({ id }),
                 }),
               ])
-              navigate({
-                to: `/communities/create/community/$id/${nextStep.step}`,
-                params: { id },
-              })
+
+              goToStep(nextStep.step)
             },
           }
         )
@@ -192,10 +181,7 @@ function RouteComponent() {
               })
             },
             onSuccess: () => {
-              navigate({
-                to: `/communities/create/community/$id/${nextStep.step}`,
-                params: { id },
-              })
+              goToStep(nextStep.step)
             },
             onError: () => {
               notification({

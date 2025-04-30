@@ -85,7 +85,7 @@ export {
 // import { useNotification } from "@/hooks/use-notification"
 // import * as CompactButton from "@/components/ui/compact-button"
 // import * as Modal from "@/components/ui/modal"
-// import * as Tooltip from "@/components/ui/tooltip"
+// import { Tooltip } from "@/components/ui/tooltip"
 
 // // Define supported file type categories
 // type FileTypeCategory = "images" | "documents" | "videos" | "audio"

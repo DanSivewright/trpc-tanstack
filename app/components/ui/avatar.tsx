@@ -290,7 +290,7 @@ const AvatarBrandLogo = React.forwardRef<
     <Component
       ref={forwardedRef}
       className={cn(
-        "border-bg-white-0 box-content size-6 rounded-full border-2",
+        "box-content size-6 rounded-full border-2 border-bg-white-0",
         className
       )}
       {...rest}
@@ -306,7 +306,7 @@ function AvatarNotification({
   return (
     <div
       className={cn(
-        "border-bg-white-0 bg-error-base box-content size-3 rounded-full border-2",
+        "box-content size-3 rounded-full border-2 border-bg-white-0 bg-error-base",
         className
       )}
       {...rest}
@@ -323,3 +323,5 @@ export {
   AvatarBrandLogo as BrandLogo,
   AvatarNotification as Notification,
 }
+
+export * as Avatar from "./avatar"

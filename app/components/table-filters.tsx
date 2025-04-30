@@ -43,12 +43,12 @@ import { Button } from "@/components/ui/button"
 import * as ButtonGroup from "@/components/ui/button-group"
 import * as Checkbox from "@/components/ui/checkbox"
 import * as CommandMenu from "@/components/ui/command-menu"
-import * as FancyButton from "@/components/ui/fancy-button"
-import * as Input from "@/components/ui/input"
+import { FancyButton } from "@/components/ui/fancy-button"
+import { Input } from "@/components/ui/input"
 import * as Popover from "@/components/ui/popover"
 import * as SegmentedControl from "@/components/ui/segmented-control"
 import * as Slider from "@/components/ui/slider"
-import * as Tooltip from "@/components/ui/tooltip"
+import { Tooltip } from "@/components/ui/tooltip"
 
 import { Calendar } from "./ui/datepicker"
 
@@ -328,7 +328,7 @@ export function DebouncedInput({
   return (
     <Input.Root>
       <Input.Wrapper>
-        <Input.Input
+        <Input.Field
           {...props}
           value={value}
           onChange={(e) => setValue(e.target.value)}
@@ -1828,7 +1828,7 @@ export function FilterValueNumberController<TData, TValue>({
                   <span className="text-xs font-medium">Value</span>
                   <Input.Root>
                     <Input.Wrapper>
-                      <Input.Input
+                      <Input.Field
                         id="single"
                         type="number"
                         value={inputValues[0]}
@@ -1866,7 +1866,7 @@ export function FilterValueNumberController<TData, TValue>({
                     <span className="text-xs font-medium">Min</span>
                     <Input.Root>
                       <Input.Wrapper>
-                        <Input.Input
+                        <Input.Field
                           type="number"
                           value={inputValues[0]}
                           onChange={(e) => handleInputChange(0, e.target.value)}
@@ -1879,7 +1879,7 @@ export function FilterValueNumberController<TData, TValue>({
                     <span className="text-xs font-medium">Max</span>
                     <Input.Root>
                       <Input.Wrapper>
-                        <Input.Input
+                        <Input.Field
                           type="text"
                           value={inputValues[1]}
                           placeholder={`${cappedMax}+`}

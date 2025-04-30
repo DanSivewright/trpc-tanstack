@@ -10,8 +10,8 @@ import { useIsMobile } from "@/hooks/use-is-mobile"
 import { Button } from "@/components/ui/button"
 import * as Divider from "@/components/ui/divider"
 import * as Drawer from "@/components/ui/drawer"
-import * as Input from "@/components/ui/input"
-import * as Tooltip from "@/components/ui/tooltip"
+import { Input } from "@/components/ui/input"
+import { Tooltip } from "@/components/ui/tooltip"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -332,13 +332,13 @@ const SidebarInset = React.forwardRef<
 SidebarInset.displayName = "SidebarInset"
 
 const SidebarInput = React.forwardRef<
-  React.ElementRef<typeof Input.Input>,
-  React.ComponentProps<typeof Input.Input>
+  React.ElementRef<typeof Input.Field>,
+  React.ComponentProps<typeof Input.Field>
 >(({ className, ...props }, ref) => {
   return (
     <Input.Root>
       <Input.Wrapper>
-        <Input.Input
+        <Input.Field
           ref={ref}
           data-sidebar="input"
           className={className}

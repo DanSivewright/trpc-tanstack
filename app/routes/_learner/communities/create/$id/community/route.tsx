@@ -7,7 +7,7 @@ import {
   useNavigate,
 } from "@tanstack/react-router"
 
-import * as HorizontalStepper from "@/components/ui/horizontal-stepper"
+import { HorizontalStepper } from "@/components/ui/horizontal-stepper"
 import NavigationLearnerSubHeader from "@/components/navigation/navigation-learner/navigation-learner-sub-header"
 
 export const communitySteps = [
@@ -33,8 +33,9 @@ export const communitySteps = [
     indicator: "4",
   },
 ]
+
 export const Route = createFileRoute(
-  "/_learner/(communities)/communities_/create/community/$id"
+  "/_learner/communities/create/$id/community"
 )({
   loader: () => ({
     crumb: "Community",
@@ -47,7 +48,6 @@ function RouteComponent() {
   const { id } = Route.useParams()
   const navigate = useNavigate()
 
-  const loaderData = Route.useLoaderData()
   const matches = useMatches()
   const matchesWithSteps = matches.filter((match) =>
     isMatch(match, "loaderData.step")
