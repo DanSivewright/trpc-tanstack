@@ -27,7 +27,7 @@ import { AnimatePresence, motion, useInView } from "motion/react"
 
 import * as Avatar from "@/components/ui/avatar"
 import * as Badge from "@/components/ui/badge"
-import * as Button from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import * as FancyButton from "@/components/ui/fancy-button"
 import * as FileFormatIcon from "@/components/ui/file-format-icon"
 import * as Input from "@/components/ui/input"

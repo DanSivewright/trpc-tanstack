@@ -14,7 +14,7 @@ import {
 } from "@remixicon/react"
 import { createFileRoute } from "@tanstack/react-router"
 
-import * as Button from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import * as CommandMenu from "@/components/ui/command-menu"
 import * as CompactButton from "@/components/ui/compact-button"
 import * as Kbd from "@/components/ui/kbd"

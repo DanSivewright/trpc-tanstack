@@ -17,7 +17,7 @@ import { z } from "zod"
 import * as Avatar from "@/components/ui/avatar"
 import * as AvatarGroupCompact from "@/components/ui/avatar-group-compact"
 import * as Badge from "@/components/ui/badge"
-import * as Button from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import IndeterminateCheckbox from "@/components/indeterminate-checkbox"
 
 const author = z.object({

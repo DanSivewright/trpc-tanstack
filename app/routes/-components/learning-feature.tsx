@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 
 import { useTRPC } from "@/lib/trpc/react"
-import * as Button from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Title } from "@/components/title"
 
 type Props = {

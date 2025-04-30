@@ -138,3 +138,4 @@ function FancyButtonIcon<T extends React.ElementType>({
 FancyButtonIcon.displayName = FANCY_BUTTON_ICON_NAME
 
 export { FancyButtonRoot as Root, FancyButtonIcon as Icon }
+export * as FancyButton from "./fancy-button"

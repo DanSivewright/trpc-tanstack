@@ -13,7 +13,7 @@ import {
   useLocation,
 } from "@tanstack/react-router"
 
-import * as Button from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import * as TabMenuHorizontal from "@/components/ui/tab-menu-horizontal"
 import NavigationLearnerSubHeader from "@/components/navigation/navigation-learner/navigation-learner-sub-header"
 

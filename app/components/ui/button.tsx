@@ -306,3 +306,4 @@ function ButtonIcon<T extends React.ElementType>({
 ButtonIcon.displayName = BUTTON_ICON_NAME
 
 export { ButtonRoot as Root, ButtonIcon as Icon }
+export * as Button from "./button"

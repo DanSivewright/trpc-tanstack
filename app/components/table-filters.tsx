@@ -39,7 +39,7 @@ import type { DateRange } from "react-day-picker"
 
 import { take, uniq } from "@/lib/array"
 import { useIsMobile } from "@/hooks/use-is-mobile"
-import * as Button from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import * as ButtonGroup from "@/components/ui/button-group"
 import * as Checkbox from "@/components/ui/checkbox"
 import * as CommandMenu from "@/components/ui/command-menu"

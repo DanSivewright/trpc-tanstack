@@ -7,7 +7,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-is-mobile"
-import * as Button from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import * as Divider from "@/components/ui/divider"
 import * as Drawer from "@/components/ui/drawer"
 import * as Input from "@/components/ui/input"
