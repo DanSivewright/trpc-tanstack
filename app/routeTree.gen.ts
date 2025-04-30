@@ -15,6 +15,7 @@ import { Route as TestImport } from './routes/test'
 import { Route as LearnerImport } from './routes/_learner'
 import { Route as AuthImport } from './routes/_auth'
 import { Route as LearnerIndexImport } from './routes/_learner/index'
+import { Route as XDropdownImport } from './routes/x/dropdown'
 import { Route as LearnerTasksImport } from './routes/_learner/tasks'
 import { Route as LearnerExploreImport } from './routes/_learner/explore'
 import { Route as LearnerChatImport } from './routes/_learner/chat'
@@ -65,6 +66,12 @@ const LearnerIndexRoute = LearnerIndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => LearnerRoute,
+} as any)
+
+const XDropdownRoute = XDropdownImport.update({
+  id: '/x/dropdown',
+  path: '/x/dropdown',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const LearnerTasksRoute = LearnerTasksImport.update({
@@ -314,6 +321,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/tasks'
       preLoaderRoute: typeof LearnerTasksImport
       parentRoute: typeof LearnerImport
+    }
+    '/x/dropdown': {
+      id: '/x/dropdown'
+      path: '/x/dropdown'
+      fullPath: '/x/dropdown'
+      preLoaderRoute: typeof XDropdownImport
+      parentRoute: typeof rootRoute
     }
     '/_learner/': {
       id: '/_learner/'
@@ -620,6 +634,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof LearnerChatRoute
   '/explore': typeof LearnerExploreRoute
   '/tasks': typeof LearnerTasksRoute
+  '/x/dropdown': typeof XDropdownRoute
   '/': typeof LearnerIndexRoute
   '/communities/$id': typeof LearnercommunitiesCommunitiesIdRouteRouteWithChildren
   '/communities/create': typeof LearnercommunitiesCommunitiesCreateRouteRouteWithChildren
@@ -653,6 +668,7 @@ export interface FileRoutesByTo {
   '/chat': typeof LearnerChatRoute
   '/explore': typeof LearnerExploreRoute
   '/tasks': typeof LearnerTasksRoute
+  '/x/dropdown': typeof XDropdownRoute
   '/': typeof LearnerIndexRoute
   '/communities': typeof LearnercommunitiesCommunitiesIndexRoute
   '/communities/$id/about': typeof LearnercommunitiesCommunitiesIdAboutRoute
@@ -685,6 +701,7 @@ export interface FileRoutesById {
   '/_learner/chat': typeof LearnerChatRoute
   '/_learner/explore': typeof LearnerExploreRoute
   '/_learner/tasks': typeof LearnerTasksRoute
+  '/x/dropdown': typeof XDropdownRoute
   '/_learner/': typeof LearnerIndexRoute
   '/_learner/(communities)/communities/$id': typeof LearnercommunitiesCommunitiesIdRouteRouteWithChildren
   '/_learner/(communities)/communities_/create': typeof LearnercommunitiesCommunitiesCreateRouteRouteWithChildren
@@ -720,6 +737,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/explore'
     | '/tasks'
+    | '/x/dropdown'
     | '/'
     | '/communities/$id'
     | '/communities/create'
@@ -752,6 +770,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/explore'
     | '/tasks'
+    | '/x/dropdown'
     | '/'
     | '/communities'
     | '/communities/$id/about'
@@ -782,6 +801,7 @@ export interface FileRouteTypes {
     | '/_learner/chat'
     | '/_learner/explore'
     | '/_learner/tasks'
+    | '/x/dropdown'
     | '/_learner/'
     | '/_learner/(communities)/communities/$id'
     | '/_learner/(communities)/communities_/create'
@@ -812,12 +832,14 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   LearnerRoute: typeof LearnerRouteWithChildren
   TestRoute: typeof TestRoute
+  XDropdownRoute: typeof XDropdownRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   LearnerRoute: LearnerRouteWithChildren,
   TestRoute: TestRoute,
+  XDropdownRoute: XDropdownRoute,
 }
 
 export const routeTree = rootRoute
@@ -832,7 +854,8 @@ export const routeTree = rootRoute
       "children": [
         "/_auth",
         "/_learner",
-        "/test"
+        "/test",
+        "/x/dropdown"
       ]
     },
     "/_auth": {
@@ -876,6 +899,9 @@ export const routeTree = rootRoute
     "/_learner/tasks": {
       "filePath": "_learner/tasks.tsx",
       "parent": "/_learner"
+    },
+    "/x/dropdown": {
+      "filePath": "x/dropdown.tsx"
     },
     "/_learner/": {
       "filePath": "_learner/index.tsx",
