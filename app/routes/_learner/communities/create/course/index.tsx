@@ -28,6 +28,7 @@ import {
   useReactTable,
   type ColumnDef,
   type ColumnFiltersState,
+  type RowSelectionState,
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table"
@@ -37,6 +38,7 @@ import { useNotification } from "@/hooks/use-notification"
 import { Avatar } from "@/components/ui/avatar"
 import { AvatarGroupCompact } from "@/components/ui/avatar-group-compact"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { FancyButton } from "@/components/ui/fancy-button"
 import { Table } from "@/components/ui/table"
 import IndeterminateCheckbox from "@/components/indeterminate-checkbox"
@@ -64,7 +66,7 @@ function RouteComponent() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = useState({})
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [sorting, setSorting] = useState<SortingState>([])
 
   const authors = useMemo(() => {

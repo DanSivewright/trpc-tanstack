@@ -1,8 +1,10 @@
-import { createTRPCRouter } from './init'
-import { communitiesRouter } from './routers/communities'
-import { enrolmentsRouter } from './routers/enrolments'
-import { paletteRouter } from './routers/palette'
-import { peopleRouter } from './routers/people'
+import { createTRPCRouter } from "./init"
+import { communitiesRouter } from "./routers/communities"
+import { contentRouter } from "./routers/content"
+import { enrolmentsRouter } from "./routers/enrolments"
+import { paletteRouter } from "./routers/palette"
+import { peopleRouter } from "./routers/people"
+
 // import { z } from 'zod'
 
 export const trpcRouter = createTRPCRouter({
@@ -10,5 +12,6 @@ export const trpcRouter = createTRPCRouter({
   people: peopleRouter,
   communities: communitiesRouter,
   palette: paletteRouter,
+  content: contentRouter,
 })
 export type TRPCRouter = typeof trpcRouter
