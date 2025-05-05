@@ -11,7 +11,7 @@ import {
 } from "@remixicon/react"
 import { useForm } from "@tanstack/react-form"
 import { useQueryClient, useSuspenseQueries } from "@tanstack/react-query"
-import { createFileRoute, redirect } from "@tanstack/react-router"
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
 import { z } from "zod"
 
 import { useNotification } from "@/hooks/use-notification"
@@ -81,7 +81,7 @@ function RouteComponent() {
   const { content, communityIds } = Route.useSearch()
 
   const { notification } = useNotification()
-  const qc = useQueryClient()
+  const navigate = useNavigate()
 
   const learning = useSuspenseQueries({
     queries: content.map((c) =>
@@ -101,6 +101,7 @@ function RouteComponent() {
     description: string
     value: "none" | "all" | string
     icon?: RemixiconComponentType | string
+    count?: string
   }[] = [
     {
       label: "Self Enrol",
@@ -135,18 +136,13 @@ function RouteComponent() {
       }`,
       value: "all",
       icon: RiGlobalLine,
+      count: `Enrol ${communities.reduce((acc, curr) => acc + (curr?.data?.members?.length || 0), 0)} members`,
     },
-    ...learning.map((l) => ({
-      label: l.data?.content.title,
-      description: `Enrol all members from ${l.data?.content.title}`,
-      value: l.data?.uid,
-      icon: l?.data?.featureImageUrl || undefined,
-    })),
   ]
 
   const form = useForm({
     defaultValues: {
-      enrolment: "none" as (typeof enrolmentOptions)[number]["value"],
+      enrolment: "self" as (typeof enrolmentOptions)[number]["value"],
     },
     validators: {
       onSubmit: z.object({
@@ -169,7 +165,14 @@ function RouteComponent() {
       })
     },
     onSubmit: async (data) => {
-      console.log("data:::", data)
+      navigate({
+        to: "/communities/create/course/publish",
+        search: {
+          communityIds: communityIds,
+          content: content,
+          enrolmentType: data.value.enrolment as "all" | "self",
+        },
+      })
     },
   })
 
@@ -203,7 +206,7 @@ function RouteComponent() {
                   className={cn(gridVariants({ gap: "xs" }), "")}
                 >
                   {enrolmentOptions.map((item) => (
-                    <div className="group/radio col-span-12 aspect-video md:col-span-6 xl:col-span-3 xl:aspect-square">
+                    <div className="group/radio col-span-12 aspect-video md:col-span-6 xl:col-span-4 xl:aspect-square">
                       <Radio.Item
                         checked={field.state.value === item.value}
                         className="hidden"

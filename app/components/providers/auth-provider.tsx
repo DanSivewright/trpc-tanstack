@@ -58,12 +58,14 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
               token: newAuth,
               uid: me?.uid ?? null,
               tenantId: user.tenantId ?? null,
+              companyUid: me?.company?.uid ?? null,
             },
           })
           return {
             token: newAuth,
             uid: me?.uid ?? null,
             tenantId: user.tenantId ?? null,
+            companyUid: me?.company?.uid ?? null,
           }
         }
       }
@@ -72,6 +74,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         token: lastStoredToken,
         tenantId: user.tenantId ?? null,
         uid: authCookies?.uid ?? null,
+        companyUid: authCookies?.companyUid ?? null,
       }
     },
     staleTime: 1000 * 60 * 50,

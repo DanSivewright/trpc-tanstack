@@ -15,6 +15,8 @@ import { Route as TestImport } from './routes/test'
 import { Route as LearnerImport } from './routes/_learner'
 import { Route as AuthImport } from './routes/_auth'
 import { Route as LearnerIndexImport } from './routes/_learner/index'
+import { Route as XTodosImport } from './routes/x/todos'
+import { Route as XProfilesImport } from './routes/x/profiles'
 import { Route as XEditorDemoImport } from './routes/x/editor-demo'
 import { Route as XDropdownImport } from './routes/x/dropdown'
 import { Route as LearnerTasksImport } from './routes/_learner/tasks'
@@ -32,6 +34,7 @@ import { Route as LearnerCommunitiesIdThreadsIndexImport } from './routes/_learn
 import { Route as LearnerCommunitiesIdCoursesIndexImport } from './routes/_learner/communities/$id/courses.index'
 import { Route as LearnerCommunitiesIdArticlesIndexImport } from './routes/_learner/communities/$id/articles.index'
 import { Route as LearnerCommunitiesCreateCourseSelectCoursesImport } from './routes/_learner/communities/create/course/select-courses'
+import { Route as LearnerCommunitiesCreateCoursePublishImport } from './routes/_learner/communities/create/course/publish'
 import { Route as LearnerCommunitiesCreateCourseEnrolmentsImport } from './routes/_learner/communities/create/course/enrolments'
 import { Route as LearnerCommunitiesIdThreadsThreadIdImport } from './routes/_learner/communities/$id/threads.$threadId'
 import { Route as LearnerCommunitiesCreateIdCommunityRouteImport } from './routes/_learner/communities/create/$id/community/route'
@@ -62,6 +65,18 @@ const LearnerIndexRoute = LearnerIndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => LearnerRoute,
+} as any)
+
+const XTodosRoute = XTodosImport.update({
+  id: '/x/todos',
+  path: '/x/todos',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const XProfilesRoute = XProfilesImport.update({
+  id: '/x/profiles',
+  path: '/x/profiles',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const XEditorDemoRoute = XEditorDemoImport.update({
@@ -170,6 +185,13 @@ const LearnerCommunitiesCreateCourseSelectCoursesRoute =
   LearnerCommunitiesCreateCourseSelectCoursesImport.update({
     id: '/select-courses',
     path: '/select-courses',
+    getParentRoute: () => LearnerCommunitiesCreateCourseRouteRoute,
+  } as any)
+
+const LearnerCommunitiesCreateCoursePublishRoute =
+  LearnerCommunitiesCreateCoursePublishImport.update({
+    id: '/publish',
+    path: '/publish',
     getParentRoute: () => LearnerCommunitiesCreateCourseRouteRoute,
   } as any)
 
@@ -296,6 +318,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof XEditorDemoImport
       parentRoute: typeof rootRoute
     }
+    '/x/profiles': {
+      id: '/x/profiles'
+      path: '/x/profiles'
+      fullPath: '/x/profiles'
+      preLoaderRoute: typeof XProfilesImport
+      parentRoute: typeof rootRoute
+    }
+    '/x/todos': {
+      id: '/x/todos'
+      path: '/x/todos'
+      fullPath: '/x/todos'
+      preLoaderRoute: typeof XTodosImport
+      parentRoute: typeof rootRoute
+    }
     '/_learner/': {
       id: '/_learner/'
       path: '/'
@@ -357,6 +393,13 @@ declare module '@tanstack/react-router' {
       path: '/enrolments'
       fullPath: '/communities/create/course/enrolments'
       preLoaderRoute: typeof LearnerCommunitiesCreateCourseEnrolmentsImport
+      parentRoute: typeof LearnerCommunitiesCreateCourseRouteImport
+    }
+    '/_learner/communities/create/course/publish': {
+      id: '/_learner/communities/create/course/publish'
+      path: '/publish'
+      fullPath: '/communities/create/course/publish'
+      preLoaderRoute: typeof LearnerCommunitiesCreateCoursePublishImport
       parentRoute: typeof LearnerCommunitiesCreateCourseRouteImport
     }
     '/_learner/communities/create/course/select-courses': {
@@ -465,6 +508,7 @@ const LearnerCommunitiesIdRouteRouteWithChildren =
 
 interface LearnerCommunitiesCreateCourseRouteRouteChildren {
   LearnerCommunitiesCreateCourseEnrolmentsRoute: typeof LearnerCommunitiesCreateCourseEnrolmentsRoute
+  LearnerCommunitiesCreateCoursePublishRoute: typeof LearnerCommunitiesCreateCoursePublishRoute
   LearnerCommunitiesCreateCourseSelectCoursesRoute: typeof LearnerCommunitiesCreateCourseSelectCoursesRoute
   LearnerCommunitiesCreateCourseIndexRoute: typeof LearnerCommunitiesCreateCourseIndexRoute
 }
@@ -473,6 +517,8 @@ const LearnerCommunitiesCreateCourseRouteRouteChildren: LearnerCommunitiesCreate
   {
     LearnerCommunitiesCreateCourseEnrolmentsRoute:
       LearnerCommunitiesCreateCourseEnrolmentsRoute,
+    LearnerCommunitiesCreateCoursePublishRoute:
+      LearnerCommunitiesCreateCoursePublishRoute,
     LearnerCommunitiesCreateCourseSelectCoursesRoute:
       LearnerCommunitiesCreateCourseSelectCoursesRoute,
     LearnerCommunitiesCreateCourseIndexRoute:
@@ -549,6 +595,8 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof LearnerTasksRoute
   '/x/dropdown': typeof XDropdownRoute
   '/x/editor-demo': typeof XEditorDemoRoute
+  '/x/profiles': typeof XProfilesRoute
+  '/x/todos': typeof XTodosRoute
   '/': typeof LearnerIndexRoute
   '/communities/$id': typeof LearnerCommunitiesIdRouteRouteWithChildren
   '/communities': typeof LearnerCommunitiesIndexRoute
@@ -558,6 +606,7 @@ export interface FileRoutesByFullPath {
   '/communities/create/$id/community': typeof LearnerCommunitiesCreateIdCommunityRouteRouteWithChildren
   '/communities/$id/threads/$threadId': typeof LearnerCommunitiesIdThreadsThreadIdRoute
   '/communities/create/course/enrolments': typeof LearnerCommunitiesCreateCourseEnrolmentsRoute
+  '/communities/create/course/publish': typeof LearnerCommunitiesCreateCoursePublishRoute
   '/communities/create/course/select-courses': typeof LearnerCommunitiesCreateCourseSelectCoursesRoute
   '/communities/$id/articles': typeof LearnerCommunitiesIdArticlesIndexRoute
   '/communities/$id/courses': typeof LearnerCommunitiesIdCoursesIndexRoute
@@ -579,12 +628,15 @@ export interface FileRoutesByTo {
   '/tasks': typeof LearnerTasksRoute
   '/x/dropdown': typeof XDropdownRoute
   '/x/editor-demo': typeof XEditorDemoRoute
+  '/x/profiles': typeof XProfilesRoute
+  '/x/todos': typeof XTodosRoute
   '/': typeof LearnerIndexRoute
   '/communities': typeof LearnerCommunitiesIndexRoute
   '/communities/$id': typeof LearnerCommunitiesIdIndexRoute
   '/communities/create': typeof LearnerCommunitiesCreateIndexRoute
   '/communities/$id/threads/$threadId': typeof LearnerCommunitiesIdThreadsThreadIdRoute
   '/communities/create/course/enrolments': typeof LearnerCommunitiesCreateCourseEnrolmentsRoute
+  '/communities/create/course/publish': typeof LearnerCommunitiesCreateCoursePublishRoute
   '/communities/create/course/select-courses': typeof LearnerCommunitiesCreateCourseSelectCoursesRoute
   '/communities/$id/articles': typeof LearnerCommunitiesIdArticlesIndexRoute
   '/communities/$id/courses': typeof LearnerCommunitiesIdCoursesIndexRoute
@@ -608,6 +660,8 @@ export interface FileRoutesById {
   '/_learner/tasks': typeof LearnerTasksRoute
   '/x/dropdown': typeof XDropdownRoute
   '/x/editor-demo': typeof XEditorDemoRoute
+  '/x/profiles': typeof XProfilesRoute
+  '/x/todos': typeof XTodosRoute
   '/_learner/': typeof LearnerIndexRoute
   '/_learner/communities/$id': typeof LearnerCommunitiesIdRouteRouteWithChildren
   '/_learner/communities/': typeof LearnerCommunitiesIndexRoute
@@ -617,6 +671,7 @@ export interface FileRoutesById {
   '/_learner/communities/create/$id/community': typeof LearnerCommunitiesCreateIdCommunityRouteRouteWithChildren
   '/_learner/communities/$id/threads/$threadId': typeof LearnerCommunitiesIdThreadsThreadIdRoute
   '/_learner/communities/create/course/enrolments': typeof LearnerCommunitiesCreateCourseEnrolmentsRoute
+  '/_learner/communities/create/course/publish': typeof LearnerCommunitiesCreateCoursePublishRoute
   '/_learner/communities/create/course/select-courses': typeof LearnerCommunitiesCreateCourseSelectCoursesRoute
   '/_learner/communities/$id/articles/': typeof LearnerCommunitiesIdArticlesIndexRoute
   '/_learner/communities/$id/courses/': typeof LearnerCommunitiesIdCoursesIndexRoute
@@ -640,6 +695,8 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/x/dropdown'
     | '/x/editor-demo'
+    | '/x/profiles'
+    | '/x/todos'
     | '/'
     | '/communities/$id'
     | '/communities'
@@ -649,6 +706,7 @@ export interface FileRouteTypes {
     | '/communities/create/$id/community'
     | '/communities/$id/threads/$threadId'
     | '/communities/create/course/enrolments'
+    | '/communities/create/course/publish'
     | '/communities/create/course/select-courses'
     | '/communities/$id/articles'
     | '/communities/$id/courses'
@@ -669,12 +727,15 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/x/dropdown'
     | '/x/editor-demo'
+    | '/x/profiles'
+    | '/x/todos'
     | '/'
     | '/communities'
     | '/communities/$id'
     | '/communities/create'
     | '/communities/$id/threads/$threadId'
     | '/communities/create/course/enrolments'
+    | '/communities/create/course/publish'
     | '/communities/create/course/select-courses'
     | '/communities/$id/articles'
     | '/communities/$id/courses'
@@ -696,6 +757,8 @@ export interface FileRouteTypes {
     | '/_learner/tasks'
     | '/x/dropdown'
     | '/x/editor-demo'
+    | '/x/profiles'
+    | '/x/todos'
     | '/_learner/'
     | '/_learner/communities/$id'
     | '/_learner/communities/'
@@ -705,6 +768,7 @@ export interface FileRouteTypes {
     | '/_learner/communities/create/$id/community'
     | '/_learner/communities/$id/threads/$threadId'
     | '/_learner/communities/create/course/enrolments'
+    | '/_learner/communities/create/course/publish'
     | '/_learner/communities/create/course/select-courses'
     | '/_learner/communities/$id/articles/'
     | '/_learner/communities/$id/courses/'
@@ -723,6 +787,8 @@ export interface RootRouteChildren {
   TestRoute: typeof TestRoute
   XDropdownRoute: typeof XDropdownRoute
   XEditorDemoRoute: typeof XEditorDemoRoute
+  XProfilesRoute: typeof XProfilesRoute
+  XTodosRoute: typeof XTodosRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -731,6 +797,8 @@ const rootRouteChildren: RootRouteChildren = {
   TestRoute: TestRoute,
   XDropdownRoute: XDropdownRoute,
   XEditorDemoRoute: XEditorDemoRoute,
+  XProfilesRoute: XProfilesRoute,
+  XTodosRoute: XTodosRoute,
 }
 
 export const routeTree = rootRoute
@@ -747,7 +815,9 @@ export const routeTree = rootRoute
         "/_learner",
         "/test",
         "/x/dropdown",
-        "/x/editor-demo"
+        "/x/editor-demo",
+        "/x/profiles",
+        "/x/todos"
       ]
     },
     "/_auth": {
@@ -800,6 +870,12 @@ export const routeTree = rootRoute
     "/x/editor-demo": {
       "filePath": "x/editor-demo.tsx"
     },
+    "/x/profiles": {
+      "filePath": "x/profiles.tsx"
+    },
+    "/x/todos": {
+      "filePath": "x/todos.tsx"
+    },
     "/_learner/": {
       "filePath": "_learner/index.tsx",
       "parent": "/_learner"
@@ -824,6 +900,7 @@ export const routeTree = rootRoute
       "parent": "/_learner",
       "children": [
         "/_learner/communities/create/course/enrolments",
+        "/_learner/communities/create/course/publish",
         "/_learner/communities/create/course/select-courses",
         "/_learner/communities/create/course/"
       ]
@@ -852,6 +929,10 @@ export const routeTree = rootRoute
     },
     "/_learner/communities/create/course/enrolments": {
       "filePath": "_learner/communities/create/course/enrolments.tsx",
+      "parent": "/_learner/communities/create/course"
+    },
+    "/_learner/communities/create/course/publish": {
+      "filePath": "_learner/communities/create/course/publish.tsx",
       "parent": "/_learner/communities/create/course"
     },
     "/_learner/communities/create/course/select-courses": {

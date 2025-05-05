@@ -14,6 +14,7 @@ export const setAuthCookie = createServerFn({ method: "POST" })
       token: z.string(),
       tenantId: z.string().optional().nullable(),
       uid: z.string().optional().nullable(),
+      companyUid: z.string().optional().nullable(),
     })
   )
   .handler(async (ctx) => {
@@ -36,6 +37,7 @@ export const getAuthCookie = createServerFn({ method: "GET" }).handler(
       token: string
       tenantId?: string
       uid: string
+      companyUid?: string
     }
   }
 )

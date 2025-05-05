@@ -39,6 +39,11 @@ export const fetcher = cache(
         Authorization: `Bearer ${ctx.token}`,
         "x-tenant-id": ctx.tenantId ?? "",
       },
+      method: input && "body" in input && input.body ? "POST" : "GET",
+      body:
+        input && "body" in input && input.body
+          ? JSON.stringify(input.body)
+          : undefined,
     })
 
     const { data, error, success } = await tryCatch(response.json())

@@ -191,3 +191,5 @@ function CharCounter({
 CharCounter.displayName = TEXTAREA_COUNTER_NAME
 
 export { TextareaRoot as Root, CharCounter }
+
+export * as Textarea from "./textarea"

@@ -68,6 +68,7 @@ export const communitySchema = z.object({
 })
 
 const feedItemSchema = z.object({
+  id: z.string(),
   authorUid: z.string(),
   author: z.object({
     id: z.string(),
@@ -76,19 +77,44 @@ const feedItemSchema = z.object({
   }),
   communityId: z.string(),
   community: communitySchema,
+  title: z.string(),
+  caption: z.string(),
+  views: z.number().optional().nullable(),
   status: z.enum(["draft", "published"]),
   accessibile: z.enum(["public", "community"]),
   tags: z.array(z.string()).nullable().optional(),
-  commentsCount: z.number(),
+  commentsCount: z.number().optional().nullable(),
   createdAt: z.custom<Timestamp>(),
   updatedAt: z.custom<Timestamp>(),
   publishedAt: z.custom<Timestamp>(),
 })
 
-const articleSchema = feedItemSchema.extend({
+const feedEnrolmentsSchema = z.object({
+  id: z.string(),
+  authorUid: z.string(),
+  author: z.object({
+    id: z.string(),
+    name: z.string(),
+    avatarUrl: z.string(),
+  }),
+  publicationUid: z.string(),
+  enrolmentUid: z.string().optional().nullable(),
+  courseDocId: z.string(),
+  enrolleeUid: z.string(),
+  enrollee: memberSchema.omit({ joinedAt: true, role: true }),
+  createdAt: z.string(),
+})
+
+const feedCourseSchema = feedItemSchema.extend({
+  type: z.literal("course"),
+  typeUid: z.string(),
+  publicationUid: z.string(),
+  typeAccessor: z.enum(["courses", "programs"]),
+  enrolments: z.array(feedEnrolmentsSchema).optional().nullable(),
+})
+
+const feedArticleSchema = feedItemSchema.extend({
   type: z.literal("article"),
-  title: z.string(),
-  caption: z.string(),
   duration: z.number(),
   content: z.any().optional().nullable(),
   featuredImageUrl: z.string(),
@@ -98,77 +124,18 @@ const articleSchema = feedItemSchema.extend({
   }),
 })
 
-const feedSchema = z.discriminatedUnion("type", [
-  feedItemSchema.extend({
-    type: z.literal("article"),
-    title: z.string(),
-    caption: z.string(),
-    duration: z.number(),
-    content: z.any().optional().nullable(),
-    featuredImageUrl: z.string(),
-    featuredImagePath: z.string(),
-    meta: z.object({
-      colors: paletteSchema,
-    }),
-  }),
-  feedItemSchema.extend({
-    type: z.literal("thread"),
-    title: z.string(),
-    caption: z.string(),
-    content: z.any().optional().nullable(),
-    featuredImageUrl: z.string(),
-    featuredImagePath: z.string(),
-  }),
-  feedItemSchema.extend({
-    type: z.literal("course"),
-  }),
-])
-
-const communityThreadSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  authorUid: z.string(),
-  author: z.object({
-    id: z.string(),
-    name: z.string(),
-    avatarUrl: z.string(),
-  }),
-  communityId: z.string(),
-  community: communitySchema,
-  accessibile: z.enum(["public", "community"]),
-  tags: z.array(z.string()).nullable().optional(),
-  status: z.enum(["open", "archived"]),
-  createdAt: z.custom<Timestamp>(),
-  updatedAt: z.custom<Timestamp>(),
-  caption: z.string(),
+const feedThreadSchema = feedItemSchema.extend({
+  type: z.literal("thread"),
   content: z.any().optional().nullable(),
-  commentsCount: z.number(),
+  featuredImageUrl: z.string(),
+  featuredImagePath: z.string(),
 })
 
-const communityCourseSchema = z.object({
-  id: z.string(),
-  authorUid: z.string(),
-  author: z.object({
-    id: z.string(),
-    name: z.string(),
-    avatarUrl: z.string(),
-  }),
-  title: z.string(),
-  viewsCount: z.number(),
-  featureImageUrl: z.string().optional().nullable(),
-  communityId: z.string(),
-  community: communitySchema,
-  typeUid: z.string(),
-  type: z.enum(["courses", "programs"]).or(z.string()),
-  detail: z.any(),
-  enrolmentsCount: z.number(),
-  commentsCount: z.number(),
-  accessibile: z.enum(["public", "community"]),
-  createdAt: z.custom<Timestamp>(),
-  meta: z.object({
-    colors: paletteSchema,
-  }),
-})
+const feedSchema = z.discriminatedUnion("type", [
+  feedCourseSchema,
+  feedArticleSchema,
+  feedThreadSchema,
+])
 
 const communityCommentSchema = z.object({
   authorUid: z.string(),
@@ -188,5 +155,17 @@ const communityCommentSchema = z.object({
   downvotesCount: z.number(),
 })
 
-export const communitiesAllSchema = z.array(communitySchema)
-export const communitiesJoinedSchema = communitiesAllSchema
+const communityFeedSchema = z.array(feedSchema)
+const communityFeedItemSchema = feedSchema
+const communitiesAllSchema = z.array(communitySchema)
+const communitiesJoinedSchema = communitiesAllSchema
+export {
+  communityFeedSchema,
+  communityFeedItemSchema,
+  communitiesAllSchema,
+  communitiesJoinedSchema,
+  communityCommentSchema,
+  feedArticleSchema,
+  feedCourseSchema,
+  feedThreadSchema,
+}

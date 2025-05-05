@@ -6,10 +6,12 @@ export const createTRPCContext = async ({ headers }: { headers: Headers }) => {
   const token = headers.get("authorization")?.split(" ")[1]
   const tenantId = headers.get("x-tenant-id")
   const uid = headers.get("uid")
+  const companyUid = headers.get("company-uid")
   return {
     token,
     tenantId,
     uid,
+    companyUid,
   }
 }
 
@@ -42,6 +44,7 @@ const enforceUserIsAuthenticated = t.middleware(({ ctx, next }) => {
       token: ctx.token,
       tenantId: ctx.tenantId,
       uid: ctx.uid,
+      companyUid: ctx.companyUid,
     },
   })
 })

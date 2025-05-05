@@ -7,6 +7,19 @@ import { PeopleMeSchema } from "@/integrations/trpc/routers/people/schemas/peopl
 import { z } from "zod"
 
 export const queryConfig = {
+  "enrol:people": {
+    path: "/learn/publications/:publicationUid/enrolments",
+    input: z.object({
+      params: z.object({
+        publicationUid: z.string(),
+      }),
+      body: z.string(),
+      query: z.object({
+        companyUid: z.string(),
+      }),
+    }),
+    as: z.any(),
+  },
   "enrolments:all": {
     path: "/learn/enrolments",
     input: z

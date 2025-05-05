@@ -66,3 +66,5 @@ function Divider({
 Divider.displayName = DIVIDER_ROOT_NAME
 
 export { Divider as Root }
+
+export * as Divider from "./divider"

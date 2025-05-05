@@ -39,6 +39,7 @@ export const trpcClient = createTRPCClient<TRPCRouter>({
           Authorization: auth ? `Bearer ${auth.token}` : "",
           "x-tenant-id": auth.tenantId ?? "",
           uid: auth.uid ?? "",
+          "company-uid": auth.companyUid ?? "",
         }
       },
     }),

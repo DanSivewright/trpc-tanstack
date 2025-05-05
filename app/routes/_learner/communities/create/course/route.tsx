@@ -12,8 +12,6 @@ import {
 import { HorizontalStepper } from "@/components/ui/horizontal-stepper"
 import NavigationLearnerSubHeader from "@/components/navigation/navigation-learner/navigation-learner-sub-header"
 
-import { useGoToNextStep } from "./-hooks/use-go-to-next-step"
-
 export const Route = createFileRoute("/_learner/communities/create/course")({
   component: RouteComponent,
 })
@@ -33,6 +31,11 @@ export const courseSteps = [
     label: "Enrolments",
     step: "enrolments",
     indicator: "3",
+  },
+  {
+    label: "Publish",
+    step: "publish",
+    indicator: "4",
   },
 ]
 function RouteComponent() {

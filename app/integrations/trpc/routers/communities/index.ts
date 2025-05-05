@@ -5,10 +5,12 @@ import merge from "lodash.merge"
 import { z } from "zod"
 
 import { cachedFunction, generateCacheKey, useStorage } from "@/lib/cache"
+import { fetcher } from "@/lib/query"
 
 import { protectedProcedure } from "../../init"
 import {
   communitySchema,
+  feedCourseSchema,
   type communitiesAllSchema,
   type communitiesJoinedSchema,
 } from "./schemas/communities-schema"
@@ -125,7 +127,7 @@ async function getCommunity(options: {
 
 export const communitiesRouter = {
   // @ts-ignore
-  all: protectedProcedure.query(async ({ type, path }) => {
+  all: protectedProcedure.query(async ({ type, path, ctx }) => {
     return getCommunities({ type, path })
   }),
   // @ts-ignore
@@ -164,6 +166,52 @@ export const communitiesRouter = {
     // @ts-ignore
     .query(async ({ ctx, input, type, path }) => {
       return getCommunity({ type, path, input })
+    }),
+  courses: protectedProcedure
+    .input(
+      z.object({
+        communityId: z.string(),
+      })
+    )
+    // @ts-ignore
+    .query(async ({ ctx, input, type, path }) => {
+      const cachedFetcher = cachedFunction(
+        async () => {
+          const { success, error, data } = await tryCatch(
+            db
+              .collection("communities")
+              .doc(input.communityId)
+              .collection("courses")
+              .get()
+          )
+          if (error || !success) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: error?.message || "Courses not found",
+            })
+          }
+          let courses: any = []
+          if (success && data && !data.empty) {
+            data.forEach((doc) => {
+              courses.push({
+                ...doc.data(),
+                id: doc.id,
+              })
+            })
+          }
+          return courses as z.infer<typeof feedCourseSchema>[]
+        },
+        {
+          name: generateCacheKey({
+            path,
+            type,
+            input,
+          }),
+          maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
+          group: CACHE_GROUP,
+        }
+      )
+      return cachedFetcher()
     }),
   create: protectedProcedure
     .input(
@@ -227,6 +275,123 @@ export const communitiesRouter = {
         generateCacheKey({
           path: "communities.joined",
           type: "query",
+        })
+      )
+    }),
+  createCourses: protectedProcedure
+    .input(
+      z.array(
+        feedCourseSchema
+          .pick({
+            id: true,
+            authorUid: true,
+            author: true,
+            communityId: true,
+            typeUid: true,
+            type: true,
+            typeAccessor: true,
+            publicationUid: true,
+          })
+          .merge(
+            feedCourseSchema
+              .omit({
+                publicationUid: true,
+                id: true,
+                authorUid: true,
+                author: true,
+                communityId: true,
+                typeUid: true,
+                type: true,
+                typeAccessor: true,
+              })
+              .partial()
+          )
+      )
+    )
+    .mutation(async ({ input, ctx }) => {
+      const batch = db.batch()
+
+      const enrolmentsMap = new Map<string, Set<string>>()
+      const communityIds = new Set<string>()
+      for (const course of input) {
+        const { enrolments, ...courseData } = course
+        communityIds.add(course.communityId)
+        const courseRef = db
+          .collection("communities")
+          .doc(course.communityId)
+          .collection("courses")
+          .doc(course.id)
+
+        batch.set(courseRef, {
+          ...courseData,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
+
+        // Create enrolments collection group if enrolments exist
+        if (enrolments && enrolments.length > 0) {
+          enrolmentsMap.set(
+            course.publicationUid,
+            enrolmentsMap.get(course.publicationUid)
+              ? new Set([
+                  ...(enrolmentsMap.get(course.publicationUid) ?? []),
+                  ...enrolments?.map((e) => e.enrolleeUid),
+                ])
+              : new Set(enrolments?.map((e) => e.enrolleeUid))
+          )
+          for (const enrolment of enrolments) {
+            const enrolmentRef = db
+              .collection("communities")
+              .doc(course.communityId)
+              .collection("enrolments")
+              .doc(enrolment.id)
+
+            batch.set(enrolmentRef, {
+              ...enrolment,
+              communityId: course.communityId,
+              courseDocId: course.id,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            })
+          }
+        }
+      }
+
+      await batch.commit()
+      const enrolments = await Promise.all(
+        Array.from(enrolmentsMap.entries()).map(
+          ([publicationUid, enrolleeUids]) => {
+            return tryCatch(
+              fetcher({
+                key: "enrol:people",
+                ctx,
+                input: {
+                  params: {
+                    publicationUid,
+                  },
+                  body: JSON.stringify({
+                    personUids: Array.from(enrolleeUids).join(","),
+                  }),
+                  query: {
+                    companyUid: ctx.companyUid ?? "",
+                  },
+                },
+              })
+            )
+          }
+        )
+      )
+      console.log("enrol:::", enrolments)
+      const storage = useStorage()
+      await Promise.all(
+        Array.from(communityIds).map((communityId) => {
+          return storage.remove(
+            generateCacheKey({
+              path: "communities.courses",
+              type: "query",
+              input: { communityId },
+            })
+          )
         })
       )
     }),

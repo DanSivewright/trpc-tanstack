@@ -188,3 +188,5 @@ export {
   ModalBody as Body,
   ModalFooter as Footer,
 }
+
+export * as Modal from "./modal"
