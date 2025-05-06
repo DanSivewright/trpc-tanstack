@@ -1,5 +1,7 @@
 import { ContentAllSchema } from "@/integrations/trpc/routers/content/schemas/content-all-schema"
 import { ContentDetailSchema } from "@/integrations/trpc/routers/content/schemas/content-detail-schema"
+import { ContentModulesSchema } from "@/integrations/trpc/routers/content/schemas/content-modules-schema"
+import { ContentModulesVersionSchema } from "@/integrations/trpc/routers/content/schemas/content-modules-version-schema"
 import { EnrolmentsAllSchema } from "@/integrations/trpc/routers/enrolments/schemas/enrolments-all-schema"
 import { EnrolmentsDetailSchema } from "@/integrations/trpc/routers/enrolments/schemas/enrolments-detail-schema"
 import { PeopleAllSchema } from "@/integrations/trpc/routers/people/schemas/people-all-schema"
@@ -13,7 +15,9 @@ export const queryConfig = {
       params: z.object({
         publicationUid: z.string(),
       }),
-      body: z.string(),
+      body: z.object({
+        personUids: z.array(z.string()),
+      }),
       query: z.object({
         companyUid: z.string(),
       }),
@@ -98,5 +102,24 @@ export const queryConfig = {
       }),
     }),
     as: ContentDetailSchema,
+  },
+  "content:modules": {
+    path: "/learn/:type/:typeUid/modules",
+    input: z.object({
+      params: z.object({
+        type: z.string(),
+        typeUid: z.string(),
+      }),
+    }),
+    as: ContentModulesSchema,
+  },
+  "content:modules:version": {
+    path: "/learn/modules/versions/:moduleVersionUid",
+    input: z.object({
+      params: z.object({
+        moduleVersionUid: z.string(),
+      }),
+    }),
+    as: ContentModulesVersionSchema,
   },
 } as const

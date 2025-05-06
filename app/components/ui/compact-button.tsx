@@ -145,3 +145,5 @@ function CompactButtonIcon<T extends React.ElementType>({
 CompactButtonIcon.displayName = COMPACT_BUTTON_ICON_NAME
 
 export { CompactButtonRoot as Root, CompactButtonIcon as Icon }
+
+export * as CompactButton from "./compact-button"

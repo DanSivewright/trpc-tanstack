@@ -4,7 +4,6 @@ import {
   RiGraduationCapLine,
   RiHashtag,
   RiLayoutMasonryLine,
-  RiTaskLine,
 } from "@remixicon/react"
 import {
   createFileRoute,
@@ -49,23 +48,10 @@ function RouteComponent() {
                 params={{
                   id,
                 }}
+                preload="intent"
               >
                 <TabMenuHorizontal.Icon as={RiLayoutMasonryLine} />
                 Feed
-              </Link>
-            </TabMenuHorizontal.Trigger>
-            <TabMenuHorizontal.Trigger
-              value={`/communities/${id}/tasks`}
-              asChild
-            >
-              <Link
-                to="/communities/$id/tasks"
-                params={{
-                  id,
-                }}
-              >
-                <TabMenuHorizontal.Icon as={RiTaskLine} />
-                Tasks
               </Link>
             </TabMenuHorizontal.Trigger>
             <TabMenuHorizontal.Trigger
@@ -77,6 +63,7 @@ function RouteComponent() {
                 params={{
                   id,
                 }}
+                preload="intent"
               >
                 <TabMenuHorizontal.Icon as={RiArticleLine} />
                 Articles
@@ -91,6 +78,7 @@ function RouteComponent() {
                 params={{
                   id,
                 }}
+                preload="intent"
               >
                 <TabMenuHorizontal.Icon as={RiHashtag} />
                 Thread
@@ -105,6 +93,7 @@ function RouteComponent() {
                 params={{
                   id,
                 }}
+                preload="intent"
               >
                 <TabMenuHorizontal.Icon as={RiGraduationCapLine} />
                 Courses

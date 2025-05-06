@@ -1,217 +1,101 @@
 import { db } from "@/integrations/firebase/server"
 import { tryCatch } from "@/utils/try-catch"
-import { TRPCError } from "@trpc/server"
 import merge from "lodash.merge"
 import { z } from "zod"
 
-import { cachedFunction, generateCacheKey, useStorage } from "@/lib/cache"
+import { generateCacheKey, useStorage } from "@/lib/cache"
 import { fetcher } from "@/lib/query"
 
 import { protectedProcedure } from "../../init"
 import {
-  communitySchema,
-  feedCourseSchema,
-  type communitiesAllSchema,
-  type communitiesJoinedSchema,
-} from "./schemas/communities-schema"
+  getAllCommunities,
+  getAllCommunitiesAdminOf,
+  getAllJoinedCommunities,
+  getCommunityCourseDetail,
+  getCommunityCourseDetailSchema,
+  getCommunityCourseEnrolments,
+  getCommunityCourseEnrolmentsSchema,
+  getCommunityCourses,
+  getCommunityCoursesSchema,
+  getCommunityDetail,
+  getCommunityDetailSchema,
+} from "./queries"
+import { communitySchema, feedCourseSchema } from "./schemas/communities-schema"
 
 const CACHE_GROUP = "communities"
-
-async function getCommunities(options: { type: string; path: string }) {
-  const cachedFetcher = cachedFunction(
-    async () => {
-      const snap = await db.collection("communities").get()
-      let data: any = []
-
-      for (const doc of snap.docs) {
-        const members = await getMembers({
-          type: options.type,
-          path: options.path,
-          input: { communityId: doc.id },
-        })
-
-        data.push({
-          id: doc.id,
-          ...doc.data(),
-          membersCount: members.length,
-          members: members,
-        })
-      }
-
-      return data as z.infer<typeof communitiesAllSchema>
-    },
-    {
-      name: generateCacheKey({ type: options.type, path: options.path }),
-      maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
-      group: CACHE_GROUP,
-    }
-  )
-
-  return cachedFetcher()
-}
-
-async function getMembers(options: {
-  type: string
-  path: string
-  input: { communityId: string }
-}) {
-  const cachedFetcher = cachedFunction(async () => {
-    const snap = await tryCatch(
-      db
-        .collectionGroup("members")
-        .where("communityId", "==", options.input.communityId)
-        .orderBy("joinedAt", "desc")
-        .get()
-    )
-    let members: any = []
-    if (snap.success && snap.data && !snap.data.empty) {
-      snap.data.forEach((doc) => {
-        members.push({
-          ...doc.data(),
-          id: doc.id,
-        })
-      })
-    }
-    return members
-  })
-  return cachedFetcher()
-}
-
-async function getCommunity(options: {
-  type: string
-  path: string
-  input: any
-}) {
-  const cachedFetcher = cachedFunction(
-    async () => {
-      const [comSnap, members] = await Promise.all([
-        tryCatch(db.collection("communities").doc(options.input.id).get()),
-        getMembers({
-          type: options.type,
-          path: options.path,
-          input: { communityId: options.input.id },
-        }),
-      ])
-
-      if (comSnap.error || !comSnap.success) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: comSnap.error?.message || "Community not found",
-        })
-      }
-
-      if (!comSnap.data.exists) return null
-
-      if (!comSnap.data) {
-        return null
-      }
-      return {
-        id: comSnap.data.id,
-        ...comSnap.data.data(),
-        membersCount: members.length,
-        members: members,
-      } as z.infer<typeof communitySchema>
-    },
-    {
-      name: generateCacheKey({
-        path: options.path,
-        type: options.type,
-        input: options.input,
-      }),
-      maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
-      group: CACHE_GROUP,
-    }
-  )
-  return cachedFetcher()
-}
 
 export const communitiesRouter = {
   // @ts-ignore
   all: protectedProcedure.query(async ({ type, path, ctx }) => {
-    return getCommunities({ type, path })
+    return getAllCommunities({
+      cacheGroup: CACHE_GROUP,
+      type,
+      path,
+      ctx,
+    })
   }),
   // @ts-ignore
-  joined: protectedProcedure.query(async ({ ctx, sin, type, path }) => {
-    const communities = await getCommunities({
-      type: "query",
-      path: "communities.all",
+  joined: protectedProcedure.query(async ({ ctx, type, path }) => {
+    return getAllJoinedCommunities({
+      cacheGroup: CACHE_GROUP,
+      type,
+      path,
+      ctx,
     })
-
-    const joinedCommunities = communities
-      .filter((com) => com.members?.some((m) => m.uid === ctx.uid))
-      .map((com) => ({
-        ...com,
-        membership: com.members?.find((m) => m.uid === ctx.uid),
-      }))
-
-    return joinedCommunities as z.infer<typeof communitiesJoinedSchema>
   }),
   adminOf: protectedProcedure.query(async ({ ctx }) => {
-    const communities = await getCommunities({
-      type: "query",
-      path: "communities.all",
+    return getAllCommunitiesAdminOf({
+      cacheGroup: CACHE_GROUP,
+      ctx,
     })
-    const adminOfCommunities = communities
-      .filter((com) =>
-        com.members?.some((m) => m.uid === ctx.uid && m.role === "admin")
-      )
-      .map((com) => ({
-        ...com,
-        membership: com.members?.find((m) => m.uid === ctx.uid),
-      }))
-    return adminOfCommunities as z.infer<typeof communitiesJoinedSchema>
   }),
   detail: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(getCommunityDetailSchema)
     // @ts-ignore
-    .query(async ({ ctx, input, type, path }) => {
-      return getCommunity({ type, path, input })
+    .query(async ({ ctx, input, type, path, signal }) => {
+      return getCommunityDetail({
+        cacheGroup: CACHE_GROUP,
+        type,
+        path,
+        input,
+        ctx,
+      })
     }),
   courses: protectedProcedure
-    .input(
-      z.object({
-        communityId: z.string(),
-      })
-    )
+    .input(getCommunityCoursesSchema)
     // @ts-ignore
     .query(async ({ ctx, input, type, path }) => {
-      const cachedFetcher = cachedFunction(
-        async () => {
-          const { success, error, data } = await tryCatch(
-            db
-              .collection("communities")
-              .doc(input.communityId)
-              .collection("courses")
-              .get()
-          )
-          if (error || !success) {
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: error?.message || "Courses not found",
-            })
-          }
-          let courses: any = []
-          if (success && data && !data.empty) {
-            data.forEach((doc) => {
-              courses.push({
-                ...doc.data(),
-                id: doc.id,
-              })
-            })
-          }
-          return courses as z.infer<typeof feedCourseSchema>[]
-        },
-        {
-          name: generateCacheKey({
-            path,
-            type,
-            input,
-          }),
-          maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
-          group: CACHE_GROUP,
-        }
-      )
-      return cachedFetcher()
+      return getCommunityCourses({
+        cacheGroup: CACHE_GROUP,
+        type,
+        path,
+        input,
+        ctx,
+      })
+    }),
+  courseDetail: protectedProcedure
+    .input(getCommunityCourseDetailSchema)
+    // @ts-ignore
+    .query(async ({ ctx, input, type, path }) => {
+      return getCommunityCourseDetail({
+        cacheGroup: CACHE_GROUP,
+        type,
+        path,
+        input,
+        ctx,
+      })
+    }),
+  courseEnrolments: protectedProcedure
+    .input(getCommunityCourseEnrolmentsSchema)
+    // @ts-ignore
+    .query(async ({ ctx, input, type, path }) => {
+      return getCommunityCourseEnrolments({
+        cacheGroup: CACHE_GROUP,
+        type,
+        path,
+        input,
+        ctx,
+      })
     }),
   create: protectedProcedure
     .input(
@@ -278,6 +162,7 @@ export const communitiesRouter = {
         })
       )
     }),
+
   createCourses: protectedProcedure
     .input(
       z.array(
@@ -369,9 +254,9 @@ export const communitiesRouter = {
                   params: {
                     publicationUid,
                   },
-                  body: JSON.stringify({
-                    personUids: Array.from(enrolleeUids).join(","),
-                  }),
+                  body: {
+                    personUids: Array.from(enrolleeUids),
+                  },
                   query: {
                     companyUid: ctx.companyUid ?? "",
                   },
@@ -448,10 +333,12 @@ export const communitiesRouter = {
       }
 
       const storage = useStorage()
-      const cache = await getCommunity({
+      const cache = await getCommunityDetail({
         type: "query",
         path: "communities.detail",
         input: { id },
+        cacheGroup: CACHE_GROUP,
+        ctx,
       })
 
       if (cache) {

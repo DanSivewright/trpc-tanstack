@@ -158,3 +158,5 @@ export {
   StatusBadgeIcon as Icon,
   StatusBadgeDot as Dot,
 }
+
+export * as StatusBadge from "./status-badge"

@@ -1,56 +1,60 @@
-import { cachedFunction, generateCacheKey } from "@/lib/cache"
-import { fetcher } from "@/lib/query"
-import { queryConfig } from "@/lib/query-config"
-
 import { protectedProcedure } from "../../init"
+import {
+  getAllContent,
+  getAllContentSchema,
+  getContentDetail,
+  getContentDetailSchema,
+  getContentModules,
+  getContentModulesSchema,
+  getContentModulesVersion,
+  getContentModulesVersionSchema,
+} from "./queries"
 
 const CACHE_GROUP = "content"
 export const contentRouter = {
   all: protectedProcedure
-    .input(queryConfig["content:all"].input)
+    .input(getAllContentSchema)
     // @ts-ignore
-    .query(async ({ ctx, input, type, path }) => {
-      const cachedFetcher = cachedFunction(
-        () =>
-          fetcher({
-            key: "content:all",
-            ctx,
-            input,
-          }),
-        {
-          name: generateCacheKey({
-            type,
-            path,
-            input,
-          }),
-          maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
-          group: CACHE_GROUP,
-        }
-      )
-      return cachedFetcher()
-    }),
+    .query(async ({ ctx, input, type, path }) =>
+      getAllContent({
+        ctx,
+        input,
+        type,
+        path,
+        cacheGroup: CACHE_GROUP,
+      })
+    ),
 
   detail: protectedProcedure
-    .input(queryConfig["content:detail"].input)
+    .input(getContentDetailSchema)
     // @ts-ignore
-    .query(async ({ ctx, input, type, path }) => {
-      const cachedFetcher = cachedFunction(
-        () =>
-          fetcher({
-            key: "content:detail",
-            ctx,
-            input,
-          }),
-        {
-          name: generateCacheKey({
-            type,
-            path,
-            input,
-          }),
-          maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
-          group: CACHE_GROUP,
-        }
-      )
-      return cachedFetcher()
-    }),
+    .query(async ({ ctx, input, type, path }) =>
+      getContentDetail({
+        ctx,
+        input,
+        type,
+        path,
+        cacheGroup: CACHE_GROUP,
+      })
+    ),
+
+  modules: protectedProcedure
+    .input(getContentModulesSchema)
+    // @ts-ignore
+    .query(async ({ ctx, input, type, path }) =>
+      getContentModules({ ctx, input, type, path, cacheGroup: CACHE_GROUP })
+    ),
+
+  modulesVersion: protectedProcedure
+    .input(getContentModulesVersionSchema)
+    // @ts-ignore
+    .query(async ({ ctx, input, type, path }) =>
+      getContentModulesVersion({
+        ctx,
+        input,
+        type,
+        path,
+        cacheGroup: CACHE_GROUP,
+      })
+    ),
 }

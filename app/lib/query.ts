@@ -38,6 +38,7 @@ export const fetcher = cache(
       headers: {
         Authorization: `Bearer ${ctx.token}`,
         "x-tenant-id": ctx.tenantId ?? "",
+        "Content-Type": "application/json",
       },
       method: input && "body" in input && input.body ? "POST" : "GET",
       body:

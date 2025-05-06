@@ -1,6 +1,7 @@
 import type { Timestamp } from "firebase-admin/firestore"
 import { z } from "zod"
 
+import { ContentDetailSchema } from "../../content/schemas/content-detail-schema"
 import { paletteSchema } from "../../palette/schemas/palette-schema"
 
 const memberSchema = z.object({
@@ -84,12 +85,12 @@ const feedItemSchema = z.object({
   accessibile: z.enum(["public", "community"]),
   tags: z.array(z.string()).nullable().optional(),
   commentsCount: z.number().optional().nullable(),
-  createdAt: z.custom<Timestamp>(),
-  updatedAt: z.custom<Timestamp>(),
-  publishedAt: z.custom<Timestamp>(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  publishedAt: z.string(),
 })
 
-const feedEnrolmentsSchema = z.object({
+export const feedEnrolmentsSchema = z.object({
   id: z.string(),
   authorUid: z.string(),
   author: z.object({
@@ -111,6 +112,8 @@ const feedCourseSchema = feedItemSchema.extend({
   publicationUid: z.string(),
   typeAccessor: z.enum(["courses", "programs"]),
   enrolments: z.array(feedEnrolmentsSchema).optional().nullable(),
+  isFeatured: z.boolean(),
+  content: ContentDetailSchema.optional().nullable(),
 })
 
 const feedArticleSchema = feedItemSchema.extend({
@@ -145,7 +148,7 @@ const communityCommentSchema = z.object({
     avatarUrl: z.string(),
   }),
   content: z.string(),
-  createdAt: z.custom<Timestamp>(),
+  createdAt: z.string(),
   status: z.enum(["posted", "user-edited", "hidden"]),
   rootParentId: z.string().nullable().optional(),
   rootParentAuthorUid: z.string().nullable().optional(),

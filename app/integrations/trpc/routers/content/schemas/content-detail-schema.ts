@@ -1,4 +1,4 @@
-import { optional, z } from "zod"
+import { z } from "zod"
 
 const ContentSchema = z.object({
   id: z.number(),
