@@ -1,7 +1,13 @@
 import { useMemo } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
+import { cn } from "@/utils/cn"
+import { faker } from "@faker-js/faker"
 import {
   RiBarChartLine,
+  RiBookmarkLine,
+  RiCalendarLine,
+  RiDownloadLine,
+  RiEyeLine,
   RiGroupLine,
   RiLayoutGridLine,
   RiLoaderLine,
@@ -19,10 +25,13 @@ import { Avatar } from "@/components/ui/avatar"
 import { AvatarGroupCompact } from "@/components/ui/avatar-group-compact"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import * as FileFormatIcon from "@/components/ui/file-format-icon"
 import { StarRating } from "@/components/ui/svg-rating-icons"
 import { TabMenuHorizontal } from "@/components/ui/tab-menu-horizontal"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Grid } from "@/components/grid"
+import Image from "@/components/image"
+import VerifiedIcon from "@/components/verified-icon"
 
 export const Route = createFileRoute(
   "/_learner/communities/$id/courses/$courseId"
@@ -82,6 +91,50 @@ function RouteComponent() {
   const badges = useMemo(() => {
     return modules?.data?.filter((m: any) => m?.badge?.uid).length
   }, [modules?.data])
+
+  const picks = useMemo(
+    () =>
+      Array.from({ length: 2 }, () => ({
+        id: faker.string.uuid(),
+        author: {
+          name: faker.person.fullName(),
+          avatar: faker.image.avatar(),
+        },
+        category: faker.helpers.arrayElement([
+          "Technology",
+          "Science",
+          "Business",
+          "Health",
+          "Environment",
+        ]),
+        title: faker.lorem.sentence(),
+        date: faker.date.recent(),
+        readTime: faker.number.int({ min: 1, max: 10 }),
+        likes: faker.number.int({ min: 0, max: 1000 }),
+      })),
+    []
+  )
+
+  const resources = useMemo(
+    () =>
+      Array.from({ length: 3 }, () => ({
+        id: faker.string.uuid(),
+        title: faker.book.title(),
+        status: faker.helpers.shuffle(["PDF", "DOC"])[0],
+        color: faker.helpers.shuffle([
+          "red",
+          "orange",
+          "sky",
+          "blue",
+          "green",
+          "yellow",
+          "purple",
+          "pink",
+        ])[0],
+        date: faker.date.recent(),
+      })),
+    []
+  )
 
   return (
     <>
@@ -253,7 +306,112 @@ function RouteComponent() {
         <div className="col-span-9">
           <Outlet />
         </div>
-        <div className="col-span-3">x</div>
+        <div className="col-span-3 flex flex-col gap-7">
+          <div className="flex flex-col gap-5">
+            <h2 className="text-title-h6 font-normal">Currated Picks</h2>
+
+            {picks.map((pick, i) => (
+              <article
+                key={pick.id}
+                className={cn("flex flex-col gap-1.5 pb-5", {
+                  "border-b border-stroke-soft-200": i < picks.length - 1,
+                })}
+              >
+                <div className="flex items-start gap-2">
+                  <Avatar.Root size="20">
+                    <Avatar.Image src={pick.author.avatar} />
+                  </Avatar.Root>
+                  <p className="pt-0.5 text-label-xs font-light text-text-soft-400">
+                    {pick.author.name} • {pick.category}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between gap-6">
+                  <p className="text-label-sm font-light text-text-strong-950">
+                    {pick.title}
+                  </p>
+                  <div className="aspect-video h-12 rounded-xl">
+                    <Image
+                      path={`${i + 1}.webp`}
+                      alt={pick.title}
+                      className="h-full w-full rounded-xl object-cover"
+                    />
+                  </div>
+                </div>
+                <div className="mt-1 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-1.5 text-label-xs font-light text-text-soft-400">
+                      <RiCalendarLine className="size-5" />
+                      {pick.date.toLocaleDateString()}
+                    </span>
+                    <span className="flex items-center gap-1.5 text-label-xs font-light text-text-soft-400">
+                      <RiEyeLine className="size-5" />
+                      {pick.readTime} Min Read
+                    </span>
+                  </div>
+                  <RiBookmarkLine className="size-5 text-text-soft-400" />
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <h2 className="text-label-md font-normal">Enrolled Members</h2>
+            <ul className="flex flex-wrap items-center gap-1">
+              {community.data?.members?.map((m, i) => (
+                <Tooltip.Root delayDuration={10} key={m.id}>
+                  <Tooltip.Trigger asChild>
+                    <Avatar.Root size="32">
+                      {m.avatarUrl ? (
+                        <Avatar.Image src={m.avatarUrl ?? undefined} />
+                      ) : (
+                        m.firstName?.[0]
+                      )}
+                      {i === 1 && (
+                        <Avatar.Indicator position="top">
+                          <VerifiedIcon />
+                        </Avatar.Indicator>
+                      )}
+                    </Avatar.Root>
+                  </Tooltip.Trigger>
+                  <Tooltip.Content>
+                    <p>
+                      {m.firstName} {m.lastName}
+                    </p>
+                  </Tooltip.Content>
+                </Tooltip.Root>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <h2 className="text-label-md font-normal">Resources</h2>
+            <ul className="flex flex-col gap-2">
+              {resources.map((r) => (
+                <li
+                  className="flex cursor-pointer items-center justify-between gap-2 rounded-10 py-2 transition-all hover:bg-bg-weak-50 hover:px-3"
+                  key={r.id}
+                >
+                  <div className="flex items-center gap-2">
+                    <FileFormatIcon.Root
+                      size="small"
+                      format={r.status}
+                      color={r.color}
+                    />
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-label-sm font-light text-text-sub-600">
+                        {r.title}
+                      </p>
+                      <p className="text-label-xs font-light text-text-soft-400">
+                        {r.date.toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <RiDownloadLine className="size-4 text-text-soft-400" />
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </Grid>
     </>
   )
