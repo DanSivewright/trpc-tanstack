@@ -7,7 +7,7 @@ import {
   RiThumbUpLine,
 } from "@remixicon/react"
 import { useQueries, useQuery, useSuspenseQuery } from "@tanstack/react-query"
-import { createFileRoute, useLocation } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 import { formatDistance, intervalToDuration } from "date-fns"
 
 import { Avatar } from "@/components/ui/avatar"
@@ -20,7 +20,13 @@ import { commentsData } from "../-components/comments-data"
 export const Route = createFileRoute(
   "/_learner/communities/$id/courses/$courseId/"
 )({
-  loader: async ({ context, params: { id, courseId } }) => {
+  loaderDeps: ({ search }) => {
+    return {
+      type: search.type,
+      typeUid: search.typeUid,
+    }
+  },
+  loader: async ({ context, params: { id, courseId }, deps }) => {
     await Promise.all([
       context.queryClient.ensureQueryData(
         context.trpc.communities.courseDetail.queryOptions({
@@ -33,32 +39,29 @@ export const Route = createFileRoute(
           id,
         })
       ),
+      context.queryClient.ensureQueryData(
+        context.trpc.content.modules.queryOptions({
+          params: {
+            type: deps.type,
+            typeUid: deps.typeUid,
+          },
+        })
+      ),
     ])
   },
+
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  const params = Route.useParams()
+  const search = Route.useSearch()
   const trpc = useTRPC()
 
-  const course = useSuspenseQuery(
-    trpc.communities.courseDetail.queryOptions({
-      communityId: params.id,
-      courseId: params.courseId,
-    })
-  )
-  const community = useSuspenseQuery(
-    trpc.communities.detail.queryOptions({
-      id: params.id,
-    })
-  )
-
-  const modules = useQuery(
+  const modules = useSuspenseQuery(
     trpc.content.modules.queryOptions({
       params: {
-        type: course.data?.typeAccessor,
-        typeUid: course.data?.typeUid,
+        type: search.type,
+        typeUid: search.typeUid,
       },
     })
   )
@@ -75,10 +78,15 @@ function RouteComponent() {
   })
 
   const lessons = useMemo(() => {
-    return moduleVersions.reduce((total, module) => {
-      return total + (module.data?.material?.length || 0)
+    return modules.data?.reduce((total, module) => {
+      return (
+        total +
+        (module?.moduleVersion?.assessments?.length || 0) +
+        (module?.moduleVersion?.lessons?.length || 0) +
+        (module?.moduleVersion?.assignments?.length || 0)
+      )
     }, 0)
-  }, [moduleVersions])
+  }, [modules])
 
   const duration = useMemo(() => {
     const totalMinutes = lessons * 30

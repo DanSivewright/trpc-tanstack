@@ -4,6 +4,8 @@ import {
   getAllContentSchema,
   getContentDetail,
   getContentDetailSchema,
+  getContentEnrolments,
+  getContentEnrolmentsSchema,
   getContentModules,
   getContentModulesSchema,
   getContentModulesVersion,
@@ -56,5 +58,12 @@ export const contentRouter = {
         path,
         cacheGroup: CACHE_GROUP,
       })
+    ),
+
+  enrolments: protectedProcedure
+    .input(getContentEnrolmentsSchema)
+    // @ts-ignore
+    .query(async ({ ctx, input, type, path }) =>
+      getContentEnrolments({ ctx, input, type, path, cacheGroup: CACHE_GROUP })
     ),
 }

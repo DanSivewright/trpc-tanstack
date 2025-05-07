@@ -274,49 +274,58 @@ export const getCommunityCourseDetail = async (
     cacheGroup: options.cacheGroup,
   })
 
-  const cachedFetcher = cachedFunction(async () => {
-    const snap = await tryCatch(
-      db
-        .collection("communities")
-        .doc(options.input.communityId)
-        .collection("courses")
-        .doc(options.input.courseId)
-        .get()
-    )
-    if (snap.error || !snap.success) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: snap.error?.message || "Course not found",
-      })
-    }
-    if (!snap.data.exists || !snap.data.data()) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Course not found",
-      })
-    }
+  const cachedFetcher = cachedFunction(
+    async () => {
+      const snap = await tryCatch(
+        db
+          .collection("communities")
+          .doc(options.input.communityId)
+          .collection("courses")
+          .doc(options.input.courseId)
+          .get()
+      )
+      if (snap.error || !snap.success) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: snap.error?.message || "Course not found",
+        })
+      }
+      if (!snap.data.exists || !snap.data.data()) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Course not found",
+        })
+      }
 
-    const course = snap.data.data()
-    const content = await getContentDetail({
-      type: "query",
-      path: "content.detail",
-      ctx: options.ctx,
-      cacheGroup: "content",
-      input: {
-        params: {
-          type: course?.typeAccessor,
-          typeUid: course?.typeUid,
+      const course = snap.data.data()
+      const content = await getContentDetail({
+        type: "query",
+        path: "content.detail",
+        ctx: options.ctx,
+        cacheGroup: "content",
+        input: {
+          params: {
+            type: course?.typeAccessor,
+            typeUid: course?.typeUid,
+          },
         },
-      },
-    })
+      })
 
-    return {
-      ...course,
-      id: snap.data.id,
-      enrolments: enrolments || [],
-      content: content || null,
-    } as z.infer<typeof feedCourseSchema>
-  })
+      return {
+        ...course,
+        id: snap.data.id,
+        enrolments: enrolments || [],
+        content: content || null,
+      } as z.infer<typeof feedCourseSchema>
+    },
+    {
+      name: generateCacheKey({
+        path: options.path,
+        type: options.type,
+        input: options.input,
+      }),
+    }
+  )
   return cachedFetcher()
 }
 

@@ -4,10 +4,12 @@ import {
   RiGraduationCapLine,
   RiHashtag,
   RiLayoutMasonryLine,
+  RiLoaderLine,
 } from "@remixicon/react"
 import {
   createFileRoute,
   Link,
+  MatchRoute,
   Outlet,
   useLocation,
 } from "@tanstack/react-router"
@@ -95,7 +97,25 @@ function RouteComponent() {
                 }}
                 preload="intent"
               >
-                <TabMenuHorizontal.Icon as={RiGraduationCapLine} />
+                <MatchRoute
+                  to="/communities/$id/courses"
+                  params={{
+                    id,
+                  }}
+                  pending
+                >
+                  {(match) => {
+                    if (!!match) {
+                      return (
+                        <TabMenuHorizontal.Icon
+                          className="animate-spin"
+                          as={RiLoaderLine}
+                        />
+                      )
+                    }
+                    return <TabMenuHorizontal.Icon as={RiGraduationCapLine} />
+                  }}
+                </MatchRoute>
                 Courses
               </Link>
             </TabMenuHorizontal.Trigger>

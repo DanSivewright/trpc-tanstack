@@ -1,5 +1,6 @@
 import { db } from "@/integrations/firebase/server"
 import { tryCatch } from "@/utils/try-catch"
+import { TRPCError } from "@trpc/server"
 import merge from "lodash.merge"
 import { z } from "zod"
 
@@ -266,18 +267,20 @@ export const communitiesRouter = {
           }
         )
       )
-      console.log("enrol:::", enrolments)
       const storage = useStorage()
-      await Promise.all(
-        Array.from(communityIds).map((communityId) => {
-          return storage.remove(
-            generateCacheKey({
-              path: "communities.courses",
-              type: "query",
-              input: { communityId },
-            })
-          )
+      const keys = await storage.keys()
+      const coursesKeys = Array.from(communityIds).map((cid) => {
+        return generateCacheKey({
+          type: "query",
+          path: "communities.courses",
+          input: { communityId: cid },
         })
+      })
+
+      await Promise.all(
+        coursesKeys.map((key) =>
+          storage.remove(keys.find((k) => k.includes(key)) as string)
+        )
       )
     }),
   update: protectedProcedure
@@ -392,5 +395,143 @@ export const communitiesRouter = {
           })
         )
       }
+    }),
+  updateCourse: protectedProcedure
+    .input(
+      feedCourseSchema
+        .pick({
+          status: true,
+          accessibile: true,
+          title: true,
+          tags: true,
+          caption: true,
+          isFeatured: true,
+          isFeaturedUntil: true,
+        })
+        .partial()
+        .extend({
+          id: z.string(),
+          communityId: z.string(),
+        })
+    )
+    .mutation(async ({ input }) => {
+      const { id, ...payload } = input
+
+      // First find the document in the collectionGroup
+      const snap = await db
+        .collection("communities")
+        .doc(input.communityId)
+        .collection("courses")
+        .doc(input.id)
+        .get()
+
+      if (!snap.exists) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Course not found",
+        })
+      }
+
+      // Get the document reference and update it
+      const docRef = snap.ref
+      await docRef.update(payload)
+      const storage = useStorage()
+      const keys = await storage.keys()
+
+      const courseDetailKey = generateCacheKey({
+        type: "query",
+        path: "communities.courseDetail",
+        input: {
+          courseId: input.id,
+          communityId: input.communityId,
+        },
+      })
+
+      const coursesKey = generateCacheKey({
+        type: "query",
+        path: "communities.courses",
+        input: {
+          communityId: input.communityId,
+        },
+      })
+
+      await Promise.all([
+        storage.remove(
+          keys.find((key) => key.includes(courseDetailKey)) as string
+        ),
+        storage.remove(keys.find((key) => key.includes(coursesKey)) as string),
+      ])
+
+      return { success: true }
+    }),
+  deleteCourse: protectedProcedure
+    .input(
+      z.object({
+        communityId: z.string(),
+        courseId: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { communityId, courseId } = input
+
+      // First delete all related enrolments from the collectionGroup
+      const enrolmentsSnap = await db
+        .collectionGroup("enrolments")
+        .where("communityId", "==", communityId)
+        .where("courseDocId", "==", courseId)
+        .get()
+
+      const batch = db.batch()
+      enrolmentsSnap.docs.forEach((doc) => {
+        batch.delete(doc.ref)
+      })
+
+      const courseRef = db
+        .collection("communities")
+        .doc(communityId)
+        .collection("courses")
+        .doc(courseId)
+      batch.delete(courseRef)
+
+      // Commit all deletions
+      const remove = await tryCatch(batch.commit())
+      console.log("remove:::", remove)
+
+      const storage = useStorage()
+      const keys = await storage.keys()
+
+      const deleteKeys = [
+        generateCacheKey({
+          type: "query",
+          path: "communities.courseDetail",
+          input: {
+            courseId: input.courseId,
+            communityId: input.communityId,
+          },
+        }),
+        generateCacheKey({
+          type: "query",
+          path: "communities.courses",
+          input: {
+            communityId: input.communityId,
+          },
+        }),
+        generateCacheKey({
+          type: "query",
+          path: "communities.courseEnrolments",
+          input: {
+            courseDocId: input.courseId,
+            communityId: input.communityId,
+          },
+        }),
+      ]
+
+      await Promise.all(
+        deleteKeys.map((key) =>
+          storage.remove(keys.find((k) => k.includes(key)) as string)
+        )
+      )
+
+      return { success: true }
     }),
 }

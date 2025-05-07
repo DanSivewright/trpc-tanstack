@@ -113,6 +113,7 @@ const feedCourseSchema = feedItemSchema.extend({
   typeAccessor: z.enum(["courses", "programs"]),
   enrolments: z.array(feedEnrolmentsSchema).optional().nullable(),
   isFeatured: z.boolean(),
+  isFeaturedUntil: z.string().optional().nullable(),
   content: ContentDetailSchema.optional().nullable(),
 })
 

@@ -1,5 +1,6 @@
 import { ContentAllSchema } from "@/integrations/trpc/routers/content/schemas/content-all-schema"
 import { ContentDetailSchema } from "@/integrations/trpc/routers/content/schemas/content-detail-schema"
+import { ContentEnrolmentsSchema } from "@/integrations/trpc/routers/content/schemas/content-enrolments-schema"
 import { ContentModulesSchema } from "@/integrations/trpc/routers/content/schemas/content-modules-schema"
 import { ContentModulesVersionSchema } from "@/integrations/trpc/routers/content/schemas/content-modules-version-schema"
 import { EnrolmentsAllSchema } from "@/integrations/trpc/routers/enrolments/schemas/enrolments-all-schema"
@@ -102,6 +103,20 @@ export const queryConfig = {
       }),
     }),
     as: ContentDetailSchema,
+  },
+  "content:detail:enrolments": {
+    path: "/learn/:type/:typeUid/enrolments",
+    input: z.object({
+      params: z.object({
+        type: z.string(),
+        typeUid: z.string(),
+      }),
+      query: z.object({
+        limit: z.number().optional(),
+        page: z.number().optional(),
+      }),
+    }),
+    as: ContentEnrolmentsSchema,
   },
   "content:modules": {
     path: "/learn/:type/:typeUid/modules",

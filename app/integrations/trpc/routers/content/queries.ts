@@ -114,3 +114,31 @@ export const getContentModulesVersion = async (
   )
   return cachedFetcher()
 }
+
+export const getContentEnrolmentsSchema =
+  queryConfig["content:detail:enrolments"].input
+const getContentEnrolmentsOptions = trpcQuerySchema.extend({
+  input: getContentEnrolmentsSchema,
+})
+export const getContentEnrolments = async (
+  options: z.infer<typeof getContentEnrolmentsOptions>
+) => {
+  const cachedFetcher = cachedFunction(
+    () =>
+      fetcher({
+        key: "content:detail:enrolments",
+        ctx: options.ctx,
+        input: options.input,
+      }),
+    {
+      name: generateCacheKey({
+        type: options.type,
+        path: options.path,
+        input: options.input,
+      }),
+      maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
+      group: options.cacheGroup,
+    }
+  )
+  return cachedFetcher()
+}

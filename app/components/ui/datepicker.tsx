@@ -1,3 +1,7 @@
+// AlignUI Datepicker v0.0.0
+
+"use client"
+
 import * as React from "react"
 import { cn } from "@/utils/cn"
 import { RiArrowLeftSLine, RiArrowRightSLine } from "@remixicon/react"
@@ -5,14 +9,11 @@ import { DayPicker } from "react-day-picker"
 
 import { compactButtonVariants } from "@/components/ui/compact-button"
 
-export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
-  size?: "sm" | "md"
-}
+export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
 function Calendar({
   classNames,
   showOutsideDays = true,
-  size = "md",
   ...rest
 }: CalendarProps) {
   return (
@@ -37,11 +38,11 @@ function Calendar({
         table: "w-full border-collapse",
         head_row: "flex gap-2",
         head_cell:
-          "text-text-soft-400 text-label-sm uppercase grow aspect-square flex items-center justify-center text-center select-none",
-        row: "grid grid-flow-col auto-cols-auto w-full mt-2",
+          "text-text-soft-400 text-label-sm uppercase size-10 flex items-center justify-center text-center select-none",
+        row: "grid grid-flow-col auto-cols-auto w-full mt-2 gap-2",
         cell: cn(
           // base
-          "group/cell relative h-full aspect-square shrink-0 select-none p-0",
+          "group/cell relative size-10 shrink-0 select-none p-0",
           // range
           "[&:has(.day-range-middle)]:bg-primary-alpha-10",
           "first:[&:has([aria-selected])]:rounded-l-lg last:[&:has([aria-selected])]:rounded-r-lg",

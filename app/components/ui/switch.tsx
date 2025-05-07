@@ -74,3 +74,4 @@ const Switch = React.forwardRef<
 Switch.displayName = SwitchPrimitives.Root.displayName
 
 export { Switch as Root }
+export * as Switch from "./switch"
