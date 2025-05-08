@@ -7,10 +7,10 @@ function formatPrivateKey(key: string) {
 }
 
 const params = {
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string,
-  clientEmail: import.meta.env.FIREBASE_CLIENT_EMAIL as string,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string,
-  privateKey: import.meta.env.FIREBASE_PRIVATE_KEY as string,
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID as string,
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL as string,
+  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET as string,
+  privateKey: process.env.FIREBASE_PRIVATE_KEY as string,
 }
 
 // Initialize Firebase Admin only if no apps exist
