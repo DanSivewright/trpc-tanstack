@@ -12,8 +12,8 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as TestImport } from './routes/test'
+import { Route as LoginImport } from './routes/login'
 import { Route as LearnerImport } from './routes/_learner'
-import { Route as AuthImport } from './routes/_auth'
 import { Route as LearnerIndexImport } from './routes/_learner/index'
 import { Route as XTodosImport } from './routes/x/todos'
 import { Route as XProfilesImport } from './routes/x/profiles'
@@ -23,7 +23,6 @@ import { Route as LearnerTasksImport } from './routes/_learner/tasks'
 import { Route as LearnerExploreImport } from './routes/_learner/explore'
 import { Route as LearnerChatImport } from './routes/_learner/chat'
 import { Route as LearnerCalendarImport } from './routes/_learner/calendar'
-import { Route as AuthLoginImport } from './routes/_auth.login'
 import { Route as LearnerCommunitiesIndexImport } from './routes/_learner/communities/index'
 import { Route as LearnerCommunitiesIdRouteImport } from './routes/_learner/communities/$id/route'
 import { Route as LearnerCommunitiesCreateIndexImport } from './routes/_learner/communities/create/index'
@@ -54,13 +53,14 @@ const TestRoute = TestImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const LearnerRoute = LearnerImport.update({
-  id: '/_learner',
+const LoginRoute = LoginImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRoute,
 } as any)
 
-const AuthRoute = AuthImport.update({
-  id: '/_auth',
+const LearnerRoute = LearnerImport.update({
+  id: '/_learner',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -116,12 +116,6 @@ const LearnerCalendarRoute = LearnerCalendarImport.update({
   id: '/calendar',
   path: '/calendar',
   getParentRoute: () => LearnerRoute,
-} as any)
-
-const AuthLoginRoute = AuthLoginImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => AuthRoute,
 } as any)
 
 const LearnerCommunitiesIndexRoute = LearnerCommunitiesIndexImport.update({
@@ -272,18 +266,18 @@ const LearnerCommunitiesIdCoursesCourseIdEnrolmentsRoute =
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_auth': {
-      id: '/_auth'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof AuthImport
-      parentRoute: typeof rootRoute
-    }
     '/_learner': {
       id: '/_learner'
       path: ''
       fullPath: ''
       preLoaderRoute: typeof LearnerImport
+      parentRoute: typeof rootRoute
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginImport
       parentRoute: typeof rootRoute
     }
     '/test': {
@@ -292,13 +286,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/test'
       preLoaderRoute: typeof TestImport
       parentRoute: typeof rootRoute
-    }
-    '/_auth/login': {
-      id: '/_auth/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof AuthLoginImport
-      parentRoute: typeof AuthImport
     }
     '/_learner/calendar': {
       id: '/_learner/calendar'
@@ -515,16 +502,6 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
-interface AuthRouteChildren {
-  AuthLoginRoute: typeof AuthLoginRoute
-}
-
-const AuthRouteChildren: AuthRouteChildren = {
-  AuthLoginRoute: AuthLoginRoute,
-}
-
-const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
-
 interface LearnerCommunitiesIdCoursesCourseIdRouteRouteChildren {
   LearnerCommunitiesIdCoursesCourseIdEnrolmentsRoute: typeof LearnerCommunitiesIdCoursesCourseIdEnrolmentsRoute
   LearnerCommunitiesIdCoursesCourseIdIndexRoute: typeof LearnerCommunitiesIdCoursesCourseIdIndexRoute
@@ -652,8 +629,8 @@ const LearnerRouteWithChildren =
 
 export interface FileRoutesByFullPath {
   '': typeof LearnerRouteWithChildren
+  '/login': typeof LoginRoute
   '/test': typeof TestRoute
-  '/login': typeof AuthLoginRoute
   '/calendar': typeof LearnerCalendarRoute
   '/chat': typeof LearnerChatRoute
   '/explore': typeof LearnerExploreRoute
@@ -687,9 +664,8 @@ export interface FileRoutesByFullPath {
 }
 
 export interface FileRoutesByTo {
-  '': typeof AuthRouteWithChildren
+  '/login': typeof LoginRoute
   '/test': typeof TestRoute
-  '/login': typeof AuthLoginRoute
   '/calendar': typeof LearnerCalendarRoute
   '/chat': typeof LearnerChatRoute
   '/explore': typeof LearnerExploreRoute
@@ -720,10 +696,9 @@ export interface FileRoutesByTo {
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/_auth': typeof AuthRouteWithChildren
   '/_learner': typeof LearnerRouteWithChildren
+  '/login': typeof LoginRoute
   '/test': typeof TestRoute
-  '/_auth/login': typeof AuthLoginRoute
   '/_learner/calendar': typeof LearnerCalendarRoute
   '/_learner/chat': typeof LearnerChatRoute
   '/_learner/explore': typeof LearnerExploreRoute
@@ -760,8 +735,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | ''
-    | '/test'
     | '/login'
+    | '/test'
     | '/calendar'
     | '/chat'
     | '/explore'
@@ -794,9 +769,8 @@ export interface FileRouteTypes {
     | '/communities/create/$id/community/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | ''
-    | '/test'
     | '/login'
+    | '/test'
     | '/calendar'
     | '/chat'
     | '/explore'
@@ -825,10 +799,9 @@ export interface FileRouteTypes {
     | '/communities/create/$id/community'
   id:
     | '__root__'
-    | '/_auth'
     | '/_learner'
+    | '/login'
     | '/test'
-    | '/_auth/login'
     | '/_learner/calendar'
     | '/_learner/chat'
     | '/_learner/explore'
@@ -863,8 +836,8 @@ export interface FileRouteTypes {
 }
 
 export interface RootRouteChildren {
-  AuthRoute: typeof AuthRouteWithChildren
   LearnerRoute: typeof LearnerRouteWithChildren
+  LoginRoute: typeof LoginRoute
   TestRoute: typeof TestRoute
   XDropdownRoute: typeof XDropdownRoute
   XEditorDemoRoute: typeof XEditorDemoRoute
@@ -873,8 +846,8 @@ export interface RootRouteChildren {
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  AuthRoute: AuthRouteWithChildren,
   LearnerRoute: LearnerRouteWithChildren,
+  LoginRoute: LoginRoute,
   TestRoute: TestRoute,
   XDropdownRoute: XDropdownRoute,
   XEditorDemoRoute: XEditorDemoRoute,
@@ -892,19 +865,13 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/_auth",
         "/_learner",
+        "/login",
         "/test",
         "/x/dropdown",
         "/x/editor-demo",
         "/x/profiles",
         "/x/todos"
-      ]
-    },
-    "/_auth": {
-      "filePath": "_auth.tsx",
-      "children": [
-        "/_auth/login"
       ]
     },
     "/_learner": {
@@ -922,12 +889,11 @@ export const routeTree = rootRoute
         "/_learner/communities/create/$id/community"
       ]
     },
+    "/login": {
+      "filePath": "login.tsx"
+    },
     "/test": {
       "filePath": "test.tsx"
-    },
-    "/_auth/login": {
-      "filePath": "_auth.login.tsx",
-      "parent": "/_auth"
     },
     "/_learner/calendar": {
       "filePath": "_learner/calendar.tsx",
