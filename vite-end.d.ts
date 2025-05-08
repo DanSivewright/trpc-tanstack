@@ -7,6 +7,7 @@ interface ImportMetaEnv {
   readonly VITE_IMAGEKIT_PUBLIC_KEY: string
   readonly VITE_IMAGEKIT_URL_ENDPOINT: string
   readonly IMAGEKIT_KEY: string
+  readonly FIREBASE_SERVICE_ACCOUNT_KEY: string
 }
 
 interface ImportMeta {
