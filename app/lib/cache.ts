@@ -126,7 +126,7 @@ export function defineCachedFunction<T, ArgsT extends unknown[] = any[]>(
         entry.integrity = integrity
         delete pending[key]
         if (validate(entry) !== false) {
-          const promise = useStorage()
+          useStorage()
             .setItem(cacheKey, entry)
             .catch((error) => {
               console.error(`[nitro] [cache] Cache write error.`, error)

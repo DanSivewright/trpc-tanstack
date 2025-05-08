@@ -148,37 +148,37 @@ const CoursePublicationSchema = BasePublicationSchema.extend({
   assignmentCount: z.string(),
 })
 
-const ProgramPublicationSchema = BasePublicationSchema.extend({
-  material: z.array(
-    z.object({
-      uid: z.string(),
-      modules: z.array(ModuleSchema),
-      translations: z.record(
-        z.string(),
-        z.object({
-          title: z.string(),
-        })
-      ),
-    })
-  ),
-})
+// const ProgramPublicationSchema = BasePublicationSchema.extend({
+//   material: z.array(
+//     z.object({
+//       uid: z.string(),
+//       modules: z.array(ModuleSchema),
+//       translations: z.record(
+//         z.string(),
+//         z.object({
+//           title: z.string(),
+//         })
+//       ),
+//     })
+//   ),
+// })
 
-const ExternalPublicationSchema = BasePublicationSchema.extend({
-  material: z.array(
-    z.object({
-      uid: z.string(),
-      url: z.string().url(),
-      type: z.string(),
-    })
-  ),
-})
+// const ExternalPublicationSchema = BasePublicationSchema.extend({
+//   material: z.array(
+//     z.object({
+//       uid: z.string(),
+//       url: z.string().url(),
+//       type: z.string(),
+//     })
+//   ),
+// })
 
 // Combined publication schema using discriminated union
-const PublicationSchema = z.union([
-  CoursePublicationSchema.extend({ type: z.literal("course") }),
-  ProgramPublicationSchema.extend({ type: z.literal("program") }),
-  ExternalPublicationSchema.extend({ type: z.literal("external") }),
-])
+// const PublicationSchema = z.union([
+//   CoursePublicationSchema.extend({ type: z.literal("course") }),
+//   ProgramPublicationSchema.extend({ type: z.literal("program") }),
+//   ExternalPublicationSchema.extend({ type: z.literal("external") }),
+// ])
 
 export const EnrolmentsDetailSchema = z.object({
   uid: z.string(),

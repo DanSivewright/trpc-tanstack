@@ -140,7 +140,7 @@ function EnrolmentsTable() {
           type: "text",
           icon: RiHeading,
         },
-        cell: ({ row, getValue }) => {
+        cell: ({ getValue }) => {
           const value = getValue() as string
 
           return <span className="text-paragraph-sm font-normal">{value}</span>

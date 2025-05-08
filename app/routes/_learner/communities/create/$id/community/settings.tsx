@@ -16,7 +16,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 import type { z } from "zod"
 
 import { useNotification } from "@/hooks/use-notification"
@@ -50,7 +50,6 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const { id } = Route.useParams()
   const { notification } = useNotification()
-  const navigate = useNavigate()
   const { step } = Route.useLoaderData()
   const { goToStep } = useGoToNextStep({ id })
 

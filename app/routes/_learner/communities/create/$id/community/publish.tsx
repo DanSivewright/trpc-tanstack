@@ -12,12 +12,8 @@ import {
   RiLoaderLine,
 } from "@remixicon/react"
 import { useForm, useStore } from "@tanstack/react-form"
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query"
+import { createFileRoute } from "@tanstack/react-router"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
 import { Vibrant } from "node-vibrant/browser"
 import { useDropzone, type FileWithPath } from "react-dropzone"
@@ -61,7 +57,6 @@ function RouteComponent() {
   const FILE_TYPES = [".png", ".jpg", ".jpeg", ".gif", ".webp"]
   const [uploadingImages, setUploadingImages] = useState(false)
 
-  const qc = useQueryClient()
   const trpc = useTRPC()
 
   const community = useSuspenseQuery(

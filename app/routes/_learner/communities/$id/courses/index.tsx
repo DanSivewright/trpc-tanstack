@@ -7,7 +7,7 @@ import {
   RiMessageLine,
   RiUserLine,
 } from "@remixicon/react"
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import {
   createFileRoute,
   Link,
@@ -223,9 +223,11 @@ function FeaturedCourse({ communityId }: { communityId: string }) {
                             </Avatar.Root>
                           ))}
                       </AvatarGroupCompact.Stack>
-                      <AvatarGroupCompact.Overflow>
-                        +{featured?.enrolments.length - 3}
-                      </AvatarGroupCompact.Overflow>
+                      {featured?.enrolments.length > 3 && (
+                        <AvatarGroupCompact.Overflow>
+                          +{featured?.enrolments.length - 3}
+                        </AvatarGroupCompact.Overflow>
+                      )}
                     </AvatarGroupCompact.Root>
                   </Tooltip.Trigger>
                   <Tooltip.Content>Community Enrolments</Tooltip.Content>
@@ -517,9 +519,11 @@ function CourseList() {
                                 </Avatar.Root>
                               ))}
                           </AvatarGroupCompact.Stack>
-                          <AvatarGroupCompact.Overflow>
-                            +{course?.enrolments.length - 3}
-                          </AvatarGroupCompact.Overflow>
+                          {course?.enrolments.length > 3 && (
+                            <AvatarGroupCompact.Overflow>
+                              +{course?.enrolments.length - 3}
+                            </AvatarGroupCompact.Overflow>
+                          )}
                         </AvatarGroupCompact.Root>
                       </Tooltip.Trigger>
                       <Tooltip.Content>Community Enrolments</Tooltip.Content>

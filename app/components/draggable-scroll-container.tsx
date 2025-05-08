@@ -18,11 +18,11 @@ const DraggableScrollContainer: React.FC<Props> = ({ children, className }) => {
     setScrollLeft(scrollRef.current!.scrollLeft)
   }
 
-  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseLeave = () => {
     setIsDragging(false)
   }
 
-  const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseUp = () => {
     setIsDragging(false)
   }
 

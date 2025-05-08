@@ -1,15 +1,8 @@
 import React from "react"
-import { useTRPC } from "@/integrations/trpc/react"
-import { useQuery } from "@tanstack/react-query"
-import { Link, useLocation } from "@tanstack/react-router"
+import { Link } from "@tanstack/react-router"
 
 type Props = {}
 const NavigationLearnerHeader: React.FC<Props> = ({}) => {
-  const trpc = useTRPC()
-  const me = useQuery(trpc.people.me.queryOptions())
-
-  const location = useLocation()
-
   const navClass =
     "text flex h-full items-center hover:text-primary-dark transition-colors justify-center px-2 text-center text-[13px] font-light"
   const navActiveProps = {

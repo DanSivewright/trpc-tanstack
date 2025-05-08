@@ -10,7 +10,7 @@ import {
   type RemixiconComponentType,
 } from "@remixicon/react"
 import { useForm } from "@tanstack/react-form"
-import { useQueryClient, useSuspenseQueries } from "@tanstack/react-query"
+import { useSuspenseQueries } from "@tanstack/react-query"
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
 import { z } from "zod"
 

@@ -328,6 +328,7 @@ export function DebouncedInput({
   return (
     <Input.Root>
       <Input.Wrapper>
+        {/* @ts-ignore */}
         <Input.Field
           {...props}
           value={value}
@@ -1667,7 +1668,6 @@ export function FilterValueTextController<TData, TValue>({
 }
 
 export function FilterValueNumberController<TData, TValue>({
-  table,
   column,
   columnMeta,
 }: ProperFilterValueMenuProps<TData, TValue>) {

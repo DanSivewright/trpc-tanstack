@@ -176,7 +176,7 @@ function RouteComponent() {
       onSubmit: formSchema,
       onChange: formSchema,
     },
-    onSubmitInvalid: (state) => {
+    onSubmitInvalid: () => {
       notification({
         title: "Invalid Form",
         description: "Please fill out all fields correctly.",

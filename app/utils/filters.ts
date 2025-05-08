@@ -71,7 +71,7 @@ export function defineMeta<
   // : never,
   TType extends ColumnDataType,
 >(
-  accessor: TAccessor,
+  // accessor: TAccessor,
   meta: Omit<ColumnMeta<TData, TVal>, "type"> & {
     type: TType
   }

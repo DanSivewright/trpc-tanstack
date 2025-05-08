@@ -11,7 +11,7 @@ import {
   RiLoaderLine,
 } from "@remixicon/react"
 import { useForm } from "@tanstack/react-form"
-import { useSuspenseQueries, useSuspenseQuery } from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
 import {
   flexRender,
@@ -91,11 +91,11 @@ function RouteComponent() {
   const navigate = useNavigate()
   const { notification } = useNotification()
 
-  const communities = useSuspenseQueries({
-    queries: communityIds.map((id) =>
-      trpc.communities.detail.queryOptions({ id })
-    ),
-  })
+  // const communities = useSuspenseQueries({
+  //   queries: communityIds.map((id) =>
+  //     trpc.communities.detail.queryOptions({ id })
+  //   ),
+  // })
   const content = useSuspenseQuery(
     trpc.content.all.queryOptions({
       query: {

@@ -21,7 +21,11 @@ import {
   getCommunityDetail,
   getCommunityDetailSchema,
 } from "./queries"
-import { communitySchema, feedCourseSchema } from "./schemas/communities-schema"
+import {
+  communitySchema,
+  feedCourseSchema,
+  feedEnrolmentsSchema,
+} from "./schemas/communities-schema"
 
 const CACHE_GROUP = "communities"
 
@@ -244,7 +248,7 @@ export const communitiesRouter = {
       }
 
       await batch.commit()
-      const enrolments = await Promise.all(
+      await Promise.all(
         Array.from(enrolmentsMap.entries()).map(
           ([publicationUid, enrolleeUids]) => {
             return tryCatch(
@@ -532,6 +536,102 @@ export const communitiesRouter = {
         )
       )
 
+      return { success: true }
+    }),
+  selfEnrolToCourse: protectedProcedure
+    .input(
+      feedEnrolmentsSchema
+        .pick({
+          courseDocId: true,
+          enrolleeUid: true,
+          enrollee: true,
+          publicationUid: true,
+        })
+        .extend({
+          communityId: z.string(),
+        })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const payload = {
+        ...input,
+        id: crypto.randomUUID(),
+        enrolmentUid: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        authorUid: ctx.uid,
+      }
+      const enrolFb = await tryCatch(
+        db
+          .collection("communities")
+          .doc(input.communityId)
+          .collection("enrolments")
+          .doc(payload.id)
+          .set(payload)
+      )
+      if (enrolFb.error || !enrolFb.success) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to enrol to course",
+        })
+      }
+      const enrolDb = await tryCatch(
+        fetcher({
+          key: "enrol:people",
+          ctx,
+          input: {
+            params: {
+              publicationUid: input.publicationUid,
+            },
+            body: {
+              personUids: [input.enrolleeUid],
+            },
+            query: {
+              companyUid: ctx.companyUid ?? "",
+            },
+          },
+        })
+      )
+      if (enrolDb.error || !enrolDb.success) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to enrol to course on API",
+        })
+      }
+
+      const storage = useStorage()
+      const keys = await storage.keys()
+
+      const deleteKeys = [
+        generateCacheKey({
+          type: "query",
+          path: "communities.courseDetail",
+          input: {
+            courseId: input.courseDocId,
+            communityId: input.communityId,
+          },
+        }),
+        generateCacheKey({
+          type: "query",
+          path: "communities.courses",
+          input: {
+            communityId: input.communityId,
+          },
+        }),
+        generateCacheKey({
+          type: "query",
+          path: "communities.courseEnrolments",
+          input: {
+            courseDocId: input.courseDocId,
+            communityId: input.communityId,
+          },
+        }),
+      ]
+
+      await Promise.all(
+        deleteKeys.map((key) =>
+          storage.remove(keys.find((k) => k.includes(key)) as string)
+        )
+      )
       return { success: true }
     }),
 }

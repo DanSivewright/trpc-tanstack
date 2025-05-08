@@ -43,6 +43,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         const newAuth = await user.getIdToken(true)
         const me = await fetcher({
           key: "people:me",
+          // @ts-ignore
           ctx: {
             token: newAuth,
             tenantId: user.tenantId ?? null,

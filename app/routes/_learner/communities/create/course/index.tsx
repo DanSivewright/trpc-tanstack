@@ -59,7 +59,6 @@ export const Route = createFileRoute("/_learner/communities/create/course/")({
 function RouteComponent() {
   const trpc = useTRPC()
   const communities = useSuspenseQuery(trpc.communities.adminOf.queryOptions())
-  const { step } = Route.useLoaderData()
   const { notification } = useNotification()
   const navigate = useNavigate()
 
@@ -126,7 +125,7 @@ function RouteComponent() {
           displayName: "Members",
           type: "multiOption",
           icon: RiAccountCircleLine,
-          transformOptionFn: (u) => ({
+          transformOptionFn: (u: any) => ({
             value: u.id,
             label: `${u.firstName} ${u.lastName}`,
             icon: (
@@ -198,7 +197,7 @@ function RouteComponent() {
           displayName: "Tags",
           type: "multiOption",
           icon: RiPriceTag3Line,
-          transformOptionFn: (opts) => {
+          transformOptionFn: (opts: any) => {
             return {
               value: opts,
               label: opts,
@@ -234,7 +233,7 @@ function RouteComponent() {
           displayName: "Created By",
           type: "multiOption",
           icon: RiUserLine,
-          transformOptionFn: (opts) => {
+          transformOptionFn: (opts: any) => {
             const author = authors.find((x) => x.uid === opts)
             return {
               value: author?.uid || "",

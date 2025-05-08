@@ -529,7 +529,7 @@ function RouteComponent() {
           })}
         </Grid>
         <ul className="mt-6 flex flex-col gap-16">
-          {comments.map((c, i) => {
+          {comments.map((c) => {
             if (c.type === "article") {
               const f = c.article
               return (
@@ -666,7 +666,7 @@ function RouteComponent() {
                       <>
                         {c.gallery.length < 3 && (
                           <Grid gap="none" className="mt-2 gap-1">
-                            {c.gallery.map((g, gi) => {
+                            {c.gallery.map((g) => {
                               const span = {
                                 1: "col-span-12",
                                 2: "col-span-6",

@@ -6,7 +6,7 @@ import {
   RiThumbDownLine,
   RiThumbUpLine,
 } from "@remixicon/react"
-import { useQueries, useQuery, useSuspenseQuery } from "@tanstack/react-query"
+import { useQueries, useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { formatDistance, intervalToDuration } from "date-fns"
 
@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Section } from "@/components/section"
 
-import { commentsData } from "../-components/comments-data"
+import { commentsData } from "../../-components/comments-data"
 
 export const Route = createFileRoute(
   "/_learner/communities/$id/courses/$courseId/"
@@ -197,7 +197,7 @@ function RouteComponent() {
           <h3 className="text-title-h6">Comments</h3>
         </header>
         <ul className="flex flex-col gap-8 pl-6">
-          {commentsData.map((comment, commentIndex) => {
+          {commentsData.map((comment) => {
             return (
               <li
                 className="relative flex flex-col gap-2 pl-6"

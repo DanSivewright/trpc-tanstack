@@ -1,4 +1,3 @@
-import type { Timestamp } from "firebase-admin/firestore"
 import { z } from "zod"
 
 import { ContentDetailSchema } from "../../content/schemas/content-detail-schema"
@@ -92,12 +91,14 @@ const feedItemSchema = z.object({
 
 export const feedEnrolmentsSchema = z.object({
   id: z.string(),
-  authorUid: z.string(),
-  author: z.object({
-    id: z.string(),
-    name: z.string(),
-    avatarUrl: z.string(),
-  }),
+  authorUid: z.string().nullable(),
+  author: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      avatarUrl: z.string(),
+    })
+    .nullable(),
   publicationUid: z.string(),
   enrolmentUid: z.string().optional().nullable(),
   courseDocId: z.string(),
@@ -164,11 +165,11 @@ const communityFeedItemSchema = feedSchema
 const communitiesAllSchema = z.array(communitySchema)
 const communitiesJoinedSchema = communitiesAllSchema
 export {
-  communityFeedSchema,
-  communityFeedItemSchema,
   communitiesAllSchema,
   communitiesJoinedSchema,
   communityCommentSchema,
+  communityFeedItemSchema,
+  communityFeedSchema,
   feedArticleSchema,
   feedCourseSchema,
   feedThreadSchema,

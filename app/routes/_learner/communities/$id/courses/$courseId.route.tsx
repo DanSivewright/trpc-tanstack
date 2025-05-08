@@ -24,6 +24,7 @@ import {
 import { useForm, useStore } from "@tanstack/react-form"
 import {
   useMutation,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
@@ -65,7 +66,7 @@ import { Grid, gridVariants } from "@/components/grid"
 import Image from "@/components/image"
 import VerifiedIcon from "@/components/verified-icon"
 
-import { communityTags } from "../create/$id/community"
+import { communityTags } from "../../create/$id/community"
 
 export const Route = createFileRoute(
   "/_learner/communities/$id/courses/$courseId"
@@ -493,33 +494,38 @@ function CourseHeader() {
             <div className="flex items-center gap-5">
               {course.data?.enrolments &&
                 course.data?.enrolments.length > 0 && (
-                  <Tooltip.Root>
-                    <Tooltip.Trigger asChild>
-                      <AvatarGroupCompact.Root size="24">
-                        <AvatarGroupCompact.Stack>
-                          {course.data?.enrolments
-                            ?.slice(0, 3)
-                            .map((enrolment) => (
-                              <Avatar.Root color="sky">
-                                {enrolment.enrollee.avatarUrl ? (
-                                  <Avatar.Image
-                                    src={enrolment.enrollee.avatarUrl}
-                                  />
-                                ) : (
-                                  enrolment?.enrollee?.firstName?.[0]
-                                )}
-                              </Avatar.Root>
-                            ))}
-                        </AvatarGroupCompact.Stack>
-                        <AvatarGroupCompact.Overflow>
-                          +{course.data?.enrolments.length - 3}
-                        </AvatarGroupCompact.Overflow>
-                      </AvatarGroupCompact.Root>
-                    </Tooltip.Trigger>
-                    <Tooltip.Content>Community Enrolments</Tooltip.Content>
-                  </Tooltip.Root>
+                  <>
+                    <Tooltip.Root>
+                      <Tooltip.Trigger asChild>
+                        <AvatarGroupCompact.Root size="24">
+                          <AvatarGroupCompact.Stack>
+                            {course.data?.enrolments
+                              ?.slice(0, 3)
+                              .map((enrolment) => (
+                                <Avatar.Root color="sky">
+                                  {enrolment.enrollee.avatarUrl ? (
+                                    <Avatar.Image
+                                      src={enrolment.enrollee.avatarUrl}
+                                    />
+                                  ) : (
+                                    enrolment?.enrollee?.firstName?.[0]
+                                  )}
+                                </Avatar.Root>
+                              ))}
+                          </AvatarGroupCompact.Stack>
+                          {course.data?.enrolments.length > 3 && (
+                            <AvatarGroupCompact.Overflow>
+                              +{course.data?.enrolments.length - 3}
+                            </AvatarGroupCompact.Overflow>
+                          )}
+                        </AvatarGroupCompact.Root>
+                      </Tooltip.Trigger>
+                      <Tooltip.Content>Community Enrolments</Tooltip.Content>
+                    </Tooltip.Root>
+                    <div className="h-4 w-px rotate-12 bg-white opacity-45"></div>
+                  </>
                 )}
-              <div className="h-4 w-px rotate-12 bg-white opacity-45"></div>
+
               <div className="flex items-center gap-2">
                 <StarRating rating={4.5} />
                 <span className="pt-1 text-paragraph-xs text-white">
@@ -560,14 +566,7 @@ function CourseHeader() {
             </div>
           </div>
           <div className="flex w-1/4 items-center gap-2">
-            <Button.Root
-              size="medium"
-              variant="neutral"
-              mode="lighter"
-              className="rounded-full"
-            >
-              Button
-            </Button.Root>
+            <CourseEnrolmentButton />
           </div>
         </div>
       </div>
@@ -623,14 +622,14 @@ function CourseSettings() {
       )
       return { previousCourse }
     },
-    onError: (err, previousCourse, context) => {
+    onError: (_, previousCourse) => {
       queryClient.setQueryData(
         trpc.communities.courseDetail.queryOptions({
           communityId: params.id,
           courseId: params.courseId,
         }).queryKey,
         // @ts-ignore
-        context?.previousCourse
+        previousCourse
       )
     },
     onSettled: () => {
@@ -682,7 +681,7 @@ function CourseSettings() {
       onSubmit: formSchema,
       onChange: formSchema,
     },
-    onSubmitInvalid: (state) => {
+    onSubmitInvalid: () => {
       notification({
         title: "Invalid Form",
         description: "Please fill out all fields correctly.",
@@ -716,6 +715,7 @@ function CourseSettings() {
         return
       }
 
+      await updateCourse.mutateAsync(args.value)
       navigate({
         resetScroll: false,
         search: (prev) => ({
@@ -723,7 +723,6 @@ function CourseSettings() {
           settingsOpen: false,
         }),
       })
-      updateCourse.mutate(args.value)
     },
   })
 
@@ -1190,7 +1189,7 @@ function DeleteCourseModal() {
             className="w-full"
             disabled={deleteCourse.isPending}
             onClick={async () => {
-              const del = await deleteCourse.mutateAsync({
+              await deleteCourse.mutateAsync({
                 communityId: params.id,
                 courseId: params.courseId,
               })
@@ -1206,5 +1205,119 @@ function DeleteCourseModal() {
         </Modal.Footer>
       </Modal.Content>
     </Modal.Root>
+  )
+}
+
+function CourseEnrolmentButton() {
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+  const params = Route.useParams()
+  const { notification } = useNotification()
+
+  const course = useSuspenseQuery(
+    trpc.communities.courseDetail.queryOptions({
+      communityId: params.id,
+      courseId: params.courseId,
+    })
+  )
+  const community = useSuspenseQuery(
+    trpc.communities.detail.queryOptions({
+      id: params.id,
+    })
+  )
+  const me = useQuery(trpc.people.me.queryOptions())
+
+  const selfEnrolMutation = useMutation({
+    ...trpc.communities.selfEnrolToCourse.mutationOptions(),
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: trpc.communities.courseDetail.queryOptions({
+          communityId: params.id,
+          courseId: params.courseId,
+        }).queryKey,
+      })
+      queryClient.invalidateQueries({
+        queryKey: trpc.communities.courses.queryOptions({
+          communityId: params.id,
+        }).queryKey,
+      })
+    },
+    onSuccess: () => {
+      notification({
+        title: "Enrolment Successful",
+        description: "You have been enrolled in the course",
+        variant: "filled",
+        color: "success",
+      })
+    },
+  })
+
+  const buttonText = useMemo(() => {
+    if (course?.data?.enrolments?.length === 0) {
+      return "Be the first to enrol"
+    }
+    return "Enrol Now"
+  }, [course.data])
+
+  if (
+    course?.data?.enrolments?.some(
+      (enrolment) => enrolment.enrolleeUid === community?.data?.membership?.uid
+    )
+  ) {
+    return null
+  }
+  return (
+    <Button.Root
+      size="medium"
+      variant="neutral"
+      mode="lighter"
+      className="rounded-full"
+      disabled={selfEnrolMutation.isPending}
+      onClick={async () => {
+        await selfEnrolMutation.mutateAsync({
+          communityId: params?.id,
+          courseDocId: params.courseId,
+          enrollee: {
+            communityId: params?.id,
+            id: me.data?.uid ?? "",
+            firstName: me.data?.firstName ?? "",
+            lastName: me.data?.lastName ?? "",
+            email:
+              me.data?.companyPerson?.email || me?.data?.contact?.email || "",
+            avatarUrl: me.data?.imageUrl ?? "",
+            uid: me.data?.uid ?? "",
+          },
+          publicationUid: course?.data?.publicationUid,
+          enrolleeUid: me.data?.uid ?? "",
+        })
+      }}
+    >
+      {buttonText}
+      {selfEnrolMutation.isPending && (
+        <Button.Icon as={RiLoaderLine} className="animate-spin" />
+      )}
+      {buttonText === "Enrol Now" &&
+      course?.data?.enrolments?.length &&
+      course?.data?.enrolments?.length > 0 ? (
+        <AvatarGroupCompact.Root size="24">
+          <AvatarGroupCompact.Stack>
+            {course.data?.enrolments
+              ?.slice(0, 3)
+              .map((enrolment) => (
+                <Avatar.Root color="sky">
+                  {enrolment.enrollee.avatarUrl ? (
+                    <Avatar.Image src={enrolment.enrollee.avatarUrl} />
+                  ) : (
+                    enrolment?.enrollee?.firstName?.[0]
+                  )}
+                </Avatar.Root>
+              ))}
+          </AvatarGroupCompact.Stack>
+          <AvatarGroupCompact.Overflow>
+            +{course?.data?.enrolments?.length - 3}
+          </AvatarGroupCompact.Overflow>
+        </AvatarGroupCompact.Root>
+      ) : null}
+    </Button.Root>
   )
 }

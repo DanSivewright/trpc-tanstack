@@ -17,7 +17,6 @@ export const Uploader: React.FC<Props> = ({
   files,
   setFiles,
   fileListClassName,
-  fileTypes,
 }) => {
   const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
     setFiles((prevFiles) => [...prevFiles, ...acceptedFiles])

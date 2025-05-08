@@ -11,7 +11,7 @@ import {
   RiSpam3Line,
   RiTodoLine,
 } from "@remixicon/react"
-import { createColumnHelper, type ColumnDef } from "@tanstack/react-table"
+import { type ColumnDef } from "@tanstack/react-table"
 import { z } from "zod"
 
 import { Avatar } from "@/components/ui/avatar"
@@ -176,7 +176,7 @@ export const ColumnsTasks: ColumnDef<z.infer<typeof taskSchema>>[] = [
       displayName: "Assignees",
       type: "multiOption",
       icon: RiAccountCircleLine,
-      transformOptionFn: (u) => ({
+      transformOptionFn: (u: any) => ({
         value: u.id,
         label: u.name,
         icon: (
@@ -186,7 +186,7 @@ export const ColumnsTasks: ColumnDef<z.infer<typeof taskSchema>>[] = [
             ) : (
               u.name
                 .split(" ")
-                .map((x) => x[0])
+                .map((x: any) => x[0])
                 .join("")
                 .toUpperCase()
             )}

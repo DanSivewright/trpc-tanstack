@@ -287,7 +287,7 @@ function RouteComponent() {
         <div className="w-full">
           {thread.gallery.length < 3 && (
             <Grid gap="none" className="mt-2 gap-1">
-              {thread.gallery.map((g, gi) => {
+              {thread.gallery.map((g) => {
                 const span = {
                   1: "col-span-12",
                   2: "col-span-6",
@@ -478,7 +478,7 @@ function RouteComponent() {
 
       <Section size="sm" className="mx-auto flex max-w-screen-lg flex-col">
         <ul className="flex flex-col gap-8 pl-6">
-          {commentsData.map((comment, commentIndex) => {
+          {commentsData.map((comment) => {
             return (
               <li
                 className="relative flex flex-col gap-2 pl-6"
