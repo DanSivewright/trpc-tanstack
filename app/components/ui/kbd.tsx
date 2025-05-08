@@ -16,3 +16,5 @@ function Kbd({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
 }
 
 export { Kbd as Root }
+
+export * as Kbd from "./kbd"

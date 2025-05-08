@@ -257,8 +257,10 @@ Sidebar.displayName = "Sidebar"
 
 const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button.Root>,
-  React.ComponentProps<typeof Button.Root>
->(({ className, onClick, ...props }, ref) => {
+  React.ComponentProps<typeof Button.Root> & {
+    isOutsideSidebar?: boolean
+  }
+>(({ className, isOutsideSidebar = false, onClick, ...props }, ref) => {
   const { toggleSidebar } = useSidebar()
 
   return (
@@ -277,7 +279,11 @@ const SidebarTrigger = React.forwardRef<
       }}
       {...props}
     >
-      <Button.Icon as={RiLayoutLeftLine} />
+      {isOutsideSidebar ? (
+        <Button.Icon as={RiLayoutLeftLine} />
+      ) : (
+        <Button.Icon as={RiLayoutLeftLine} />
+      )}
       <span className="sr-only">Toggle Sidebar</span>
     </Button.Root>
   )

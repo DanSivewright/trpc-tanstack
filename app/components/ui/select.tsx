@@ -435,3 +435,5 @@ export {
   TriggerIcon,
   SelectValue as Value,
 }
+
+export * as Select from "./select"

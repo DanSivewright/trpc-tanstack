@@ -1,6 +1,7 @@
 import {
   RiAddLine,
   RiArticleLine,
+  RiCalendarEventLine,
   RiGraduationCapLine,
   RiHashtag,
   RiLayoutMasonryLine,
@@ -56,20 +57,9 @@ function RouteComponent() {
                 Feed
               </Link>
             </TabMenuHorizontal.Trigger>
-            <TabMenuHorizontal.Trigger
-              value={`/communities/${id}/articles`}
-              asChild
-            >
-              <Link
-                to="/communities/$id/articles"
-                params={{
-                  id,
-                }}
-                preload="intent"
-              >
-                <TabMenuHorizontal.Icon as={RiArticleLine} />
-                Articles
-              </Link>
+            <TabMenuHorizontal.Trigger value={`/communities/${id}/articles`}>
+              <TabMenuHorizontal.Icon as={RiArticleLine} />
+              Articles
             </TabMenuHorizontal.Trigger>
             <TabMenuHorizontal.Trigger
               value={`/communities/${id}/threads`}
@@ -84,6 +74,21 @@ function RouteComponent() {
               >
                 <TabMenuHorizontal.Icon as={RiHashtag} />
                 Thread
+              </Link>
+            </TabMenuHorizontal.Trigger>
+            <TabMenuHorizontal.Trigger
+              value={`/communities/${id}/events`}
+              asChild
+            >
+              <Link
+                to="/communities/$id/events"
+                params={{
+                  id,
+                }}
+                preload="intent"
+              >
+                <TabMenuHorizontal.Icon as={RiCalendarEventLine} />
+                Events
               </Link>
             </TabMenuHorizontal.Trigger>
             <TabMenuHorizontal.Trigger
