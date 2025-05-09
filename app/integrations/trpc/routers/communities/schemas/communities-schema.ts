@@ -77,6 +77,19 @@ const feedItemSchema = z.object({
   }),
   communityId: z.string(),
   community: communitySchema,
+  images: z
+    .array(
+      z.object({
+        id: z.string(),
+        featured: z.boolean(),
+        name: z.string(),
+        url: z.string().optional().nullable(),
+        path: z.string().optional().nullable(),
+        size: z.number().optional().nullable(),
+      })
+    )
+    .optional()
+    .nullable(),
   title: z.string(),
   caption: z.string(),
   views: z.number().optional().nullable(),
@@ -87,6 +100,14 @@ const feedItemSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   publishedAt: z.string(),
+  meta: z
+    .object({
+      colors: paletteSchema.optional().nullable(),
+    })
+    .nullable()
+    .optional(),
+  isFeatured: z.boolean(),
+  isFeaturedUntil: z.string().optional().nullable(),
 })
 
 export const feedEnrolmentsSchema = z.object({
@@ -113,8 +134,7 @@ const feedCourseSchema = feedItemSchema.extend({
   publicationUid: z.string(),
   typeAccessor: z.enum(["courses", "programs"]),
   enrolments: z.array(feedEnrolmentsSchema).optional().nullable(),
-  isFeatured: z.boolean(),
-  isFeaturedUntil: z.string().optional().nullable(),
+
   content: ContentDetailSchema.optional().nullable(),
 })
 
@@ -132,8 +152,6 @@ const feedArticleSchema = feedItemSchema.extend({
 const feedThreadSchema = feedItemSchema.extend({
   type: z.literal("thread"),
   content: z.any().optional().nullable(),
-  featuredImageUrl: z.string(),
-  featuredImagePath: z.string(),
 })
 
 const feedSchema = z.discriminatedUnion("type", [

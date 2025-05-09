@@ -8,6 +8,7 @@ import { generateCacheKey, useStorage } from "@/lib/cache"
 import { fetcher } from "@/lib/query"
 
 import { protectedProcedure } from "../../init"
+import { createThread, createThreadSchema } from "./mutations"
 import {
   getAllCommunities,
   getAllCommunitiesAdminOf,
@@ -286,6 +287,11 @@ export const communitiesRouter = {
           storage.remove(keys.find((k) => k.includes(key)) as string)
         )
       )
+    }),
+  createThread: protectedProcedure
+    .input(createThreadSchema)
+    .mutation(async ({ input }) => {
+      return createThread(input)
     }),
   update: protectedProcedure
     .input(

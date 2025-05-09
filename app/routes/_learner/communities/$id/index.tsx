@@ -4,16 +4,11 @@ import { cn } from "@/utils/cn"
 import { faker } from "@faker-js/faker"
 import {
   RiAddLine,
-  RiAttachmentLine,
   RiBookmarkLine,
   RiCalendarLine,
   RiDownloadLine,
   RiEyeLine,
   RiHashtag,
-  RiSearchLine,
-  RiSendPlaneLine,
-  RiVideoAddLine,
-  RiVoiceAiLine,
 } from "@remixicon/react"
 import { useQueries, useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
@@ -23,12 +18,13 @@ import { useElementSize } from "@/hooks/use-element-size"
 import { Avatar } from "@/components/ui/avatar"
 import { FancyButton } from "@/components/ui/fancy-button"
 import * as FileFormatIcon from "@/components/ui/file-format-icon"
-import { Input } from "@/components/ui/input"
 import { Tag } from "@/components/ui/tag"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Grid } from "@/components/grid"
 import Image from "@/components/image"
 import { Section } from "@/components/section"
+
+import FeedInput from "./-components/feed-input"
 
 export const Route = createFileRoute("/_learner/communities/$id/")({
   loader: async ({ context, params: { id } }) => {
@@ -391,53 +387,8 @@ function RouteComponent() {
         ref={main.ref}
         className="relative -top-[calc(100svh-48px)] z-10 mx-auto flex w-full max-w-screen-md flex-col gap-2 pt-6"
       >
-        <div className="flex w-full flex-col gap-1 rounded-10 bg-bg-soft-200 p-1 pb-1.5 shadow-regular-md">
-          <Input.Root className="shadow-none">
-            <Input.Wrapper>
-              <Input.Icon as={RiSearchLine} />
-              <Input.Field type="text" placeholder="What's on your mind?" />
-            </Input.Wrapper>
-          </Input.Root>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <FancyButton.Root size="xsmall" variant="basic">
-                    <FancyButton.Icon as={RiAttachmentLine} />
-                  </FancyButton.Root>
-                </Tooltip.Trigger>
-                <Tooltip.Content>
-                  <span>Attach</span>
-                </Tooltip.Content>
-              </Tooltip.Root>
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <FancyButton.Root size="xsmall" variant="basic">
-                    <FancyButton.Icon as={RiVideoAddLine} />
-                  </FancyButton.Root>
-                </Tooltip.Trigger>
-                <Tooltip.Content>
-                  <span>Video</span>
-                </Tooltip.Content>
-              </Tooltip.Root>
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <FancyButton.Root size="xsmall" variant="basic">
-                    <FancyButton.Icon as={RiVoiceAiLine} />
-                  </FancyButton.Root>
-                </Tooltip.Trigger>
-                <Tooltip.Content>
-                  <span>Voice</span>
-                </Tooltip.Content>
-              </Tooltip.Root>
-            </div>
-            <FancyButton.Root size="xsmall" variant="neutral">
-              Share
-              <FancyButton.Icon as={RiSendPlaneLine} />
-            </FancyButton.Root>
-          </div>
-        </div>
-        <Grid gap="none" className="gap-2">
+        <FeedInput width={main.width} />
+        <Grid gap="none" className="mt-2 gap-2">
           {[featured?.[0]].map((f, i) => (
             <div
               key={f.id}
