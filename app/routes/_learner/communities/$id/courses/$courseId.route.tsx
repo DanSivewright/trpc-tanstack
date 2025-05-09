@@ -1,6 +1,6 @@
 import { Suspense, useMemo } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
-import { feedCourseSchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
+import { communityCourseSchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
 import { cn } from "@/utils/cn"
 import { faker } from "@faker-js/faker"
 import {
@@ -647,7 +647,7 @@ function CourseSettings() {
     },
   })
 
-  const formSchema = feedCourseSchema
+  const formSchema = communityCourseSchema
     .pick({
       id: true,
       status: true,
@@ -831,7 +831,7 @@ function CourseSettings() {
                         <Switch.Root
                           id={field.name}
                           name={field.name}
-                          checked={field.state.value}
+                          checked={field.state.value ?? false}
                           onCheckedChange={(value) => {
                             field.handleChange(value)
                           }}

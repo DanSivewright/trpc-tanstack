@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
-import { feedCourseSchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
+import { communityCourseSchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
 import { cn } from "@/utils/cn"
 import {
   RiArrowRightSLine,
@@ -130,7 +130,7 @@ function RouteComponent() {
 
   const formSchema = z.object({
     courses: z.array(
-      feedCourseSchema
+      communityCourseSchema
         .pick({
           status: true,
           accessibile: true,

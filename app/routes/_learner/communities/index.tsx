@@ -203,10 +203,10 @@ function RouteComponent() {
           <h1 className="text-title-h1 font-light">
             <span className="text-text-sub-600">Discover</span> communities.
           </h1>
-          <p className="text-pretty text-subheading-sm font-light text-text-soft-400">
-            {/* Looking for a community? We have {communities.data?.length}+
-            communities. */}
-          </p>
+          {/* <p className="text-pretty text-subheading-sm font-light text-text-soft-400">
+            Looking for a community? We have {communities.data?.length}+
+            communities.
+          </p> */}
           <Input.Root>
             <Input.Wrapper>
               <Input.Field

@@ -67,7 +67,7 @@ export const communitySchema = z.object({
     .optional(),
 })
 
-const feedItemSchema = z.object({
+const communityCollectionGroupBaseSchema = z.object({
   id: z.string(),
   authorUid: z.string(),
   author: z.object({
@@ -90,7 +90,7 @@ const feedItemSchema = z.object({
     )
     .optional()
     .nullable(),
-  title: z.string(),
+  title: z.string().min(1, { message: "Title is required" }),
   caption: z.string(),
   views: z.number().optional().nullable(),
   status: z.enum(["draft", "published"]),
@@ -106,11 +106,11 @@ const feedItemSchema = z.object({
     })
     .nullable()
     .optional(),
-  isFeatured: z.boolean(),
+  isFeatured: z.boolean().optional().nullable(),
   isFeaturedUntil: z.string().optional().nullable(),
 })
 
-export const feedEnrolmentsSchema = z.object({
+export const communityEnrolmentsSchema = z.object({
   id: z.string(),
   authorUid: z.string().nullable(),
   author: z
@@ -128,17 +128,17 @@ export const feedEnrolmentsSchema = z.object({
   createdAt: z.string(),
 })
 
-const feedCourseSchema = feedItemSchema.extend({
+const communityCourseSchema = communityCollectionGroupBaseSchema.extend({
   type: z.literal("course"),
   typeUid: z.string(),
   publicationUid: z.string(),
   typeAccessor: z.enum(["courses", "programs"]),
-  enrolments: z.array(feedEnrolmentsSchema).optional().nullable(),
+  enrolments: z.array(communityEnrolmentsSchema).optional().nullable(),
 
   content: ContentDetailSchema.optional().nullable(),
 })
 
-const feedArticleSchema = feedItemSchema.extend({
+const communityArticleSchema = communityCollectionGroupBaseSchema.extend({
   type: z.literal("article"),
   duration: z.number(),
   content: z.any().optional().nullable(),
@@ -149,16 +149,10 @@ const feedArticleSchema = feedItemSchema.extend({
   }),
 })
 
-const feedThreadSchema = feedItemSchema.extend({
+const communityThreadSchema = communityCollectionGroupBaseSchema.extend({
   type: z.literal("thread"),
   content: z.any().optional().nullable(),
 })
-
-const feedSchema = z.discriminatedUnion("type", [
-  feedCourseSchema,
-  feedArticleSchema,
-  feedThreadSchema,
-])
 
 const communityCommentSchema = z.object({
   authorUid: z.string(),
@@ -178,17 +172,45 @@ const communityCommentSchema = z.object({
   downvotesCount: z.number(),
 })
 
-const communityFeedSchema = z.array(feedSchema)
-const communityFeedItemSchema = feedSchema
+// const communityFeedItemBaseSchema = z.object({
+//   id: z.string(),
+//   source: z.enum(["grouping", "system", "user"]),
+//   authorUid: z.string().optional().nullable(),
+//   author: z
+//     .object({
+//       id: z.string(),
+//       name: z.string(),
+//       avatarUrl: z.string(),
+//     })
+//     .optional()
+//     .nullable(),
+//   communityId: z.string(),
+//   isFeatured: z.boolean().optional().nullable(),
+//   isFeaturedUntil: z.string().optional().nullable(),
+//   createdAt: z.string(),
+//   updatedAt: z.string(),
+
+//   verb: z.enum(["created", "updated", "deleted", "commented"]).or(z.string()),
+//   descriptor: z.string(),
+
+//   // collectionGroup: z.discriminatedUnion("collectionGroup", [
+
+//   // ])
+//   accessor: z.discriminatedUnion("group", [
+//     z.object({
+//       group: z.literal("threads"),
+//       input: communityThreadSchema,
+//     }),
+//   ]),
+// })
+
 const communitiesAllSchema = z.array(communitySchema)
 const communitiesJoinedSchema = communitiesAllSchema
 export {
   communitiesAllSchema,
   communitiesJoinedSchema,
   communityCommentSchema,
-  communityFeedItemSchema,
-  communityFeedSchema,
-  feedArticleSchema,
-  feedCourseSchema,
-  feedThreadSchema,
+  communityArticleSchema,
+  communityCourseSchema,
+  communityThreadSchema,
 }

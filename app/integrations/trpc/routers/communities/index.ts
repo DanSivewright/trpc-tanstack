@@ -8,7 +8,7 @@ import { generateCacheKey, useStorage } from "@/lib/cache"
 import { fetcher } from "@/lib/query"
 
 import { protectedProcedure } from "../../init"
-import { createThread, createThreadSchema } from "./mutations"
+import { createCommunityThread, createCommunityThreadSchema } from "./mutations"
 import {
   getAllCommunities,
   getAllCommunitiesAdminOf,
@@ -21,11 +21,15 @@ import {
   getCommunityCoursesSchema,
   getCommunityDetail,
   getCommunityDetailSchema,
+  getCommunityThreadDetail,
+  getCommunityThreadDetailSchema,
+  getCommunityThreads,
+  getCommunityThreadsSchema,
 } from "./queries"
 import {
+  communityCourseSchema,
+  communityEnrolmentsSchema,
   communitySchema,
-  feedCourseSchema,
-  feedEnrolmentsSchema,
 } from "./schemas/communities-schema"
 
 const CACHE_GROUP = "communities"
@@ -103,6 +107,32 @@ export const communitiesRouter = {
         ctx,
       })
     }),
+  threads: protectedProcedure
+    .input(getCommunityThreadsSchema)
+    // @ts-ignore
+    .query(async ({ ctx, input, type, path }) => {
+      return getCommunityThreads({
+        cacheGroup: CACHE_GROUP,
+        type,
+        path,
+        input,
+        ctx,
+      })
+    }),
+
+  threadDetail: protectedProcedure
+    .input(getCommunityThreadDetailSchema)
+    // @ts-ignore
+    .query(async ({ ctx, input, type, path }) => {
+      return getCommunityThreadDetail({
+        cacheGroup: CACHE_GROUP,
+        type,
+        path,
+        input,
+        ctx,
+      })
+    }),
+
   create: protectedProcedure
     .input(
       communitySchema.pick({
@@ -172,7 +202,7 @@ export const communitiesRouter = {
   createCourses: protectedProcedure
     .input(
       z.array(
-        feedCourseSchema
+        communityCourseSchema
           .pick({
             id: true,
             authorUid: true,
@@ -184,7 +214,7 @@ export const communitiesRouter = {
             publicationUid: true,
           })
           .merge(
-            feedCourseSchema
+            communityCourseSchema
               .omit({
                 publicationUid: true,
                 id: true,
@@ -289,9 +319,9 @@ export const communitiesRouter = {
       )
     }),
   createThread: protectedProcedure
-    .input(createThreadSchema)
+    .input(createCommunityThreadSchema)
     .mutation(async ({ input }) => {
-      return createThread(input)
+      return createCommunityThread(input)
     }),
   update: protectedProcedure
     .input(
@@ -408,7 +438,7 @@ export const communitiesRouter = {
     }),
   updateCourse: protectedProcedure
     .input(
-      feedCourseSchema
+      communityCourseSchema
         .pick({
           status: true,
           accessibile: true,
@@ -546,7 +576,7 @@ export const communitiesRouter = {
     }),
   selfEnrolToCourse: protectedProcedure
     .input(
-      feedEnrolmentsSchema
+      communityEnrolmentsSchema
         .pick({
           courseDocId: true,
           enrolleeUid: true,

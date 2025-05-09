@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react"
 import { storage } from "@/integrations/firebase/client"
 import { useTRPC } from "@/integrations/trpc/react"
-import { createThreadSchema } from "@/integrations/trpc/routers/communities/mutations"
+import { communityThreadSchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
 import type { paletteSchema } from "@/integrations/trpc/routers/palette/schemas/palette-schema"
 import { cn } from "@/utils/cn"
 import { formatBytes } from "@/utils/format-bytes"
@@ -60,29 +60,51 @@ const FeedInput: React.FC<Props> = ({ width }) => {
   const MAX_SIZE = 5 * 1024 * 1024
   const FILE_TYPES = [".png", ".jpg", ".jpeg", ".gif", ".webp"]
   const VIDEO_TYPES = [".mp4", ".mov"]
-  const [uploadingImages, setUploadingImages] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
 
   const createThread = useMutation(
     trpc.communities.createThread.mutationOptions()
   )
 
-  const formSchema = createThreadSchema.extend({
-    images: z
-      .array(
-        z.object({
-          file: z.instanceof(File).optional().nullable(),
-          id: z.string(),
-          featured: z.boolean(),
-          url: z.string(),
-          name: z.string(),
-          path: z.string().optional().nullable(),
-          size: z.number().optional().nullable(),
+  const formSchema = communityThreadSchema
+    .pick({
+      id: true,
+      title: true,
+      author: true,
+      authorUid: true,
+      type: true,
+      communityId: true,
+      status: true,
+      accessibile: true,
+      tags: true,
+    })
+    .merge(
+      communityThreadSchema
+        .pick({
+          caption: true,
+          meta: true,
         })
-      )
-      .max(MAX_FILES, { message: `Maximum ${MAX_FILES} files allowed` })
-      .optional()
-      .nullable(),
-  })
+        .extend({
+          images: z
+            .array(
+              z.object({
+                id: z.string(),
+                file: z.instanceof(File).optional().nullable(),
+                featured: z.boolean(),
+                name: z.string(),
+                url: z.string().optional().nullable(),
+                path: z.string().optional().nullable(),
+                size: z.number().optional().nullable(),
+              })
+            )
+            .max(MAX_FILES, {
+              message: `Maximum ${MAX_FILES} images allowed`,
+            })
+            .optional()
+            .nullable(),
+        })
+        .partial()
+    )
 
   const form = useForm({
     defaultValues: {
@@ -101,9 +123,20 @@ const FeedInput: React.FC<Props> = ({ width }) => {
       accessibile: "community",
       tags: [],
       images: [],
+      meta: {
+        colors: null,
+      },
     } as z.infer<typeof formSchema>,
     validators: {
       onSubmit: formSchema,
+    },
+    onSubmitInvalid: () => {
+      notification({
+        title: "Invalid Form",
+        description: "Please fill in all fields correctly.",
+        variant: "lighter",
+        status: "error",
+      })
     },
     onSubmit: async (data) => {
       const threadId = crypto.randomUUID()
@@ -113,10 +146,9 @@ const FeedInput: React.FC<Props> = ({ width }) => {
       let payload = {
         ...rest,
         id: threadId,
-      } as z.infer<typeof createThreadSchema>
+      } as z.infer<typeof formSchema>
 
       if (formImages && formImages?.length > 0) {
-        setUploadingImages(true)
         const uploadedImages = await Promise.all(
           formImages?.map(async (f) => {
             if ("file" in f && f.file) {
@@ -185,7 +217,6 @@ const FeedInput: React.FC<Props> = ({ width }) => {
               },
             }))) as z.infer<typeof paletteSchema>
         }
-        setUploadingImages(false)
         let imagesWithoutFile = uploadedImages.map((f) => ({
           id: f.id,
           featured: f.featured,
@@ -201,7 +232,16 @@ const FeedInput: React.FC<Props> = ({ width }) => {
         }
       }
       const createdThread = await createThread.mutateAsync(payload)
-      console.log("createdThread:::", createdThread)
+      console.log(":::", createdThread)
+
+      notification({
+        title: "Thread Created",
+        description: "Your thread has been created successfully.",
+        variant: "lighter",
+        status: "success",
+      })
+      setIsExpanded(false)
+      form.reset()
     },
   })
 
@@ -324,11 +364,11 @@ const FeedInput: React.FC<Props> = ({ width }) => {
 
   return (
     <Expandable
+      expanded={isExpanded}
+      onToggle={() => setIsExpanded(!isExpanded)}
       expandDirection="vertical"
       expandBehavior="replace"
       //   initialDelay={0.2}
-      onExpandStart={() => console.log("Expanding meeting card...")}
-      onExpandEnd={() => console.log("Meeting card expanded!")}
     >
       {({ isExpanded }) => (
         <ExpandableCard
@@ -371,8 +411,9 @@ const FeedInput: React.FC<Props> = ({ width }) => {
                   )}
                 </form.Field>
 
-                <ExpandableTrigger>
+                <ExpandableTrigger itemType="button">
                   <FancyButton.Root
+                    type="button"
                     className="relative z-0 -ml-[5px] w-[calc(100%+10px)] rounded-l-none"
                     size="small"
                     variant="neutral"
@@ -404,7 +445,7 @@ const FeedInput: React.FC<Props> = ({ width }) => {
                                   field.handleChange(e.target.value)
                                 }
                                 value={field.state.value}
-                                placeholder="Community Name"
+                                placeholder="Give your post a title"
                                 type="text"
                               />
                             </Input.Wrapper>
@@ -433,7 +474,7 @@ const FeedInput: React.FC<Props> = ({ width }) => {
                           >
                             <Textarea.CharCounter
                               current={field.state.value?.length}
-                              max={200}
+                              max={1000}
                             />
                           </Textarea.Root>
 
@@ -545,7 +586,7 @@ const FeedInput: React.FC<Props> = ({ width }) => {
                                     delayDuration={0}
                                     key={name + i}
                                   >
-                                    <Tooltip.Trigger>
+                                    <Tooltip.Trigger type="button">
                                       <div>
                                         <img
                                           src={previewImage ?? undefined}
@@ -636,12 +677,14 @@ const FeedInput: React.FC<Props> = ({ width }) => {
                                             </form.Field>
 
                                             <CompactButton.Root
+                                              type="button"
                                               onClick={() =>
                                                 field.removeValue(i)
                                               }
                                               variant="ghost"
                                             >
                                               <CompactButton.Icon
+                                                type="button"
                                                 className="size-4 text-warning-base"
                                                 as={RiDeleteBinLine}
                                               />
@@ -663,11 +706,14 @@ const FeedInput: React.FC<Props> = ({ width }) => {
               </ExpandableContent>
             </ExpandableCardContent>
             <ExpandableContent preset="slide-up">
-              <ExpandableCardFooter>
+              <ExpandableCardFooter className="flex w-full items-center gap-2 pt-2">
                 <FancyButton.Root
+                  type="button"
                   onClick={() => {
                     form.reset()
+                    setIsExpanded(false)
                   }}
+                  className="w-full"
                   variant="basic"
                 >
                   Cancel

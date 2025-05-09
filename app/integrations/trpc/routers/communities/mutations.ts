@@ -3,25 +3,50 @@ import { tryCatch } from "@/utils/try-catch"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 
-import { feedThreadSchema } from "./schemas/communities-schema"
+import { communityThreadSchema } from "./schemas/communities-schema"
 
-export const createThreadSchema = feedThreadSchema.pick({
-  id: true,
-  title: true,
-  caption: true,
-  author: true,
-  authorUid: true,
-  type: true,
-  communityId: true,
-  status: true,
-  accessibile: true,
-  tags: true,
-  images: true,
-  meta: true,
-})
+export const createCommunityThreadSchema = communityThreadSchema
+  .pick({
+    id: true,
+    title: true,
+    author: true,
+    authorUid: true,
+    type: true,
+    communityId: true,
+    status: true,
+    accessibile: true,
+    tags: true,
+  })
+  .merge(
+    communityThreadSchema
+      .pick({
+        caption: true,
+        meta: true,
+      })
+      .extend({
+        images: z
+          .array(
+            z.object({
+              id: z.string(),
+              file: z.instanceof(File).optional().nullable(),
+              featured: z.boolean(),
+              name: z.string(),
+              url: z.string().optional().nullable(),
+              path: z.string().optional().nullable(),
+              size: z.number().optional().nullable(),
+            })
+          )
+          .max(5, {
+            message: `Maximum ${5} images allowed`,
+          })
+          .optional()
+          .nullable(),
+      })
+      .partial()
+  )
 
-export const createThread = async (
-  input: z.infer<typeof createThreadSchema>
+export const createCommunityThread = async (
+  input: z.infer<typeof createCommunityThreadSchema>
 ) => {
   const payload = {
     ...input,

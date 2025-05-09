@@ -190,7 +190,7 @@ const MultipleSelector = React.forwardRef<
       disabled,
       groupBy,
       className,
-      badgeClassName,
+      // badgeClassName,
       selectFirstItem = true,
       creatable = false,
       triggerSearchOnFocus = false,

@@ -10,9 +10,10 @@ import { getContentDetail } from "../content/queries"
 import type {
   communitiesAllSchema,
   communitiesJoinedSchema,
+  communityCourseSchema,
+  communityEnrolmentsSchema,
   communitySchema,
-  feedCourseSchema,
-  feedEnrolmentsSchema,
+  communityThreadSchema,
 } from "./schemas/communities-schema"
 
 export const getAllCommunities = async (options: TRPCQuerySchema) => {
@@ -238,7 +239,7 @@ export const getCommunityCourses = async (
           content: content || null,
         })
       }
-      return courses as z.infer<typeof feedCourseSchema>[]
+      return courses as z.infer<typeof communityCourseSchema>[]
     },
     {
       name: generateCacheKey({
@@ -316,7 +317,7 @@ export const getCommunityCourseDetail = async (
         id: snap.data.id,
         enrolments: enrolments || [],
         content: content || null,
-      } as z.infer<typeof feedCourseSchema>
+      } as z.infer<typeof communityCourseSchema>
     },
     {
       name: generateCacheKey({
@@ -363,7 +364,110 @@ export const getCommunityCourseEnrolments = async (
           })
         })
       }
-      return enrolments as z.infer<typeof feedEnrolmentsSchema>[]
+      return enrolments as z.infer<typeof communityEnrolmentsSchema>[]
+    },
+    {
+      name: generateCacheKey({
+        path: options.path,
+        type: options.type,
+        input: options.input,
+      }),
+      maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
+      group: options.cacheGroup,
+    }
+  )
+  return cachedFetcher()
+}
+
+export const getCommunityThreadsSchema = z.object({
+  communityId: z.string(),
+})
+const getCommunityThreadsOptions = trpcQuerySchema.extend({
+  input: getCommunityThreadsSchema,
+})
+export const getCommunityThreads = async (
+  options: z.infer<typeof getCommunityThreadsOptions>
+) => {
+  const cachedFetcher = cachedFunction(
+    async () => {
+      const snap = await tryCatch(
+        db
+          .collection("communities")
+          .doc(options.input.communityId)
+          .collection("threads")
+          .get()
+      )
+      let threads: any = []
+
+      if (snap.error || !snap.success) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: snap.error?.message || "Threads not found",
+        })
+      }
+
+      if (snap.success && snap.data) {
+        snap.data.forEach((doc) => {
+          threads.push({
+            ...doc.data(),
+            id: doc.id,
+          })
+        })
+      }
+
+      return threads as z.infer<typeof communityThreadSchema>[]
+    },
+    {
+      name: generateCacheKey({
+        path: options.path,
+        type: options.type,
+        input: options.input,
+      }),
+      maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
+      group: options.cacheGroup,
+    }
+  )
+  return cachedFetcher()
+}
+
+export const getCommunityThreadDetailSchema = z.object({
+  communityId: z.string(),
+  threadId: z.string(),
+})
+const getCommunityThreadDetailOptions = trpcQuerySchema.extend({
+  input: getCommunityThreadDetailSchema,
+})
+export const getCommunityThreadDetail = async (
+  options: z.infer<typeof getCommunityThreadDetailOptions>
+) => {
+  const cachedFetcher = cachedFunction(
+    async () => {
+      const snap = await tryCatch(
+        db
+          .collection("communities")
+          .doc(options.input.communityId)
+          .collection("threads")
+          .doc(options.input.threadId)
+          .get()
+      )
+      if (snap.error || !snap.success) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: snap.error?.message || "Thread not found",
+        })
+      }
+      if (!snap.data.exists || !snap.data.data()) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Course not found",
+        })
+      }
+
+      const thread = snap.data.data()
+      return {
+        ...thread,
+        id: snap.data.id,
+      } as z.infer<typeof communityThreadSchema>
     },
     {
       name: generateCacheKey({

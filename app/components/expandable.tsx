@@ -199,6 +199,7 @@ const ANIMATION_PRESETS: Record<string, AnimationPreset> = {
 }
 
 // Update type definitions
+// @ts-ignore
 type AnimationConfig = {
   initial: { [key: string]: number | string }
   animate: { [key: string]: number | string }
@@ -216,6 +217,7 @@ interface AnimationProps {
 // Inside ExpandableContent component
 const getAnimationProps = (
   preset: keyof typeof ANIMATION_PRESETS | undefined,
+  // @ts-ignore
   animateIn?: AnimationProps,
   animateOut?: AnimationProps
 ) => {
