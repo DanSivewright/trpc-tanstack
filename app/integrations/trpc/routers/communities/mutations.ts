@@ -3,7 +3,12 @@ import { tryCatch } from "@/utils/try-catch"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 
-import { communityThreadSchema } from "./schemas/communities-schema"
+import { generateCacheKey, useStorage } from "@/lib/cache"
+
+import {
+  communityThreadSchema,
+  threadFeedItemSchema,
+} from "./schemas/communities-schema"
 
 export const createCommunityThreadSchema = communityThreadSchema
   .pick({
@@ -70,7 +75,68 @@ export const createCommunityThread = async (
       message: addThead.error?.message || "Error: Failed to create thread",
     })
   }
-  //   const storage = useStorage()
-  // TODO: INVALIDATE THREADS EPS WHEN THEY EXIST
+
+  type ThreadFeedItem = z.infer<typeof threadFeedItemSchema>
+  const threadFeedItem: Omit<ThreadFeedItem, "id" | "data"> = {
+    type: "thread",
+    group: "threads",
+    communityId: input.communityId,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    source: "user",
+    verb: "created",
+    descriptor: "a new thread",
+    input: {
+      communityId: input.communityId,
+      threadId: input.id,
+    },
+    authorUid: input.authorUid,
+    author: input.author,
+    isFeatured: false,
+    isFeaturedUntil: null,
+  }
+
+  const addFeedItem = await tryCatch(
+    db
+      .collection("communities")
+      .doc(input.communityId)
+      .collection("feed")
+      .doc(input.id)
+      .set(threadFeedItem)
+  )
+
+  if (addFeedItem.error || !addFeedItem.success) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message:
+        addFeedItem.error?.message || "Error: Failed to create feed item",
+    })
+  }
+
+  const storage = useStorage()
+  const keys = await storage.keys()
+  const feedKey = generateCacheKey({
+    type: "query",
+    path: "communities.feed",
+    input: {
+      communityId: input.communityId,
+    },
+  })
+  const threadsKey = generateCacheKey({
+    type: "query",
+    path: "communities.threads",
+    input: {
+      communityId: input.communityId,
+    },
+  })
+
+  const deleteKeys = [feedKey, threadsKey]
+
+  await Promise.all(
+    deleteKeys.map((key) =>
+      storage.remove(keys.find((k) => k.includes(key)) as string)
+    )
+  )
+
   return payload
 }

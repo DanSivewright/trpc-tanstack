@@ -21,6 +21,8 @@ import {
   getCommunityCoursesSchema,
   getCommunityDetail,
   getCommunityDetailSchema,
+  getCommunityFeed,
+  getCommunityFeedSchema,
   getCommunityThreadDetail,
   getCommunityThreadDetailSchema,
   getCommunityThreads,
@@ -125,6 +127,18 @@ export const communitiesRouter = {
     // @ts-ignore
     .query(async ({ ctx, input, type, path }) => {
       return getCommunityThreadDetail({
+        cacheGroup: CACHE_GROUP,
+        type,
+        path,
+        input,
+        ctx,
+      })
+    }),
+  feed: protectedProcedure
+    .input(getCommunityFeedSchema)
+    // @ts-ignore
+    .query(async ({ ctx, input, type, path }) => {
+      return getCommunityFeed({
         cacheGroup: CACHE_GROUP,
         type,
         path,

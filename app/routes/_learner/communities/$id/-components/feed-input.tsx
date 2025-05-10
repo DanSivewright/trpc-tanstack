@@ -14,8 +14,8 @@ import {
   RiSearchLine,
 } from "@remixicon/react"
 import { useForm, useStore } from "@tanstack/react-form"
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { useParams } from "@tanstack/react-router"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Link, useParams } from "@tanstack/react-router"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
 import { Vibrant } from "node-vibrant/browser"
 import { useDropzone, type FileWithPath } from "react-dropzone"
@@ -29,6 +29,8 @@ import { Divider } from "@/components/ui/divider"
 import { FancyButton } from "@/components/ui/fancy-button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { LinkButton } from "@/components/ui/link-button"
+import { Notification } from "@/components/ui/notification"
 import { Textarea } from "@/components/ui/textarea"
 import { Tooltip } from "@/components/ui/tooltip"
 import {
@@ -55,6 +57,7 @@ const FeedInput: React.FC<Props> = ({ width }) => {
     from: "/_learner/communities/$id",
   })
   const { notification } = useNotification()
+  const queryClient = useQueryClient()
 
   const MAX_FILES = 5
   const MAX_SIZE = 5 * 1024 * 1024
@@ -62,9 +65,56 @@ const FeedInput: React.FC<Props> = ({ width }) => {
   const VIDEO_TYPES = [".mp4", ".mov"]
   const [isExpanded, setIsExpanded] = useState(false)
 
-  const createThread = useMutation(
-    trpc.communities.createThread.mutationOptions()
-  )
+  const createThread = useMutation({
+    ...trpc.communities.createThread.mutationOptions(),
+    onMutate: async (newThread) => {
+      await Promise.all([
+        queryClient.cancelQueries({
+          queryKey: trpc.communities.threads.queryOptions({
+            communityId: params.id,
+          }).queryKey,
+        }),
+        queryClient.cancelQueries({
+          queryKey: trpc.communities.feed.queryOptions({
+            communityId: params.id,
+          }).queryKey,
+        }),
+      ])
+
+      queryClient.setQueryData(
+        trpc.communities.threads.queryOptions({
+          communityId: params.id,
+        }).queryKey,
+        // @ts-ignore
+        (old) => [newThread, ...(old || [])]
+      )
+
+      // todo optimistically update the feed
+
+      return undefined
+    },
+    onError: (_, previousThreads) => {
+      queryClient.setQueryData(
+        trpc.communities.threads.queryOptions({
+          communityId: params.id,
+        }).queryKey,
+        // @ts-ignore
+        previousThreads
+      )
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: trpc.communities.threads.queryOptions({
+          communityId: params.id,
+        }).queryKey,
+      })
+      queryClient.invalidateQueries({
+        queryKey: trpc.communities.feed.queryOptions({
+          communityId: params.id,
+        }).queryKey,
+      })
+    },
+  })
 
   const formSchema = communityThreadSchema
     .pick({
@@ -239,6 +289,28 @@ const FeedInput: React.FC<Props> = ({ width }) => {
         description: "Your thread has been created successfully.",
         variant: "lighter",
         status: "success",
+        action: (
+          <>
+            <Notification.Action altText="upgrade" asChild>
+              <LinkButton.Root
+                variant="modifiable"
+                size="medium"
+                underline
+                asChild
+              >
+                <Link
+                  to="/communities/$id/threads/$threadId"
+                  params={{
+                    id: params.id,
+                    threadId: createdThread.id,
+                  }}
+                >
+                  Go to thread
+                </Link>
+              </LinkButton.Root>
+            </Notification.Action>
+          </>
+        ),
       })
       setIsExpanded(false)
       form.reset()

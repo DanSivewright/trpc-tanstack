@@ -135,3 +135,5 @@ export {
   NotificationViewport as Viewport,
   type NotificationProps,
 }
+
+export * as Notification from "./notification"

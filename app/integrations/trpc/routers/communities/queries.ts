@@ -12,8 +12,10 @@ import type {
   communitiesJoinedSchema,
   communityCourseSchema,
   communityEnrolmentsSchema,
+  communityFeedSchema,
   communitySchema,
   communityThreadSchema,
+  threadFeedItemSchema,
 } from "./schemas/communities-schema"
 
 export const getAllCommunities = async (options: TRPCQuerySchema) => {
@@ -468,6 +470,58 @@ export const getCommunityThreadDetail = async (
         ...thread,
         id: snap.data.id,
       } as z.infer<typeof communityThreadSchema>
+    },
+    {
+      name: generateCacheKey({
+        path: options.path,
+        type: options.type,
+        input: options.input,
+      }),
+      maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
+      group: options.cacheGroup,
+    }
+  )
+  return cachedFetcher()
+}
+
+export const getCommunityFeedSchema = z.object({
+  communityId: z.string(),
+})
+const getCommunityFeedOptions = trpcQuerySchema.extend({
+  input: getCommunityFeedSchema,
+})
+export const getCommunityFeed = async (
+  options: z.infer<typeof getCommunityFeedOptions>
+) => {
+  const cachedFetcher = cachedFunction(
+    async () => {
+      const snap = await tryCatch(
+        db
+          .collection("communities")
+          .doc(options.input.communityId)
+          .collection("feed")
+          // .orderBy("createdAt", "desc")
+          .get()
+      )
+      let feed: any = []
+
+      if (snap.error || !snap.success) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: snap.error?.message || "Feed not found",
+        })
+      }
+
+      if (snap.success && snap.data) {
+        snap.data.forEach((doc) => {
+          feed.push({
+            ...doc.data(),
+            id: doc.id,
+          })
+        })
+      }
+
+      return feed as z.infer<typeof threadFeedItemSchema>[]
     },
     {
       name: generateCacheKey({

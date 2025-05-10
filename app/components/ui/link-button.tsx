@@ -135,3 +135,5 @@ function LinkButtonIcon<T extends React.ElementType>({
 LinkButtonIcon.displayName = LINK_BUTTON_ICON_NAME
 
 export { LinkButtonRoot as Root, LinkButtonIcon as Icon }
+
+export * as LinkButton from "./link-button"

@@ -28,9 +28,14 @@ import FeedInput from "./-components/feed-input"
 
 export const Route = createFileRoute("/_learner/communities/$id/")({
   loader: async ({ context, params: { id } }) => {
-    await context.queryClient.ensureQueryData(
+    context.queryClient.prefetchQuery(
       context.trpc.communities.detail.queryOptions({
         id,
+      })
+    )
+    context.queryClient.prefetchQuery(
+      context.trpc.communities.feed.queryOptions({
+        communityId: id,
       })
     )
     return {
@@ -45,6 +50,12 @@ function RouteComponent() {
   const trpc = useTRPC()
   const community = useSuspenseQuery(
     trpc.communities.detail.queryOptions({ id })
+  )
+
+  const feed = useSuspenseQuery(
+    trpc.communities.feed.queryOptions({
+      communityId: id,
+    })
   )
 
   const picks = useMemo(
@@ -479,7 +490,12 @@ function RouteComponent() {
             )
           })}
         </Grid>
-        <ul className="mt-6 flex flex-col gap-16">
+        {feed.data?.map((f) => (
+          <pre key={f?.id}>
+            {f?.type}: {f?.id}
+          </pre>
+        ))}
+        {/* <ul className="mt-6 flex flex-col gap-16">
           {comments.map((c) => {
             if (c.type === "article") {
               const f = c.article
@@ -532,7 +548,6 @@ function RouteComponent() {
                     </div>
                     <div className="absolute inset-0 z-10 flex flex-col items-start justify-between p-6">
                       <span></span>
-                      {/* <Tag.Root className="rounded-full">Article</Tag.Root> */}
                       <div className="flex w-full flex-col gap-2">
                         <div className="flex items-start gap-2">
                           <Avatar.Root size="20">
@@ -701,7 +716,7 @@ function RouteComponent() {
               </Link>
             )
           })}
-        </ul>
+        </ul> */}
         <Section className="gutter">
           <div className="gutter relative mt-4 flex w-full flex-col gap-2 overflow-hidden rounded-xl bg-bg-weak-50 py-16">
             <h1 className="relative z-10 text-title-h4">
@@ -743,9 +758,6 @@ function RouteComponent() {
             />
           </div>
         </Section>
-        {Array.from({ length: 10 }).map((_, i) => (
-          <div key={i} className="aspect-video w-full rounded-xl bg-pink-100" />
-        ))}
       </div>
     </>
   )
