@@ -21,6 +21,7 @@ import { Vibrant } from "node-vibrant/browser"
 import { useDropzone, type FileWithPath } from "react-dropzone"
 import { z } from "zod"
 
+import { useElementSize } from "@/hooks/use-element-size"
 import { useNotification } from "@/hooks/use-notification"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -47,10 +48,8 @@ import MultipleSelector from "@/components/multi-select"
 
 import { communityTags } from "../../create/$id/community"
 
-type Props = {
-  width: number
-}
-const FeedInput: React.FC<Props> = ({ width }) => {
+type Props = {}
+const FeedInput: React.FC<Props> = ({}) => {
   const trpc = useTRPC()
   const me = useQuery(trpc.people.me.queryOptions())
   const params = useParams({
@@ -64,6 +63,7 @@ const FeedInput: React.FC<Props> = ({ width }) => {
   const FILE_TYPES = [".png", ".jpg", ".jpeg", ".gif", ".webp"]
   const VIDEO_TYPES = [".mp4", ".mov"]
   const [isExpanded, setIsExpanded] = useState(false)
+  const wrapperRef = useElementSize()
 
   const createThread = useMutation({
     ...trpc.communities.createThread.mutationOptions(),
@@ -435,384 +435,398 @@ const FeedInput: React.FC<Props> = ({ width }) => {
   }))
 
   return (
-    <Expandable
-      expanded={isExpanded}
-      onToggle={() => setIsExpanded(!isExpanded)}
-      expandDirection="vertical"
-      expandBehavior="replace"
-      //   initialDelay={0.2}
+    <div
+      ref={wrapperRef.ref}
+      className="sticky top-14 z-50 mx-auto mt-2 w-full max-w-screen-lg px-8 xl:px-0"
     >
-      {({ isExpanded }) => (
-        <ExpandableCard
-          className="relative w-full"
-          collapsedSize={{ width: width }}
-          expandedSize={{ width: width }}
-          hoverToExpand={false}
-        >
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              form.handleSubmit()
-            }}
+      <Expandable
+        expanded={isExpanded}
+        onToggle={() => setIsExpanded(!isExpanded)}
+        expandDirection="vertical"
+        expandBehavior="replace"
+      >
+        {({ isExpanded }) => (
+          <ExpandableCard
+            className="relative w-full"
+            collapsedSize={{ width: wrapperRef.width }}
+            expandedSize={{ width: wrapperRef.width }}
+            hoverToExpand={false}
           >
-            <ExpandableCardContent className="p-0">
-              <div className="flex w-full items-center">
-                <form.Field name="title">
-                  {(field) => (
-                    <Input.Root
-                      className={cn(
-                        "relative z-10 w-[calc(100%-38px)] shadow-none before:ring-0",
-                        {
-                          "rounded-bl-none": isExpanded,
-                        }
-                      )}
-                    >
-                      <Input.Wrapper className="">
-                        <Input.Icon as={RiSearchLine} />
-                        <Input.Field
-                          name={field.name}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          value={field.state.value}
-                          type="text"
-                          placeholder="What's on your mind?"
-                        />
-                      </Input.Wrapper>
-                    </Input.Root>
-                  )}
-                </form.Field>
-
-                <ExpandableTrigger itemType="button">
-                  <FancyButton.Root
-                    type="button"
-                    className="relative z-0 -ml-[5px] w-[calc(100%+10px)] rounded-l-none"
-                    size="small"
-                    variant="neutral"
-                  >
-                    <FancyButton.Icon as={RiAddLine} />
-                  </FancyButton.Root>
-                </ExpandableTrigger>
-              </div>
-
-              <ExpandableContent preset="blur-md" stagger staggerChildren={0.2}>
-                <Divider.Root variant="solid-text">
-                  Configure Your Post
-                </Divider.Root>
-                <div className="flex flex-col gap-8 px-5 pb-8 pt-4">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                form.handleSubmit()
+              }}
+            >
+              <ExpandableCardContent className="p-0">
+                <div className="flex w-full items-center">
                   <form.Field name="title">
-                    {(field) => {
-                      return (
-                        <div className="flex flex-col gap-2">
-                          <Label.Root htmlFor={field.name}>
-                            Post Title
-                            <Label.Asterisk />
-                          </Label.Root>
-                          <Input.Root>
-                            <Input.Wrapper>
-                              <Input.Field
-                                name={field.name}
-                                onBlur={field.handleBlur}
-                                onChange={(e) =>
-                                  field.handleChange(e.target.value)
-                                }
-                                value={field.state.value}
-                                placeholder="Give your post a title"
-                                type="text"
-                              />
-                            </Input.Wrapper>
-                          </Input.Root>
-                          <FieldInfo field={field} />
-                        </div>
-                      )
-                    }}
-                  </form.Field>
-                  <form.Field name="caption">
-                    {(field) => {
-                      return (
-                        <div className="flex flex-col gap-2">
-                          <Label.Root htmlFor={field.name}>
-                            Post Caption
-                            <Label.Asterisk />
-                          </Label.Root>
-                          <Textarea.Root
-                            id={field.name}
+                    {(field) => (
+                      <Input.Root
+                        className={cn(
+                          "relative z-10 w-[calc(100%-38px)] shadow-none before:ring-0",
+                          {
+                            "rounded-bl-none": isExpanded,
+                          }
+                        )}
+                      >
+                        <Input.Wrapper className="">
+                          <Input.Icon as={RiSearchLine} />
+                          <Input.Field
                             name={field.name}
                             onBlur={field.handleBlur}
                             onChange={(e) => field.handleChange(e.target.value)}
                             value={field.state.value}
-                            placeholder="Describe your post in 1 - 2 sentences"
-                            rows={5}
-                          >
-                            <Textarea.CharCounter
-                              current={field.state.value?.length}
-                              max={1000}
-                            />
-                          </Textarea.Root>
-
-                          <FieldInfo field={field} />
-                        </div>
-                      )
-                    }}
-                  </form.Field>
-
-                  <form.Field name="tags" mode="array">
-                    {(field) => (
-                      <div className="flex flex-col gap-2">
-                        <Label.Root>Tags</Label.Root>
-                        <MultipleSelector
-                          commandProps={{
-                            label: "Select tags",
-                          }}
-                          onChange={(value) => {
-                            field.setValue(value.map((tag) => tag.value))
-                          }}
-                          value={field.state.value?.map((tag) => ({
-                            label: tag,
-                            value: tag,
-                          }))}
-                          defaultOptions={tags}
-                          placeholder="Select tags"
-                          hidePlaceholderWhenSelected
-                          emptyIndicator={
-                            <p className="text-sm text-center">No tags found</p>
-                          }
-                        />
-                      </div>
+                            type="text"
+                            placeholder="What's on your mind?"
+                          />
+                        </Input.Wrapper>
+                      </Input.Root>
                     )}
                   </form.Field>
-                  <form.Field
-                    name="images"
-                    mode="array"
-                    children={(field) => {
-                      return (
-                        <>
-                          <div className="flex w-full flex-col gap-1">
+
+                  <ExpandableTrigger itemType="button">
+                    <FancyButton.Root
+                      type="button"
+                      className="relative z-0 -ml-[5px] w-[calc(100%+10px)] rounded-l-none"
+                      size="small"
+                      variant="neutral"
+                    >
+                      <FancyButton.Icon as={RiAddLine} />
+                    </FancyButton.Root>
+                  </ExpandableTrigger>
+                </div>
+
+                <ExpandableContent
+                  preset="blur-md"
+                  stagger
+                  staggerChildren={0.2}
+                >
+                  <Divider.Root variant="solid-text">
+                    Configure Your Post
+                  </Divider.Root>
+                  <div className="flex flex-col gap-8 px-5 pb-8 pt-4">
+                    <form.Field name="title">
+                      {(field) => {
+                        return (
+                          <div className="flex flex-col gap-2">
                             <Label.Root htmlFor={field.name}>
-                              Post Images
+                              Post Title
                               <Label.Asterisk />
                             </Label.Root>
-                            <div
-                              className={cn(
-                                "flex w-full cursor-pointer flex-col items-center gap-5 rounded-xl border border-dashed border-stroke-sub-300 bg-bg-white-0 p-8 text-center",
-                                "transition duration-200 ease-out",
-                                "hover:bg-bg-weak-50",
-                                {
-                                  "border-primary-base bg-primary-alpha-24":
-                                    isDragActive,
-                                }
-                              )}
-                              {...getRootProps()}
+                            <Input.Root>
+                              <Input.Wrapper>
+                                <Input.Field
+                                  name={field.name}
+                                  onBlur={field.handleBlur}
+                                  onChange={(e) =>
+                                    field.handleChange(e.target.value)
+                                  }
+                                  value={field.state.value}
+                                  placeholder="Give your post a title"
+                                  type="text"
+                                />
+                              </Input.Wrapper>
+                            </Input.Root>
+                            <FieldInfo field={field} />
+                          </div>
+                        )
+                      }}
+                    </form.Field>
+                    <form.Field name="caption">
+                      {(field) => {
+                        return (
+                          <div className="flex flex-col gap-2">
+                            <Label.Root htmlFor={field.name}>
+                              Post Caption
+                              <Label.Asterisk />
+                            </Label.Root>
+                            <Textarea.Root
+                              id={field.name}
+                              name={field.name}
+                              onBlur={field.handleBlur}
+                              onChange={(e) =>
+                                field.handleChange(e.target.value)
+                              }
+                              value={field.state.value}
+                              placeholder="Describe your post in 1 - 2 sentences"
+                              rows={5}
                             >
-                              <input
-                                {...getInputProps()}
-                                disabled={
-                                  images && images?.length >= MAX_FILES
-                                    ? true
-                                    : false
-                                }
-                                multiple
-                                type="file"
-                                tabIndex={-1}
-                                className="hidden"
+                              <Textarea.CharCounter
+                                current={field.state.value?.length}
+                                max={1000}
                               />
-                              <div className="space-y-1.5">
-                                <div className="text-label-sm text-text-strong-950">
-                                  Choose a file or drag & drop it here.
-                                </div>
-                                <div className="text-paragraph-xs text-text-sub-600">
-                                  JPEG, PNG, PDF, and MP4 formats, up to 50 MB.
-                                </div>
-                              </div>
-                              <Button.Root
-                                disabled={
-                                  images && images?.length >= MAX_FILES
-                                    ? true
-                                    : false
-                                }
-                                type="button"
-                                size="xxsmall"
+                            </Textarea.Root>
+
+                            <FieldInfo field={field} />
+                          </div>
+                        )
+                      }}
+                    </form.Field>
+
+                    <form.Field name="tags" mode="array">
+                      {(field) => (
+                        <div className="flex flex-col gap-2">
+                          <Label.Root>Tags</Label.Root>
+                          <MultipleSelector
+                            commandProps={{
+                              label: "Select tags",
+                            }}
+                            onChange={(value) => {
+                              field.setValue(value.map((tag) => tag.value))
+                            }}
+                            value={field.state.value?.map((tag) => ({
+                              label: tag,
+                              value: tag,
+                            }))}
+                            defaultOptions={tags}
+                            placeholder="Select tags"
+                            hidePlaceholderWhenSelected
+                            emptyIndicator={
+                              <p className="text-sm text-center">
+                                No tags found
+                              </p>
+                            }
+                          />
+                        </div>
+                      )}
+                    </form.Field>
+                    <form.Field
+                      name="images"
+                      mode="array"
+                      children={(field) => {
+                        return (
+                          <>
+                            <div className="flex w-full flex-col gap-1">
+                              <Label.Root htmlFor={field.name}>
+                                Post Images
+                                <Label.Asterisk />
+                              </Label.Root>
+                              <div
+                                className={cn(
+                                  "flex w-full cursor-pointer flex-col items-center gap-5 rounded-xl border border-dashed border-stroke-sub-300 bg-bg-white-0 p-8 text-center",
+                                  "transition duration-200 ease-out",
+                                  "hover:bg-bg-weak-50",
+                                  {
+                                    "border-primary-base bg-primary-alpha-24":
+                                      isDragActive,
+                                  }
+                                )}
+                                {...getRootProps()}
                               >
-                                Browse Files
-                              </Button.Root>
-                            </div>
-                            <FieldInfo
-                              field={field}
-                              fallback={`${images?.length} ${
-                                images?.length === 1 ? "file" : "files"
-                              }, ${formatBytes(
-                                images?.reduce((acc, file) => {
-                                  return acc + (file.size || 0)
-                                }, 0) || 0
-                              )}`}
-                              fallbackIcon={RiInformationFill}
-                            />
-                            <div className="flex w-full flex-wrap items-center gap-2">
-                              {field.state.value?.map((fileField, i) => {
-                                const name = fileField.name
-                                const previewImage =
-                                  preViewImages?.[i] ?? undefined
+                                <input
+                                  {...getInputProps()}
+                                  disabled={
+                                    images && images?.length >= MAX_FILES
+                                      ? true
+                                      : false
+                                  }
+                                  multiple
+                                  type="file"
+                                  tabIndex={-1}
+                                  className="hidden"
+                                />
+                                <div className="space-y-1.5">
+                                  <div className="text-label-sm text-text-strong-950">
+                                    Choose a file or drag & drop it here.
+                                  </div>
+                                  <div className="text-paragraph-xs text-text-sub-600">
+                                    JPEG, PNG, PDF, and MP4 formats, up to 50
+                                    MB.
+                                  </div>
+                                </div>
+                                <Button.Root
+                                  disabled={
+                                    images && images?.length >= MAX_FILES
+                                      ? true
+                                      : false
+                                  }
+                                  type="button"
+                                  size="xxsmall"
+                                >
+                                  Browse Files
+                                </Button.Root>
+                              </div>
+                              <FieldInfo
+                                field={field}
+                                fallback={`${images?.length} ${
+                                  images?.length === 1 ? "file" : "files"
+                                }, ${formatBytes(
+                                  images?.reduce((acc, file) => {
+                                    return acc + (file.size || 0)
+                                  }, 0) || 0
+                                )}`}
+                                fallbackIcon={RiInformationFill}
+                              />
+                              <div className="flex w-full flex-wrap items-center gap-2">
+                                {field.state.value?.map((fileField, i) => {
+                                  const name = fileField.name
+                                  const previewImage =
+                                    preViewImages?.[i] ?? undefined
 
-                                return (
-                                  <Tooltip.Root
-                                    delayDuration={0}
-                                    key={name + i}
-                                  >
-                                    <Tooltip.Trigger type="button">
-                                      <div>
-                                        <img
-                                          src={previewImage ?? undefined}
-                                          alt="Preview"
-                                          className={cn(
-                                            "h-10 w-10 rounded-md object-cover",
-                                            {
-                                              "outline outline-2 outline-primary-base":
-                                                fileField.featured,
-                                            }
-                                          )}
-                                          style={{ objectFit: "cover" }}
-                                        />
-                                      </div>
-                                    </Tooltip.Trigger>
-                                    <Tooltip.Content
-                                      variant="light"
-                                      size="medium"
+                                  return (
+                                    <Tooltip.Root
+                                      delayDuration={0}
+                                      key={name + i}
                                     >
-                                      <div className="flex items-center gap-3">
-                                        <img
-                                          src={previewImage ?? undefined}
-                                          alt="Preview"
-                                          className="h-10 w-10 rounded-md object-cover"
-                                          style={{ objectFit: "cover" }}
-                                        />
+                                      <Tooltip.Trigger type="button">
                                         <div>
-                                          <div className="text-text-strong-950">
-                                            {name}
-                                          </div>
-                                          <div className="mt-1 flex items-center gap-2">
-                                            <form.Field
-                                              name={`images[${i}].featured`}
-                                            >
-                                              {(subField) => {
-                                                return (
-                                                  <div className="flex items-center gap-2">
-                                                    <Checkbox.Root
-                                                      checked={
-                                                        !!subField.state.value
-                                                      }
-                                                      onCheckedChange={(
-                                                        checked
-                                                      ) => {
-                                                        if (!checked) {
-                                                          notification({
-                                                            title:
-                                                              "Cover image Required",
-                                                            description:
-                                                              "You must set a cover for your community. Click another switch to set it as cover.",
-                                                            variant: "lighter",
-                                                            status:
-                                                              "information",
-                                                          })
-                                                          return
-                                                        }
-                                                        subField.handleChange(
-                                                          checked
-                                                        )
-
-                                                        if (checked) {
-                                                          field.state.value?.forEach(
-                                                            (
-                                                              editFile,
-                                                              editFileIndex
-                                                            ) => {
-                                                              if (
-                                                                editFileIndex !==
-                                                                  i &&
-                                                                editFile.featured
-                                                              ) {
-                                                                form.setFieldValue(
-                                                                  `images[${editFileIndex}].featured`,
-                                                                  false
-                                                                )
-                                                              }
-                                                            }
-                                                          )
-                                                        }
-                                                      }}
-                                                    />
-                                                    <p className="text-label-xs text-text-soft-400">
-                                                      Featured
-                                                    </p>
-                                                  </div>
-                                                )
-                                              }}
-                                            </form.Field>
-
-                                            <CompactButton.Root
-                                              type="button"
-                                              onClick={() =>
-                                                field.removeValue(i)
+                                          <img
+                                            src={previewImage ?? undefined}
+                                            alt="Preview"
+                                            className={cn(
+                                              "h-10 w-10 rounded-md object-cover",
+                                              {
+                                                "outline outline-2 outline-primary-base":
+                                                  fileField.featured,
                                               }
-                                              variant="ghost"
-                                            >
-                                              <CompactButton.Icon
+                                            )}
+                                            style={{ objectFit: "cover" }}
+                                          />
+                                        </div>
+                                      </Tooltip.Trigger>
+                                      <Tooltip.Content
+                                        variant="light"
+                                        size="medium"
+                                      >
+                                        <div className="flex items-center gap-3">
+                                          <img
+                                            src={previewImage ?? undefined}
+                                            alt="Preview"
+                                            className="h-10 w-10 rounded-md object-cover"
+                                            style={{ objectFit: "cover" }}
+                                          />
+                                          <div>
+                                            <div className="text-text-strong-950">
+                                              {name}
+                                            </div>
+                                            <div className="mt-1 flex items-center gap-2">
+                                              <form.Field
+                                                name={`images[${i}].featured`}
+                                              >
+                                                {(subField) => {
+                                                  return (
+                                                    <div className="flex items-center gap-2">
+                                                      <Checkbox.Root
+                                                        checked={
+                                                          !!subField.state.value
+                                                        }
+                                                        onCheckedChange={(
+                                                          checked
+                                                        ) => {
+                                                          if (!checked) {
+                                                            notification({
+                                                              title:
+                                                                "Cover image Required",
+                                                              description:
+                                                                "You must set a cover for your community. Click another switch to set it as cover.",
+                                                              variant:
+                                                                "lighter",
+                                                              status:
+                                                                "information",
+                                                            })
+                                                            return
+                                                          }
+                                                          subField.handleChange(
+                                                            checked
+                                                          )
+
+                                                          if (checked) {
+                                                            field.state.value?.forEach(
+                                                              (
+                                                                editFile,
+                                                                editFileIndex
+                                                              ) => {
+                                                                if (
+                                                                  editFileIndex !==
+                                                                    i &&
+                                                                  editFile.featured
+                                                                ) {
+                                                                  form.setFieldValue(
+                                                                    `images[${editFileIndex}].featured`,
+                                                                    false
+                                                                  )
+                                                                }
+                                                              }
+                                                            )
+                                                          }
+                                                        }}
+                                                      />
+                                                      <p className="text-label-xs text-text-soft-400">
+                                                        Featured
+                                                      </p>
+                                                    </div>
+                                                  )
+                                                }}
+                                              </form.Field>
+
+                                              <CompactButton.Root
                                                 type="button"
-                                                className="size-4 text-warning-base"
-                                                as={RiDeleteBinLine}
-                                              />
-                                            </CompactButton.Root>
+                                                onClick={() =>
+                                                  field.removeValue(i)
+                                                }
+                                                variant="ghost"
+                                              >
+                                                <CompactButton.Icon
+                                                  type="button"
+                                                  className="size-4 text-warning-base"
+                                                  as={RiDeleteBinLine}
+                                                />
+                                              </CompactButton.Root>
+                                            </div>
                                           </div>
                                         </div>
-                                      </div>
-                                    </Tooltip.Content>
-                                  </Tooltip.Root>
-                                )
-                              })}
+                                      </Tooltip.Content>
+                                    </Tooltip.Root>
+                                  )
+                                })}
+                              </div>
                             </div>
-                          </div>
-                        </>
-                      )
+                          </>
+                        )
+                      }}
+                    />
+                  </div>
+                </ExpandableContent>
+              </ExpandableCardContent>
+              <ExpandableContent preset="slide-up">
+                <ExpandableCardFooter className="flex w-full items-center gap-2 pt-2">
+                  <FancyButton.Root
+                    type="button"
+                    onClick={() => {
+                      form.reset()
+                      setIsExpanded(false)
                     }}
+                    className="w-full"
+                    variant="basic"
+                  >
+                    Cancel
+                  </FancyButton.Root>
+                  <form.Subscribe
+                    selector={(state) => [state.canSubmit, state.isSubmitting]}
+                    children={([canSubmit, isSubmitting]) => (
+                      <FancyButton.Root
+                        variant="primary"
+                        type="submit"
+                        className="w-full"
+                        disabled={!canSubmit}
+                      >
+                        Create
+                        <FancyButton.Icon
+                          className={cn(isSubmitting && "animate-spin")}
+                          as={isSubmitting ? RiLoaderLine : RiArrowRightSLine}
+                        />
+                      </FancyButton.Root>
+                    )}
                   />
-                </div>
+                </ExpandableCardFooter>
               </ExpandableContent>
-            </ExpandableCardContent>
-            <ExpandableContent preset="slide-up">
-              <ExpandableCardFooter className="flex w-full items-center gap-2 pt-2">
-                <FancyButton.Root
-                  type="button"
-                  onClick={() => {
-                    form.reset()
-                    setIsExpanded(false)
-                  }}
-                  className="w-full"
-                  variant="basic"
-                >
-                  Cancel
-                </FancyButton.Root>
-                <form.Subscribe
-                  selector={(state) => [state.canSubmit, state.isSubmitting]}
-                  children={([canSubmit, isSubmitting]) => (
-                    <FancyButton.Root
-                      variant="primary"
-                      type="submit"
-                      className="w-full"
-                      disabled={!canSubmit}
-                    >
-                      Create
-                      <FancyButton.Icon
-                        className={cn(isSubmitting && "animate-spin")}
-                        as={isSubmitting ? RiLoaderLine : RiArrowRightSLine}
-                      />
-                    </FancyButton.Root>
-                  )}
-                />
-              </ExpandableCardFooter>
-            </ExpandableContent>
-          </form>
-        </ExpandableCard>
-      )}
-    </Expandable>
+            </form>
+          </ExpandableCard>
+        )}
+      </Expandable>
+    </div>
   )
 }
 export default FeedInput

@@ -212,8 +212,18 @@ export const threadFeedItemSchema = communityFeedItemBaseSchema.extend({
   data: communityThreadSchema.optional().nullable(),
 })
 
+export const courseFeedItemSchema = communityFeedItemBaseSchema.extend({
+  type: z.literal("course"),
+  group: z.literal("courses"),
+  input: z.object({
+    communityId: z.string(),
+    courseId: z.string(),
+  }),
+  data: communityCourseSchema.optional().nullable(),
+})
+
 export const communityFeedSchema = z.array(
-  z.discriminatedUnion("type", [threadFeedItemSchema])
+  z.discriminatedUnion("type", [threadFeedItemSchema, courseFeedItemSchema])
 )
 
 const communitiesAllSchema = z.array(communitySchema)

@@ -12,7 +12,6 @@ import type {
   communitiesJoinedSchema,
   communityCourseSchema,
   communityEnrolmentsSchema,
-  communityFeedSchema,
   communitySchema,
   communityThreadSchema,
   threadFeedItemSchema,
