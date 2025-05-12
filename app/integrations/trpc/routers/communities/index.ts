@@ -8,11 +8,20 @@ import { generateCacheKey, useStorage } from "@/lib/cache"
 import { fetcher } from "@/lib/query"
 
 import { protectedProcedure } from "../../init"
-import { createCommunityThread, createCommunityThreadSchema } from "./mutations"
+import {
+  createComment,
+  createCommentSchema,
+  createCommunityThread,
+  createCommunityThreadSchema,
+  upsertLike,
+  upsertLikeSchema,
+} from "./mutations"
 import {
   getAllCommunities,
   getAllCommunitiesAdminOf,
   getAllJoinedCommunities,
+  getCommunityComments,
+  getCommunityCommentsSchema,
   getCommunityCourseDetail,
   getCommunityCourseDetailSchema,
   getCommunityCourseEnrolments,
@@ -27,6 +36,8 @@ import {
   getCommunityThreadDetailSchema,
   getCommunityThreads,
   getCommunityThreadsSchema,
+  getinteractionsCountForCollectionGroup,
+  interactionsCountForCollectionGroupSchema,
 } from "./queries"
 import {
   communityCourseSchema,
@@ -147,6 +158,30 @@ export const communitiesRouter = {
       })
     }),
 
+  comments: protectedProcedure
+    .input(getCommunityCommentsSchema)
+    // @ts-ignore
+    .query(async ({ ctx, input, type, path }) => {
+      return getCommunityComments({
+        cacheGroup: CACHE_GROUP,
+        type,
+        path,
+        input,
+        ctx,
+      })
+    }),
+  interactionsCountForCollectionGroup: protectedProcedure
+    .input(interactionsCountForCollectionGroupSchema)
+    // @ts-ignore
+    .query(async ({ ctx, input, type, path }) => {
+      return getinteractionsCountForCollectionGroup({
+        cacheGroup: CACHE_GROUP,
+        type,
+        path,
+        input,
+        ctx,
+      })
+    }),
   create: protectedProcedure
     .input(
       communitySchema.pick({
@@ -683,5 +718,15 @@ export const communitiesRouter = {
         )
       )
       return { success: true }
+    }),
+  handleLike: protectedProcedure
+    .input(upsertLikeSchema)
+    .mutation(async ({ input }) => {
+      return upsertLike(input)
+    }),
+  comment: protectedProcedure
+    .input(createCommentSchema)
+    .mutation(async ({ input }) => {
+      return createComment(input)
     }),
 }

@@ -63,8 +63,8 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <AuthProvider>
           <TooltipProvider>{children}</TooltipProvider>
         </AuthProvider>
-        {/* <TanStackRouterDevtools position="bottom-right" />
-        <ReactQueryDevtools buttonPosition="bottom-left" /> */}
+        <TanStackRouterDevtools position="bottom-right" />
+        <ReactQueryDevtools buttonPosition="bottom-left" />
         <TailwindIndicator />
         <NotificationProvider />
         <Scripts />

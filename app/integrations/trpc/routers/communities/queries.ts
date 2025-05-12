@@ -10,6 +10,7 @@ import { getContentDetail } from "../content/queries"
 import type {
   communitiesAllSchema,
   communitiesJoinedSchema,
+  communityCommentSchema,
   communityCourseSchema,
   communityEnrolmentsSchema,
   communitySchema,
@@ -542,6 +543,158 @@ export const getCommunityFeed = async (
       }
 
       return feed as z.infer<typeof threadFeedItemSchema>[]
+    },
+    {
+      name: generateCacheKey({
+        path: options.path,
+        type: options.type,
+        input: options.input,
+      }),
+      maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
+      group: options.cacheGroup,
+    }
+  )
+  return cachedFetcher()
+}
+
+export const interactionsCountForCollectionGroupSchema = z.object({
+  collectionGroup: z.enum(["threads", "articles", "courses"]),
+  collectionGroupDocId: z.string(),
+  interactionType: z.enum(["likes", "comments"]),
+  communityId: z.string(),
+})
+const interactionsCountForCollectionGroupOptions = trpcQuerySchema.extend({
+  input: interactionsCountForCollectionGroupSchema,
+})
+export const getinteractionsCountForCollectionGroup = async (
+  options: z.infer<typeof interactionsCountForCollectionGroupOptions>
+) => {
+  const cachedFetcher = cachedFunction(
+    async () => {
+      const [snap, createdByMe] = await Promise.all([
+        tryCatch(
+          db
+            .collection("communities")
+            .doc(options.input.communityId)
+            .collection(options.input.interactionType)
+            .where("collectionGroup", "==", options.input.collectionGroup)
+            .where(
+              "collectionGroupDocId",
+              "==",
+              options.input.collectionGroupDocId
+            )
+            .count()
+            .get()
+        ),
+        tryCatch(
+          db
+            .collection("communities")
+            .doc(options.input.communityId)
+            .collection(options.input.interactionType)
+            .where("collectionGroup", "==", options.input.collectionGroup)
+            .where(
+              "collectionGroupDocId",
+              "==",
+              options.input.collectionGroupDocId
+            )
+            .where("authorUid", "==", options.ctx.uid)
+            .get()
+        ),
+      ])
+
+      if (snap.error || !snap.success) {
+        console.error(snap.error)
+        return {
+          total: 0,
+          byMe: createdByMe.success && createdByMe.data?.docs.length > 0,
+          id: (createdByMe.success && createdByMe.data?.docs[0]?.id) || null,
+        }
+      }
+
+      return {
+        total: snap.data.data().count || 0,
+        byMe: createdByMe.success && createdByMe.data?.docs.length > 0,
+        id: (createdByMe.success && createdByMe.data?.docs[0]?.id) || null,
+      }
+    },
+    {
+      name: generateCacheKey({
+        path: options.path,
+        type: options.type,
+        input: options.input,
+      }),
+      maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
+      group: options.cacheGroup,
+    }
+  )
+  return cachedFetcher()
+}
+
+export const getCommunityCommentsSchema = z.object({
+  collectionGroup: z.enum(["threads", "articles", "courses"]),
+  collectionGroupDocId: z.string(),
+  communityId: z.string(),
+})
+const getCommunityCommentsOptions = trpcQuerySchema.extend({
+  input: getCommunityCommentsSchema,
+})
+export const getCommunityComments = async (
+  options: z.infer<typeof getCommunityCommentsOptions>
+) => {
+  const cachedFetcher = cachedFunction(
+    async () => {
+      const snap = await tryCatch(
+        db
+          .collection("communities")
+          .doc(options.input.communityId)
+          .collection("comments")
+          .where("collectionGroup", "==", options.input.collectionGroup)
+          .where(
+            "collectionGroupDocId",
+            "==",
+            options.input.collectionGroupDocId
+          )
+          .orderBy("createdAt", "desc")
+          .get()
+      )
+      let comments: any = []
+
+      if (snap.error || !snap.success) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: snap.error?.message || "Comments not found",
+        })
+      }
+
+      snap.data.forEach((doc) => {
+        comments.push({
+          ...doc.data(),
+          id: doc.id,
+          byMe: doc.data().authorUid === options.ctx.uid,
+        })
+      })
+
+      // Sort comments by likesCount, commentsCount, and createdAt
+      comments.sort((a: any, b: any) => {
+        // First compare by likesCount (if available)
+        const aLikes = a.likesCount || 0
+        const bLikes = b.likesCount || 0
+        if (aLikes !== bLikes) {
+          return bLikes - aLikes // Descending order
+        }
+
+        // Then compare by commentsCount (if available)
+        const aComments = a.commentsCount || 0
+        const bComments = b.commentsCount || 0
+        if (aComments !== bComments) {
+          return bComments - aComments // Descending order
+        }
+
+        // Finally, sort by createdAt (newest first)
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      })
+
+      return comments as z.infer<typeof communityCommentSchema>[]
     },
     {
       name: generateCacheKey({

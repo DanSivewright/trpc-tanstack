@@ -6,6 +6,8 @@ import { z } from "zod"
 import { generateCacheKey, useStorage } from "@/lib/cache"
 
 import {
+  communityCommentSchema,
+  communityLikeSchema,
   communityThreadSchema,
   threadFeedItemSchema,
 } from "./schemas/communities-schema"
@@ -60,10 +62,6 @@ export const createCommunityThread = async (
     updatedAt: new Date().toISOString(),
     publishedAt: new Date().toISOString(),
   }
-  console.log("media:::", {
-    i: input.images,
-    a: input.attachments,
-  })
 
   //   await db.collectionGroup("threads").doc(input.id).set(payload)
   const addThead = await tryCatch(
@@ -137,6 +135,123 @@ export const createCommunityThread = async (
 
   const deleteKeys = [feedKey, threadsKey]
 
+  await Promise.all(
+    deleteKeys.map((key) =>
+      storage.remove(keys.find((k) => k.includes(key)) as string)
+    )
+  )
+
+  return payload
+}
+
+export const upsertLikeSchema = communityLikeSchema.extend({
+  id: z.string().optional().nullable(),
+})
+
+export const upsertLike = async (input: z.infer<typeof upsertLikeSchema>) => {
+  const payload = {
+    ...input,
+    createdAt: new Date().toISOString(),
+  }
+  if (input.id) {
+    // handle like delete
+    const deleteLike = await tryCatch(
+      db
+        .collection("communities")
+        .doc(input.communityId)
+        .collection("likes")
+        .doc(input.id)
+        .delete()
+    )
+    if (deleteLike.error || !deleteLike.success) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: `Error: failed to delete like ${input.collectionGroup}`,
+      })
+    }
+  } else {
+    const addLike = await tryCatch(
+      db
+        .collection("communities")
+        .doc(input.communityId)
+        .collection("likes")
+        .add(payload)
+    )
+
+    if (addLike.error || !addLike.success) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: `Error: failed to like ${input.collectionGroup}`,
+      })
+    }
+  }
+
+  const storage = useStorage()
+  const keys = await storage.keys()
+  const likesKey = generateCacheKey({
+    type: "query",
+    path: "communities.interactionsCountForCollectionGroup",
+    input: {
+      collectionGroup: input.collectionGroup,
+      collectionGroupDocId: input.collectionGroupDocId,
+      communityId: input.communityId,
+      interactionType: "likes",
+    },
+  })
+  await storage.remove(keys.find((k) => k.includes(likesKey)) as string)
+
+  return payload
+}
+
+export const createCommentSchema = communityCommentSchema
+export const createComment = async (
+  input: z.infer<typeof createCommentSchema>
+) => {
+  const payload = {
+    ...input,
+    createdAt: new Date().toISOString(),
+  }
+
+  const addComment = await tryCatch(
+    db
+      .collection("communities")
+      .doc(input.communityId)
+      .collection("comments")
+      .doc(input.id)
+      .set(payload)
+  )
+  if (addComment.error || !addComment.success) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Error: failed to create comment",
+    })
+  }
+
+  const storage = useStorage()
+  const keys = await storage.keys()
+
+  const deleteKeys = [
+    generateCacheKey({
+      type: "query",
+      path: "communities.interactionsCountForCollectionGroup",
+      input: {
+        collectionGroup: input.collectionGroup,
+        collectionGroupDocId: input.collectionGroupDocId,
+        communityId: input.communityId,
+        interactionType: "comments",
+      },
+    }),
+    // INVALIDATE COMMENTS TO COLLECTION GROUP
+    generateCacheKey({
+      type: "query",
+      path: "communities.comments",
+      input: {
+        communityId: input.communityId,
+        collectionGroup: input.collectionGroup,
+        collectionGroupDocId: input.collectionGroupDocId,
+      },
+    }),
+  ]
   await Promise.all(
     deleteKeys.map((key) =>
       storage.remove(keys.find((k) => k.includes(key)) as string)

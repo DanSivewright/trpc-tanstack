@@ -166,6 +166,7 @@ const communityThreadSchema = communityCollectionGroupBaseSchema.extend({
 })
 
 const communityCommentSchema = z.object({
+  id: z.string(),
   authorUid: z.string(),
   author: z.object({
     id: z.string(),
@@ -175,12 +176,25 @@ const communityCommentSchema = z.object({
   content: z.string(),
   createdAt: z.string(),
   status: z.enum(["posted", "user-edited", "hidden"]),
-  rootParentId: z.string().nullable().optional(),
-  rootParentAuthorUid: z.string().nullable().optional(),
-  rootParentType: z.enum(["threads", "articles", "courses", "comments"]),
   communityId: z.string(),
-  upvotesCount: z.number(),
-  downvotesCount: z.number(),
+  collectionGroup: z.enum(["threads", "articles", "courses"]),
+  collectionGroupDocId: z.string(),
+  likesCount: z.number().optional().nullable(),
+  commentsCount: z.number().optional().nullable(),
+  byMe: z.boolean().optional().nullable(),
+})
+export const communityLikeSchema = z.object({
+  id: z.string(),
+  authorUid: z.string(),
+  author: z.object({
+    id: z.string(),
+    name: z.string(),
+    avatarUrl: z.string(),
+  }),
+  createdAt: z.string(),
+  communityId: z.string(),
+  collectionGroup: z.enum(["threads", "articles", "courses"]),
+  collectionGroupDocId: z.string(),
 })
 
 const communityFeedItemBaseSchema = z.object({
@@ -203,14 +217,6 @@ const communityFeedItemBaseSchema = z.object({
 
   verb: z.enum(["created", "updated", "deleted", "commented"]).or(z.string()),
   descriptor: z.string(),
-
-  // accessor: z.discriminatedUnion("group", [
-  //   z.object({
-  //     group: z.literal("threads"),
-  //     input: communityThreadSchema,
-  //     as: communityThreadSchema,
-  //   }),
-  // ]),
 })
 
 export const threadFeedItemSchema = communityFeedItemBaseSchema.extend({
