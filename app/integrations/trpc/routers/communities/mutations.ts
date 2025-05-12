@@ -21,6 +21,7 @@ export const createCommunityThreadSchema = communityThreadSchema
     status: true,
     accessibile: true,
     tags: true,
+    attachments: true,
   })
   .merge(
     communityThreadSchema
@@ -59,6 +60,10 @@ export const createCommunityThread = async (
     updatedAt: new Date().toISOString(),
     publishedAt: new Date().toISOString(),
   }
+  console.log("media:::", {
+    i: input.images,
+    a: input.attachments,
+  })
 
   //   await db.collectionGroup("threads").doc(input.id).set(payload)
   const addThead = await tryCatch(

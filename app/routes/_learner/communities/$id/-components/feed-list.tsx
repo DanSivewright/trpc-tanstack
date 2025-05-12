@@ -80,13 +80,13 @@ const FeedList: React.FC<Props> = ({}) => {
     )
   }
   return (
-    <div className="mt-6 flex flex-col gap-16">
+    <Section side="b" className="mt-6 flex flex-col gap-16">
       {feed?.data?.map((item) => {
         const Block = components[item.type]
         if (!Block) return null
         return <Block key={item.id} {...item} />
       })}
-    </div>
+    </Section>
   )
 }
 export default FeedList

@@ -499,7 +499,7 @@ export const getCommunityFeed = async (
           .collection("communities")
           .doc(options.input.communityId)
           .collection("feed")
-          // .orderBy("createdAt", "desc")
+          .orderBy("createdAt", "desc")
           .get()
       )
       let feed: any = []
@@ -511,12 +511,33 @@ export const getCommunityFeed = async (
         })
       }
 
-      if (snap.success && snap.data) {
-        snap.data.forEach((doc) => {
-          feed.push({
-            ...doc.data(),
-            id: doc.id,
-          })
+      for (const doc of snap.data.docs) {
+        let collectionGroupData
+        switch (doc.data().group) {
+          case "threads":
+            const threadSourceItem = doc?.data() as z.infer<
+              typeof threadFeedItemSchema
+            >
+            collectionGroupData = await getCommunityThreadDetail({
+              type: "query",
+              path: "communities.threadDetail",
+              input: {
+                communityId: threadSourceItem.input.communityId,
+                threadId: threadSourceItem.input.threadId,
+              },
+              ctx: options.ctx,
+              cacheGroup: options.cacheGroup,
+            })
+
+            break
+          default:
+            break
+        }
+
+        feed.push({
+          ...doc.data(),
+          id: doc.id,
+          data: collectionGroupData,
         })
       }
 

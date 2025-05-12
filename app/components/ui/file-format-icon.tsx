@@ -96,3 +96,5 @@ function FileFormatIcon({
 }
 
 export { FileFormatIcon as Root }
+
+export * as FileFormatIcon from "./file-format-icon"

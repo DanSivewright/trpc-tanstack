@@ -16,6 +16,7 @@ import { Route as LoginImport } from './routes/login'
 import { Route as LearnerImport } from './routes/_learner'
 import { Route as LearnerIndexImport } from './routes/_learner/index'
 import { Route as XTodosImport } from './routes/x/todos'
+import { Route as XSidebarImport } from './routes/x/sidebar'
 import { Route as XProfilesImport } from './routes/x/profiles'
 import { Route as XEditorDemoImport } from './routes/x/editor-demo'
 import { Route as XDropdownImport } from './routes/x/dropdown'
@@ -73,6 +74,12 @@ const LearnerIndexRoute = LearnerIndexImport.update({
 const XTodosRoute = XTodosImport.update({
   id: '/x/todos',
   path: '/x/todos',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const XSidebarRoute = XSidebarImport.update({
+  id: '/x/sidebar',
+  path: '/x/sidebar',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -334,6 +341,13 @@ declare module '@tanstack/react-router' {
       path: '/x/profiles'
       fullPath: '/x/profiles'
       preLoaderRoute: typeof XProfilesImport
+      parentRoute: typeof rootRoute
+    }
+    '/x/sidebar': {
+      id: '/x/sidebar'
+      path: '/x/sidebar'
+      fullPath: '/x/sidebar'
+      preLoaderRoute: typeof XSidebarImport
       parentRoute: typeof rootRoute
     }
     '/x/todos': {
@@ -638,6 +652,7 @@ export interface FileRoutesByFullPath {
   '/x/dropdown': typeof XDropdownRoute
   '/x/editor-demo': typeof XEditorDemoRoute
   '/x/profiles': typeof XProfilesRoute
+  '/x/sidebar': typeof XSidebarRoute
   '/x/todos': typeof XTodosRoute
   '/': typeof LearnerIndexRoute
   '/communities/$id': typeof LearnerCommunitiesIdRouteRouteWithChildren
@@ -673,6 +688,7 @@ export interface FileRoutesByTo {
   '/x/dropdown': typeof XDropdownRoute
   '/x/editor-demo': typeof XEditorDemoRoute
   '/x/profiles': typeof XProfilesRoute
+  '/x/sidebar': typeof XSidebarRoute
   '/x/todos': typeof XTodosRoute
   '/': typeof LearnerIndexRoute
   '/communities': typeof LearnerCommunitiesIndexRoute
@@ -706,6 +722,7 @@ export interface FileRoutesById {
   '/x/dropdown': typeof XDropdownRoute
   '/x/editor-demo': typeof XEditorDemoRoute
   '/x/profiles': typeof XProfilesRoute
+  '/x/sidebar': typeof XSidebarRoute
   '/x/todos': typeof XTodosRoute
   '/_learner/': typeof LearnerIndexRoute
   '/_learner/communities/$id': typeof LearnerCommunitiesIdRouteRouteWithChildren
@@ -744,6 +761,7 @@ export interface FileRouteTypes {
     | '/x/dropdown'
     | '/x/editor-demo'
     | '/x/profiles'
+    | '/x/sidebar'
     | '/x/todos'
     | '/'
     | '/communities/$id'
@@ -778,6 +796,7 @@ export interface FileRouteTypes {
     | '/x/dropdown'
     | '/x/editor-demo'
     | '/x/profiles'
+    | '/x/sidebar'
     | '/x/todos'
     | '/'
     | '/communities'
@@ -809,6 +828,7 @@ export interface FileRouteTypes {
     | '/x/dropdown'
     | '/x/editor-demo'
     | '/x/profiles'
+    | '/x/sidebar'
     | '/x/todos'
     | '/_learner/'
     | '/_learner/communities/$id'
@@ -842,6 +862,7 @@ export interface RootRouteChildren {
   XDropdownRoute: typeof XDropdownRoute
   XEditorDemoRoute: typeof XEditorDemoRoute
   XProfilesRoute: typeof XProfilesRoute
+  XSidebarRoute: typeof XSidebarRoute
   XTodosRoute: typeof XTodosRoute
 }
 
@@ -852,6 +873,7 @@ const rootRouteChildren: RootRouteChildren = {
   XDropdownRoute: XDropdownRoute,
   XEditorDemoRoute: XEditorDemoRoute,
   XProfilesRoute: XProfilesRoute,
+  XSidebarRoute: XSidebarRoute,
   XTodosRoute: XTodosRoute,
 }
 
@@ -871,6 +893,7 @@ export const routeTree = rootRoute
         "/x/dropdown",
         "/x/editor-demo",
         "/x/profiles",
+        "/x/sidebar",
         "/x/todos"
       ]
     },
@@ -919,6 +942,9 @@ export const routeTree = rootRoute
     },
     "/x/profiles": {
       "filePath": "x/profiles.tsx"
+    },
+    "/x/sidebar": {
+      "filePath": "x/sidebar.tsx"
     },
     "/x/todos": {
       "filePath": "x/todos.tsx"

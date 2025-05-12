@@ -89,6 +89,18 @@ const communityCollectionGroupBaseSchema = z.object({
     )
     .optional()
     .nullable(),
+  attachments: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        url: z.string().optional().nullable(),
+        size: z.number().optional().nullable(),
+        mimeType: z.string().optional().nullable(),
+      })
+    )
+    .optional()
+    .nullable(),
   title: z.string().min(1, { message: "Title is required" }),
   caption: z.string(),
   views: z.number().optional().nullable(),

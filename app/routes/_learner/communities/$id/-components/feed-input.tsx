@@ -8,6 +8,7 @@ import { formatBytes } from "@/utils/format-bytes"
 import {
   RiAddLine,
   RiArrowRightSLine,
+  RiCheckLine,
   RiDeleteBinLine,
   RiInformationFill,
   RiLoaderLine,
@@ -18,7 +19,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useParams } from "@tanstack/react-router"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
 import { Vibrant } from "node-vibrant/browser"
-import { useDropzone, type FileWithPath } from "react-dropzone"
+import { useDropzone, type Accept, type FileWithPath } from "react-dropzone"
 import { z } from "zod"
 
 import { useElementSize } from "@/hooks/use-element-size"
@@ -28,6 +29,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { CompactButton } from "@/components/ui/compact-button"
 import { Divider } from "@/components/ui/divider"
 import { FancyButton } from "@/components/ui/fancy-button"
+import * as FileFormatIcon from "@/components/ui/file-format-icon"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LinkButton } from "@/components/ui/link-button"
@@ -49,6 +51,28 @@ import MultipleSelector from "@/components/multi-select"
 import { communityTags } from "../../create/$id/community"
 
 type Props = {}
+type FileTypeCategory = "images" | "documents" | "videos" | "audio"
+
+const fileTypeMappings: Record<FileTypeCategory, Accept> = {
+  images: {
+    "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
+  },
+  documents: {
+    "application/pdf": [".pdf"],
+    "application/msword": [".doc"],
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
+      ".docx",
+    ],
+    "text/plain": [".txt"],
+  },
+  videos: {
+    "video/*": [".mp4", ".webm", ".ogg"],
+  },
+  audio: {
+    "audio/*": [".mp3", ".wav", ".ogg"],
+  },
+}
+
 const FeedInput: React.FC<Props> = ({}) => {
   const trpc = useTRPC()
   const me = useQuery(trpc.people.me.queryOptions())
@@ -60,8 +84,25 @@ const FeedInput: React.FC<Props> = ({}) => {
 
   const MAX_FILES = 5
   const MAX_SIZE = 5 * 1024 * 1024
-  const FILE_TYPES = [".png", ".jpg", ".jpeg", ".gif", ".webp"]
-  const VIDEO_TYPES = [".mp4", ".mov"]
+  const ACCEPTED_FILE_TYPES: FileTypeCategory[] = [
+    "documents",
+    "images",
+    "videos",
+    "audio",
+  ]
+
+  const accept = useMemo(
+    () =>
+      ACCEPTED_FILE_TYPES.reduce<Accept>(
+        (acc, type) => ({
+          ...acc,
+          ...fileTypeMappings[type],
+        }),
+        {}
+      ),
+    []
+  )
+
   const [isExpanded, setIsExpanded] = useState(false)
   const wrapperRef = useElementSize()
 
@@ -127,6 +168,7 @@ const FeedInput: React.FC<Props> = ({}) => {
       status: true,
       accessibile: true,
       tags: true,
+      attachments: true,
     })
     .merge(
       communityThreadSchema
@@ -142,6 +184,7 @@ const FeedInput: React.FC<Props> = ({}) => {
                 file: z.instanceof(File).optional().nullable(),
                 featured: z.boolean(),
                 name: z.string(),
+                mimeType: z.string().optional().nullable(),
                 url: z.string().optional().nullable(),
                 path: z.string().optional().nullable(),
                 size: z.number().optional().nullable(),
@@ -219,7 +262,12 @@ const FeedInput: React.FC<Props> = ({}) => {
         )
         const featureImage = uploadedImages.find((x) => x.featured)
         let palette
-        if (featureImage && "file" in featureImage && featureImage.file) {
+        if (
+          featureImage &&
+          "file" in featureImage &&
+          featureImage.file &&
+          featureImage.mimeType?.startsWith("image")
+        ) {
           palette = (await Vibrant.from(URL.createObjectURL(featureImage.file))
             .getPalette()
             .then((p) => ({
@@ -274,11 +322,23 @@ const FeedInput: React.FC<Props> = ({}) => {
           name: f.name,
           path: f.path,
           size: f.size,
+          mimeType: f.mimeType,
         }))
 
-        payload.images = imagesWithoutFile
-        payload.meta = {
-          colors: palette,
+        const onlyImages = imagesWithoutFile.filter((f) =>
+          f.mimeType?.startsWith("image")
+        )
+
+        const onlyAttachments = imagesWithoutFile.filter(
+          (f) => !f.mimeType?.startsWith("image")
+        )
+
+        payload.images = onlyImages
+        payload.attachments = onlyAttachments
+        if (palette) {
+          payload.meta = {
+            colors: palette,
+          }
         }
       }
       const createdThread = await createThread.mutateAsync(payload)
@@ -339,6 +399,7 @@ const FeedInput: React.FC<Props> = ({}) => {
             ...acceptedFiles.slice(0, diff).map((x) => ({
               id: crypto.randomUUID(),
               file: x,
+              mimeType: x.type,
               featured: false,
               url: "",
               name: x.name,
@@ -347,7 +408,10 @@ const FeedInput: React.FC<Props> = ({}) => {
             })),
           ]
 
-          if (!newFiles.some((x) => x.featured)) {
+          if (
+            !newFiles.some((x) => x.featured) &&
+            newFiles?.[0]?.mimeType?.startsWith("image")
+          ) {
             newFiles[0].featured = true
           }
 
@@ -362,6 +426,7 @@ const FeedInput: React.FC<Props> = ({}) => {
           id: crypto.randomUUID(),
           file: x,
           featured: false,
+          mimeType: x.type,
           url: "",
           name: x.name,
           path: "",
@@ -369,7 +434,10 @@ const FeedInput: React.FC<Props> = ({}) => {
         })),
       ]
 
-      if (!newFiles.some((x) => x.featured)) {
+      if (
+        !newFiles.some((x) => x.featured) &&
+        newFiles?.[0]?.mimeType?.startsWith("image")
+      ) {
         newFiles[0].featured = true
       }
 
@@ -380,10 +448,7 @@ const FeedInput: React.FC<Props> = ({}) => {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      "image/*": FILE_TYPES,
-      "video/*": VIDEO_TYPES,
-    },
+    accept,
     maxSize: MAX_SIZE,
     // maxFiles: MAX_FILES,
     onDropRejected: (fileRejections) => {
@@ -409,8 +474,8 @@ const FeedInput: React.FC<Props> = ({}) => {
         console.log("typeErrors error:::", typeErrors)
         notification({
           title: "Invalid File Type",
-          description: `Only ${FILE_TYPES.join(", ")} file${
-            FILE_TYPES.length === 1 ? " is" : "s are"
+          description: `Only ${ACCEPTED_FILE_TYPES.join(", ")} file${
+            ACCEPTED_FILE_TYPES.length === 1 ? " is" : "s are"
           } allowed. ${typeErrors.length} file${
             typeErrors.length === 1 ? " was" : "s were"
           } rejected.`,
@@ -419,14 +484,22 @@ const FeedInput: React.FC<Props> = ({}) => {
     },
   })
 
-  const getPreviewImage = useCallback((fileField: any) => {
-    if ("file" in fileField && fileField.file) {
+  type PreviewImage = NonNullable<z.infer<typeof formSchema>["images"]>[number]
+  const getPreviewImage = useCallback((fileField: PreviewImage) => {
+    if (
+      "file" in fileField &&
+      fileField.file &&
+      fileField.file.type.startsWith("image")
+    ) {
       return URL.createObjectURL(fileField.file)
     }
-    return fileField.url
+    if (fileField.url) {
+      return fileField.url
+    }
+    return null
   }, [])
   const preViewImages = useMemo(() => {
-    return images?.map((image) => getPreviewImage(image))
+    return (images ?? []).map((image) => getPreviewImage(image))
   }, [images])
 
   const tags: Option[] = communityTags.map((tag) => ({
@@ -600,7 +673,7 @@ const FeedInput: React.FC<Props> = ({}) => {
                           <>
                             <div className="flex w-full flex-col gap-1">
                               <Label.Root htmlFor={field.name}>
-                                Post Images
+                                Post Images & Attachments
                                 <Label.Asterisk />
                               </Label.Root>
                               <div
@@ -632,8 +705,19 @@ const FeedInput: React.FC<Props> = ({}) => {
                                     Choose a file or drag & drop it here.
                                   </div>
                                   <div className="text-paragraph-xs text-text-sub-600">
-                                    JPEG, PNG, PDF, and MP4 formats, up to 50
-                                    MB.
+                                    {ACCEPTED_FILE_TYPES.map((type, index) => {
+                                      const capitalizedType =
+                                        type.charAt(0).toUpperCase() +
+                                        type.slice(1)
+                                      if (index === 0) return capitalizedType
+                                      if (
+                                        index ===
+                                        ACCEPTED_FILE_TYPES.length - 1
+                                      )
+                                        return ` and ${capitalizedType}`
+                                      return `, ${capitalizedType}`
+                                    }).join("")}{" "}
+                                    formats, up to 50 MB.
                                   </div>
                                 </div>
                                 <Button.Root
@@ -671,19 +755,35 @@ const FeedInput: React.FC<Props> = ({}) => {
                                       key={name + i}
                                     >
                                       <Tooltip.Trigger type="button">
-                                        <div>
-                                          <img
-                                            src={previewImage ?? undefined}
-                                            alt="Preview"
-                                            className={cn(
-                                              "h-10 w-10 rounded-md object-cover",
-                                              {
-                                                "outline outline-2 outline-primary-base":
-                                                  fileField.featured,
+                                        <div className="relative">
+                                          {fileField.featured && (
+                                            <div className="absolute -right-1 -top-1 flex size-3 items-center justify-center rounded-full bg-primary-base">
+                                              <RiCheckLine className="size-2 fill-white" />
+                                            </div>
+                                          )}
+                                          {previewImage ? (
+                                            <img
+                                              src={previewImage ?? undefined}
+                                              alt="Preview"
+                                              className={cn(
+                                                "h-10 w-10 rounded-md object-cover",
+                                                {
+                                                  "outline outline-2 outline-primary-base":
+                                                    fileField.featured,
+                                                }
+                                              )}
+                                              style={{ objectFit: "cover" }}
+                                            />
+                                          ) : (
+                                            <FileFormatIcon.Root
+                                              format={
+                                                fileField?.mimeType?.split(
+                                                  "/"
+                                                )[1]
                                               }
-                                            )}
-                                            style={{ objectFit: "cover" }}
-                                          />
+                                              color="red"
+                                            />
+                                          )}
                                         </div>
                                       </Tooltip.Trigger>
                                       <Tooltip.Content
@@ -691,75 +791,92 @@ const FeedInput: React.FC<Props> = ({}) => {
                                         size="medium"
                                       >
                                         <div className="flex items-center gap-3">
-                                          <img
-                                            src={previewImage ?? undefined}
-                                            alt="Preview"
-                                            className="h-10 w-10 rounded-md object-cover"
-                                            style={{ objectFit: "cover" }}
-                                          />
+                                          {previewImage ? (
+                                            <img
+                                              src={previewImage ?? undefined}
+                                              alt="Preview"
+                                              className="h-10 w-10 rounded-md object-cover"
+                                              style={{ objectFit: "cover" }}
+                                            />
+                                          ) : (
+                                            <FileFormatIcon.Root
+                                              format={
+                                                fileField?.mimeType?.split(
+                                                  "/"
+                                                )[1]
+                                              }
+                                              color="red"
+                                            />
+                                          )}
+
                                           <div>
                                             <div className="text-text-strong-950">
                                               {name}
                                             </div>
                                             <div className="mt-1 flex items-center gap-2">
-                                              <form.Field
-                                                name={`images[${i}].featured`}
-                                              >
-                                                {(subField) => {
-                                                  return (
-                                                    <div className="flex items-center gap-2">
-                                                      <Checkbox.Root
-                                                        checked={
-                                                          !!subField.state.value
-                                                        }
-                                                        onCheckedChange={(
-                                                          checked
-                                                        ) => {
-                                                          if (!checked) {
-                                                            notification({
-                                                              title:
-                                                                "Cover image Required",
-                                                              description:
-                                                                "You must set a cover for your community. Click another switch to set it as cover.",
-                                                              variant:
-                                                                "lighter",
-                                                              status:
-                                                                "information",
-                                                            })
-                                                            return
+                                              {fileField?.mimeType?.startsWith(
+                                                "image"
+                                              ) && (
+                                                <form.Field
+                                                  name={`images[${i}].featured`}
+                                                >
+                                                  {(subField) => {
+                                                    return (
+                                                      <div className="flex items-center gap-2">
+                                                        <Checkbox.Root
+                                                          checked={
+                                                            !!subField.state
+                                                              .value
                                                           }
-                                                          subField.handleChange(
+                                                          onCheckedChange={(
                                                             checked
-                                                          )
-
-                                                          if (checked) {
-                                                            field.state.value?.forEach(
-                                                              (
-                                                                editFile,
-                                                                editFileIndex
-                                                              ) => {
-                                                                if (
-                                                                  editFileIndex !==
-                                                                    i &&
-                                                                  editFile.featured
-                                                                ) {
-                                                                  form.setFieldValue(
-                                                                    `images[${editFileIndex}].featured`,
-                                                                    false
-                                                                  )
-                                                                }
-                                                              }
+                                                          ) => {
+                                                            if (!checked) {
+                                                              notification({
+                                                                title:
+                                                                  "Cover image Required",
+                                                                description:
+                                                                  "You must set a cover for your community. Click another switch to set it as cover.",
+                                                                variant:
+                                                                  "lighter",
+                                                                status:
+                                                                  "information",
+                                                              })
+                                                              return
+                                                            }
+                                                            subField.handleChange(
+                                                              checked
                                                             )
-                                                          }
-                                                        }}
-                                                      />
-                                                      <p className="text-label-xs text-text-soft-400">
-                                                        Featured
-                                                      </p>
-                                                    </div>
-                                                  )
-                                                }}
-                                              </form.Field>
+
+                                                            if (checked) {
+                                                              field.state.value?.forEach(
+                                                                (
+                                                                  editFile,
+                                                                  editFileIndex
+                                                                ) => {
+                                                                  if (
+                                                                    editFileIndex !==
+                                                                      i &&
+                                                                    editFile.featured
+                                                                  ) {
+                                                                    form.setFieldValue(
+                                                                      `images[${editFileIndex}].featured`,
+                                                                      false
+                                                                    )
+                                                                  }
+                                                                }
+                                                              )
+                                                            }
+                                                          }}
+                                                        />
+                                                        <p className="text-label-xs text-text-soft-400">
+                                                          Featured
+                                                        </p>
+                                                      </div>
+                                                    )
+                                                  }}
+                                                </form.Field>
+                                              )}
 
                                               <CompactButton.Root
                                                 type="button"
