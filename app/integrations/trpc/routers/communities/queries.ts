@@ -558,7 +558,7 @@ export const getCommunityFeed = async (
 }
 
 export const interactionsCountForCollectionGroupSchema = z.object({
-  collectionGroup: z.enum(["threads", "articles", "courses"]),
+  collectionGroup: z.enum(["threads", "articles", "courses", "comments"]),
   collectionGroupDocId: z.string(),
   interactionType: z.enum(["likes", "comments"]),
   communityId: z.string(),
@@ -675,27 +675,6 @@ export const getCommunityComments = async (
         })
       })
 
-      // Sort comments by likesCount, commentsCount, and createdAt
-      comments.sort((a: any, b: any) => {
-        // First compare by likesCount (if available)
-        const aLikes = a.likesCount || 0
-        const bLikes = b.likesCount || 0
-        if (aLikes !== bLikes) {
-          return bLikes - aLikes // Descending order
-        }
-
-        // Then compare by commentsCount (if available)
-        const aComments = a.commentsCount || 0
-        const bComments = b.commentsCount || 0
-        if (aComments !== bComments) {
-          return bComments - aComments // Descending order
-        }
-
-        // Finally, sort by createdAt (newest first)
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      })
-
-      // return buildNestedCommentsTree(comments)
       return comments as z.infer<typeof communityCommentSchema>[]
     },
     {

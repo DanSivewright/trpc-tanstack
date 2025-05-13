@@ -26,11 +26,13 @@ import {
 import {
   createFileRoute,
   Link,
+  stripSearchParams,
   useCanGoBack,
   useRouter,
 } from "@tanstack/react-router"
 import { formatDistance } from "date-fns"
 import { AnimatePresence, motion, useInView } from "motion/react"
+import { z } from "zod"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -47,9 +49,20 @@ import { Section } from "@/components/section"
 import Comments from "../../-components/comments"
 import LikesButton from "../../-components/likes-button"
 
+const searchDefaultValues = {
+  replyToCommentId: "",
+  replyContent: "",
+}
 export const Route = createFileRoute(
   "/_learner/communities/$id/threads/$threadId/"
 )({
+  validateSearch: z.object({
+    replyToCommentId: z.string().default(searchDefaultValues.replyToCommentId),
+    replyContent: z.string().default(searchDefaultValues.replyContent),
+  }),
+  search: {
+    middlewares: [stripSearchParams(searchDefaultValues)],
+  },
   loader: async ({ params, context }) => {
     await context.queryClient.ensureQueryData(
       context.trpc.communities.threadDetail.queryOptions({
@@ -67,6 +80,7 @@ function RouteComponent() {
   const router = useRouter()
   const canGoBack = useCanGoBack()
   const queryClient = useQueryClient()
+  const search = Route.useSearch()
 
   const navigate = Route.useNavigate()
   const onBack = useCallback(() => {
@@ -74,6 +88,17 @@ function RouteComponent() {
       ? router.history.back()
       : navigate({ to: "/communities/$id", params })
   }, [canGoBack])
+
+  const onShowReply = useCallback((commentId: string, content?: string) => {
+    navigate({
+      resetScroll: false,
+      search: (old) => ({
+        ...old,
+        replyToCommentId: commentId,
+        ...(content && { replyContent: content }),
+      }),
+    })
+  }, [])
 
   const thread = useSuspenseQuery(
     trpc.communities.threadDetail.queryOptions({
@@ -100,43 +125,9 @@ function RouteComponent() {
           collectionGroupDocId: params.threadId,
           communityId: params.id,
         }).queryKey,
-        (old) => [...(old && old.length ? old : []), newComment]
+        (old) => [newComment, ...(old && old.length ? old : [])]
       )
 
-      if (newComment.parentCommentId) {
-        const previousComments = queryClient.getQueryData(
-          trpc.communities.comments.queryOptions({
-            collectionGroup: "threads",
-            collectionGroupDocId: params.threadId,
-            communityId: params.id,
-          }).queryKey
-        )
-        const indexOfParentComment = previousComments?.findIndex(
-          (c) => c.id === newComment.parentCommentId
-        )
-        if (!indexOfParentComment) return undefined
-        if (indexOfParentComment < 0) return undefined
-
-        const parentComment = previousComments?.[indexOfParentComment]
-        if (!parentComment) return undefined
-
-        queryClient.setQueryData(
-          trpc.communities.comments.queryOptions({
-            collectionGroup: "threads",
-            collectionGroupDocId: params.threadId,
-            communityId: params.id,
-          }).queryKey,
-          previousComments?.map((c) => {
-            if (c.id === newComment.parentCommentId) {
-              return {
-                ...c,
-                commentsCount: (c.commentsCount || 0) + 1,
-              }
-            }
-            return c
-          })
-        )
-      }
       return undefined
     },
     onError: (_, previousComments) => {
@@ -473,7 +464,9 @@ function RouteComponent() {
                   communityId: params.id,
                   collectionGroup: "threads",
                   collectionGroupDocId: thread?.data?.id,
-                  rootParentCommentId: id,
+                  rootParentCommentId: null,
+                  parentCommentId: null,
+                  likesCount: 0,
                   byMe: true,
                 })
               }}
@@ -491,9 +484,12 @@ function RouteComponent() {
         </div>
         <Suspense fallback={<div>Loading comments...</div>}>
           <Comments
+            opUid={thread?.data?.authorUid}
             communityId={params.id}
             collectionGroup="threads"
             collectionGroupDocId={params.threadId}
+            onShowReply={onShowReply}
+            {...search}
           />
         </Suspense>
         {/* <ul className="flex flex-col gap-8 pl-6">

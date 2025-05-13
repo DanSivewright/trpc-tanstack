@@ -14,6 +14,7 @@ import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query"
 
 import { NotificationProvider } from "@/components/ui/notification-provider"
 import { Provider as TooltipProvider } from "@/components/ui/tooltip"
+import CacheBuster from "@/components/cache-buster"
 import { AuthProvider } from "@/components/providers/auth-provider"
 import { TailwindIndicator } from "@/components/tailwind-indicator"
 import appCss from "@/styles/app.css?url"
@@ -63,6 +64,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <AuthProvider>
           <TooltipProvider>{children}</TooltipProvider>
         </AuthProvider>
+        <CacheBuster />
         <TanStackRouterDevtools position="bottom-right" />
         <ReactQueryDevtools buttonPosition="bottom-left" />
         <TailwindIndicator />

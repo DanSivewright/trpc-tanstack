@@ -335,7 +335,6 @@ function CommunityCard({
   const [api, setApi] = useState<CarouselApi>()
   const [current, setCurrent] = useState(0)
   const [count, setCount] = useState(0)
-  console.log("count:::", count)
 
   useEffect(() => {
     if (!api) {

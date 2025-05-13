@@ -1,18 +1,35 @@
 import { useTRPC } from "@/integrations/trpc/react"
 import type { interactionsCountForCollectionGroupSchema } from "@/integrations/trpc/routers/communities/queries"
 import { cn } from "@/utils/cn"
-import { RiHeartFill, RiHeartLine, RiLoaderLine } from "@remixicon/react"
+import { type VariantProps } from "@/utils/tv"
+import {
+  RiHeartFill,
+  RiHeartLine,
+  RiLoaderLine,
+  type RemixiconComponentType,
+} from "@remixicon/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { z } from "zod"
 
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Tooltip } from "@/components/ui/tooltip"
 
-type Props = z.infer<typeof interactionsCountForCollectionGroupSchema>
+type Props = z.infer<typeof interactionsCountForCollectionGroupSchema> &
+  VariantProps<typeof buttonVariants> & {
+    iconLine?: RemixiconComponentType
+    iconFill?: RemixiconComponentType
+    hideText?: boolean
+  }
 const LikesButton: React.FC<Omit<Props, "interactionType">> = ({
   collectionGroup,
   collectionGroupDocId,
   communityId,
+  mode = "stroke",
+  size = "xxsmall",
+  variant = "neutral",
+  iconLine = RiHeartLine,
+  iconFill = RiHeartFill,
+  hideText = false,
 }) => {
   const interactionType = "likes"
   const trpc = useTRPC()
@@ -102,9 +119,9 @@ const LikesButton: React.FC<Omit<Props, "interactionType">> = ({
               createdAt: new Date().toISOString(),
             })
           }}
-          variant="neutral"
-          mode="stroke"
-          size="xxsmall"
+          variant={variant}
+          mode={mode}
+          size={size}
         >
           <Button.Icon
             className={cn(
@@ -115,14 +132,14 @@ const LikesButton: React.FC<Omit<Props, "interactionType">> = ({
               handleLikeMutation.isPending
                 ? RiLoaderLine
                 : likesCount.data?.byMe
-                  ? RiHeartFill
-                  : RiHeartLine
+                  ? iconFill
+                  : iconLine
             }
           />
-          Likes{" "}
+          {!hideText && <>Likes </>}
           {likesCount?.data?.total && likesCount?.data?.total > 0
             ? likesCount.data?.total
-            : null}
+            : 0}
         </Button.Root>
       </Tooltip.Trigger>
       <Tooltip.Content side="bottom">Likes</Tooltip.Content>

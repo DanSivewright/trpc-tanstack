@@ -222,35 +222,16 @@ export const createComment = async (
         .doc(input.id)
         .set(payload)
     ),
-    ...(input.parentCommentId
-      ? [
-          tryCatch(
-            db
-              .collection("communities")
-              .doc(input.communityId)
-              .collection("comments")
-              .doc(input.parentCommentId)
-              .update({
-                commentsCount: FieldValue.increment(1),
-              })
-          ),
-        ]
-      : []),
-    ...(input.rootParentCommentId &&
-    input.rootParentCommentId !== input.parentCommentId
-      ? [
-          tryCatch(
-            db
-              .collection("communities")
-              .doc(input.communityId)
-              .collection("comments")
-              .doc(input.rootParentCommentId)
-              .update({
-                commentsCount: FieldValue.increment(1),
-              })
-          ),
-        ]
-      : []),
+    tryCatch(
+      db
+        .collection("communities")
+        .doc(input.communityId)
+        .collection(input.collectionGroup)
+        .doc(input.collectionGroupDocId)
+        .update({
+          commentsCount: FieldValue.increment(1),
+        })
+    ),
   ])
   if (addComment.error || !addComment.success) {
     throw new TRPCError({

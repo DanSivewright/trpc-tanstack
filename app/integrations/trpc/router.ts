@@ -1,4 +1,5 @@
 import { createTRPCRouter } from "./init"
+import { cacheRouter } from "./routers/cache"
 import { communitiesRouter } from "./routers/communities"
 import { contentRouter } from "./routers/content"
 import { enrolmentsRouter } from "./routers/enrolments"
@@ -13,5 +14,6 @@ export const trpcRouter = createTRPCRouter({
   communities: communitiesRouter,
   palette: paletteRouter,
   content: contentRouter,
+  cache: cacheRouter,
 })
 export type TRPCRouter = typeof trpcRouter
