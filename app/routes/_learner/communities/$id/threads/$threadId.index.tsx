@@ -1,21 +1,11 @@
-import { Suspense, useCallback, useEffect, useMemo, useRef } from "react"
+import { Suspense, useCallback, useEffect, useRef } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
-import { buildNestedCommentsTree } from "@/utils/build-nested-comments-tree"
 import { cn } from "@/utils/cn"
-import { faker } from "@faker-js/faker"
 import {
   RiArrowLeftSLine,
-  RiAttachmentLine,
   RiHashtag,
-  RiLoaderLine,
   RiMessage2Line,
-  RiSearchLine,
-  RiSendPlaneLine,
   RiShareLine,
-  RiThumbDownLine,
-  RiThumbUpLine,
-  RiVideoAddLine,
-  RiVoiceAiLine,
 } from "@remixicon/react"
 import {
   useMutation,
@@ -37,9 +27,7 @@ import { z } from "zod"
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { FancyButton } from "@/components/ui/fancy-button"
 import { FileFormatIcon } from "@/components/ui/file-format-icon"
-import { Input } from "@/components/ui/input"
 import { Tag } from "@/components/ui/tag"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Grid } from "@/components/grid"
