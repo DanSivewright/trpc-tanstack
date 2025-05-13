@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef } from "react"
+import { Suspense, useCallback, useEffect, useMemo, useRef } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
+import { buildNestedCommentsTree } from "@/utils/build-nested-comments-tree"
 import { cn } from "@/utils/cn"
 import { faker } from "@faker-js/faker"
 import {
@@ -43,6 +44,7 @@ import { Grid } from "@/components/grid"
 import Image from "@/components/image"
 import { Section } from "@/components/section"
 
+import Comments from "../../-components/comments"
 import LikesButton from "../../-components/likes-button"
 
 export const Route = createFileRoute(
@@ -80,13 +82,6 @@ function RouteComponent() {
     })
   )
   const me = useQuery(trpc.people.me.queryOptions())
-  const comments = useQuery(
-    trpc.communities.comments.queryOptions({
-      communityId: params.id,
-      collectionGroup: "threads",
-      collectionGroupDocId: params.threadId,
-    })
-  )
 
   const commentMutation = useMutation({
     ...trpc.communities.comment.mutationOptions(),
@@ -107,6 +102,41 @@ function RouteComponent() {
         }).queryKey,
         (old) => [...(old && old.length ? old : []), newComment]
       )
+
+      if (newComment.parentCommentId) {
+        const previousComments = queryClient.getQueryData(
+          trpc.communities.comments.queryOptions({
+            collectionGroup: "threads",
+            collectionGroupDocId: params.threadId,
+            communityId: params.id,
+          }).queryKey
+        )
+        const indexOfParentComment = previousComments?.findIndex(
+          (c) => c.id === newComment.parentCommentId
+        )
+        if (!indexOfParentComment) return undefined
+        if (indexOfParentComment < 0) return undefined
+
+        const parentComment = previousComments?.[indexOfParentComment]
+        if (!parentComment) return undefined
+
+        queryClient.setQueryData(
+          trpc.communities.comments.queryOptions({
+            collectionGroup: "threads",
+            collectionGroupDocId: params.threadId,
+            communityId: params.id,
+          }).queryKey,
+          previousComments?.map((c) => {
+            if (c.id === newComment.parentCommentId) {
+              return {
+                ...c,
+                commentsCount: (c.commentsCount || 0) + 1,
+              }
+            }
+            return c
+          })
+        )
+      }
       return undefined
     },
     onError: (_, previousComments) => {
@@ -428,6 +458,7 @@ function RouteComponent() {
 
                   return `${intro} ${topic}: ${detail}`
                 }
+                const id = crypto.randomUUID()
                 commentMutation.mutate({
                   authorUid: me.data?.uid || "",
                   author: {
@@ -435,13 +466,14 @@ function RouteComponent() {
                     name: `${me.data?.firstName} ${me.data?.lastName}` || "",
                     avatarUrl: me.data?.imageUrl || "",
                   },
-                  id: crypto.randomUUID(),
+                  id,
                   content: generateTitle(),
                   createdAt: new Date().toISOString(),
                   status: "posted",
                   communityId: params.id,
                   collectionGroup: "threads",
                   collectionGroupDocId: thread?.data?.id,
+                  rootParentCommentId: id,
                   byMe: true,
                 })
               }}
@@ -457,13 +489,20 @@ function RouteComponent() {
             </FancyButton.Root>
           </div>
         </div>
-        <ul className="flex flex-col gap-8 pl-6">
-          {comments.data?.map((c) => (
+        <Suspense fallback={<div>Loading comments...</div>}>
+          <Comments
+            communityId={params.id}
+            collectionGroup="threads"
+            collectionGroupDocId={params.threadId}
+          />
+        </Suspense>
+        {/* <ul className="flex flex-col gap-8 pl-6">
+          {comments?.map((c) => (
             <li className="relative flex flex-col gap-2 pl-6" key={c.id}>
               <div className="relative flex flex-col gap-2">
-                {/* {comment.replies && comment?.replies?.length ? (
+                {c.replies && c?.replies?.length ? (
                   <div className="absolute -left-[25px] bottom-0 top-10 w-px bg-stroke-soft-200"></div>
-                  ) : null} */}
+                ) : null}
                 <div className="-ml-10 flex items-center gap-2">
                   <Avatar.Root size="32">
                     <Avatar.Image src={c.author.avatarUrl} />
@@ -484,21 +523,68 @@ function RouteComponent() {
                 <footer className="flex items-center gap-2">
                   <Button.Root size="xxsmall" variant="neutral" mode="ghost">
                     <Button.Icon as={RiThumbUpLine} />
-                    {c.upvotesCount}
+                    {c.likesCount || 0}
                   </Button.Root>
                   <Button.Root size="xxsmall" variant="neutral" mode="ghost">
                     <Button.Icon as={RiThumbDownLine} />
                   </Button.Root>
-                  <Button.Root size="xxsmall" variant="neutral" mode="ghost">
+                  <Button.Root
+                    onClick={async () => {
+                      const generateTitle = () => {
+                        const intro = faker.helpers.arrayElement([
+                          "How to",
+                          "Why You Should",
+                          "The Ultimate Guide to",
+                          "Top 10 Ways to",
+                          "Understanding",
+                          "What You Need to Know About",
+                          "The Hidden Secrets of",
+                        ])
+
+                        const topic = faker.hacker.noun() // or use faker.commerce.productName()
+                        const detail = faker.company.catchPhrase() // or faker.hacker.phrase()
+
+                        return `${intro} ${topic}: ${detail}`
+                      }
+                      commentMutation.mutate({
+                        authorUid: me.data?.uid || "",
+                        author: {
+                          id: me.data?.uid || "",
+                          name:
+                            `${me.data?.firstName} ${me.data?.lastName}` || "",
+                          avatarUrl: me.data?.imageUrl || "",
+                        },
+                        id: crypto.randomUUID(),
+                        content: generateTitle(),
+                        createdAt: new Date().toISOString(),
+                        status: "posted",
+                        communityId: params.id,
+                        collectionGroup: "threads",
+                        collectionGroupDocId: thread?.data?.id,
+                        parentCommentId: c.id,
+                        byMe: true,
+                      })
+                    }}
+                    disabled={commentMutation.isPending || me.isLoading}
+                    size="xxsmall"
+                    variant="neutral"
+                    mode="ghost"
+                  >
                     <Button.Icon as={RiMessage2Line} />
-                    Reply
+                    Reply {c.commentsCount && c.commentsCount}
                   </Button.Root>
                 </footer>
               </div>
+              {c.replies && c?.replies?.length ? (
+                <ul className="flex flex-col gap-8 pl-6">
+                  {c.replies.map((r) => (
+                    <li key={r.id}>{r.content}</li>
+                  ))}
+                </ul>
+              ) : null}
             </li>
           ))}
-        </ul>
-        {/* <pre>{JSON.stringify(comments.data, null, 2)}</pre> */}
+        </ul> */}
       </Section>
     </>
   )

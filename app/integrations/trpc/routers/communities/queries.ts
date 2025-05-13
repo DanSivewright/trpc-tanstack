@@ -657,7 +657,7 @@ export const getCommunityComments = async (
           .orderBy("createdAt", "desc")
           .get()
       )
-      let comments: any = []
+      let comments: z.infer<typeof communityCommentSchema>[] = []
 
       if (snap.error || !snap.success) {
         throw new TRPCError({
@@ -667,8 +667,9 @@ export const getCommunityComments = async (
       }
 
       snap.data.forEach((doc) => {
+        const c = doc.data() as z.infer<typeof communityCommentSchema>
         comments.push({
-          ...doc.data(),
+          ...c,
           id: doc.id,
           byMe: doc.data().authorUid === options.ctx.uid,
         })
@@ -694,6 +695,7 @@ export const getCommunityComments = async (
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       })
 
+      // return buildNestedCommentsTree(comments)
       return comments as z.infer<typeof communityCommentSchema>[]
     },
     {

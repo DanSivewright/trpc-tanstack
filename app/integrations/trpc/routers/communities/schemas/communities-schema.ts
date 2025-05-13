@@ -179,6 +179,8 @@ const communityCommentSchema = z.object({
   communityId: z.string(),
   collectionGroup: z.enum(["threads", "articles", "courses"]),
   collectionGroupDocId: z.string(),
+  parentCommentId: z.string().optional().nullable(),
+  rootParentCommentId: z.string().optional().nullable(),
   likesCount: z.number().optional().nullable(),
   commentsCount: z.number().optional().nullable(),
   byMe: z.boolean().optional().nullable(),

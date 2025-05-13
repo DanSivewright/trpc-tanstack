@@ -1,6 +1,7 @@
 import { db } from "@/integrations/firebase/server"
 import { tryCatch } from "@/utils/try-catch"
 import { TRPCError } from "@trpc/server"
+import { FieldValue } from "firebase-admin/firestore"
 import { z } from "zod"
 
 import { generateCacheKey, useStorage } from "@/lib/cache"
@@ -212,20 +213,53 @@ export const createComment = async (
     createdAt: new Date().toISOString(),
   }
 
-  const addComment = await tryCatch(
-    db
-      .collection("communities")
-      .doc(input.communityId)
-      .collection("comments")
-      .doc(input.id)
-      .set(payload)
-  )
+  const [addComment, _] = await Promise.all([
+    tryCatch(
+      db
+        .collection("communities")
+        .doc(input.communityId)
+        .collection("comments")
+        .doc(input.id)
+        .set(payload)
+    ),
+    ...(input.parentCommentId
+      ? [
+          tryCatch(
+            db
+              .collection("communities")
+              .doc(input.communityId)
+              .collection("comments")
+              .doc(input.parentCommentId)
+              .update({
+                commentsCount: FieldValue.increment(1),
+              })
+          ),
+        ]
+      : []),
+    ...(input.rootParentCommentId &&
+    input.rootParentCommentId !== input.parentCommentId
+      ? [
+          tryCatch(
+            db
+              .collection("communities")
+              .doc(input.communityId)
+              .collection("comments")
+              .doc(input.rootParentCommentId)
+              .update({
+                commentsCount: FieldValue.increment(1),
+              })
+          ),
+        ]
+      : []),
+  ])
   if (addComment.error || !addComment.success) {
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
       message: "Error: failed to create comment",
     })
   }
+
+  // const updateParent
 
   const storage = useStorage()
   const keys = await storage.keys()
