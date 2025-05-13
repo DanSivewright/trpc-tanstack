@@ -2,8 +2,13 @@ import { useMemo } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
 import type { getCommunityCommentsSchema } from "@/integrations/trpc/routers/communities/queries"
 import { buildNestedCommentsTree } from "@/utils/build-nested-comments-tree"
-import { cn } from "@/utils/cn"
-import { RiMessage2Line, RiThumbUpFill, RiThumbUpLine } from "@remixicon/react"
+import {
+  RiAddLine,
+  RiDeleteBinLine,
+  RiMessage2Line,
+  RiThumbUpFill,
+  RiThumbUpLine,
+} from "@remixicon/react"
 import {
   useMutation,
   useQueryClient,
@@ -15,10 +20,10 @@ import type { z } from "zod"
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { FancyButton } from "@/components/ui/fancy-button"
-import { Popover } from "@/components/ui/popover"
-import { Textarea } from "@/components/ui/textarea"
+import { toast } from "@/components/ui/toast"
+import * as AlertToast from "@/components/ui/toast-alert"
 
+import CommentWysiwyg from "./comment-wysiwyg"
 import LikesButton from "./likes-button"
 
 type Props = z.infer<typeof getCommunityCommentsSchema> & {
@@ -114,6 +119,13 @@ const CommentsList: React.FC<CommentsListProps> = ({
         // @ts-ignore
         previousComments
       )
+      toast.custom((t) => (
+        <AlertToast.Root
+          t={t}
+          status="error"
+          message="Error! Your comment has not been posted."
+        />
+      ))
     },
     onSettled: () => {
       queryClient.invalidateQueries({
@@ -123,8 +135,68 @@ const CommentsList: React.FC<CommentsListProps> = ({
           communityId,
         }).queryKey,
       })
+      onShowReply?.("", "")
+    },
+    onSuccess: () => {
+      toast.custom((t) => (
+        <AlertToast.Root
+          t={t}
+          status="success"
+          message="Success! Your comment has been posted."
+        />
+      ))
     },
   })
+
+  const updateCommentMutation = useMutation({
+    ...trpc.communities.updateComment.mutationOptions(),
+  })
+
+  const handleComment = async ({
+    htmlString,
+    parentCommentId,
+    rootParentCommentId,
+  }: {
+    htmlString: string
+    parentCommentId: string | null
+    rootParentCommentId: string | null
+  }) => {
+    await commentMutation.mutateAsync({
+      authorUid: me.data?.uid || "",
+      author: {
+        id: me.data?.uid || "",
+        name: `${me.data?.firstName} ${me.data?.lastName}` || "",
+        avatarUrl: me.data?.imageUrl || "",
+      },
+      id: crypto.randomUUID(),
+      content: htmlString,
+      createdAt: new Date().toISOString(),
+      status: "posted",
+      communityId,
+      collectionGroup,
+      collectionGroupDocId,
+      parentCommentId,
+      rootParentCommentId,
+      byMe: true,
+    })
+  }
+  if (comments.length === 0) {
+    return (
+      <div className="gutter relative mt-4 flex w-full flex-col gap-2 overflow-hidden rounded-xl bg-bg-weak-50 py-16">
+        <h1 className="relative z-10 text-title-h4">
+          Your {collectionGroup.slice(0, -1)} has no comments
+        </h1>
+        <p className="relative z-10 text-label-sm font-light text-text-soft-400">
+          Be the first to comment in this {collectionGroup.slice(0, -1)}.
+        </p>
+
+        <RiAddLine
+          className="absolute -top-24 right-24 z-0 rotate-[-20deg] text-text-soft-400 opacity-10"
+          size={450}
+        />
+      </div>
+    )
+  }
   return (
     <ul className="flex w-full flex-col gap-8 pl-6">
       {comments.map((comment, ci) => {
@@ -147,42 +219,58 @@ const CommentsList: React.FC<CommentsListProps> = ({
               ) : null}
               <div className="-ml-10 flex items-center gap-2">
                 <Avatar.Root size="32">
-                  {comment.author.avatarUrl ? (
-                    <Avatar.Image src={comment.author.avatarUrl} />
-                  ) : (
-                    comment?.author?.name?.[0]
+                  {!comment?.deletedAt && (
+                    <>
+                      {comment.author.avatarUrl ? (
+                        <Avatar.Image src={comment.author.avatarUrl} />
+                      ) : (
+                        comment?.author?.name?.[0]
+                      )}
+                    </>
                   )}
                 </Avatar.Root>
                 <div className="flex flex-col">
                   <span className="text-label-sm font-medium">
-                    {comment.author.name}{" "}
-                    {comment?.authorUid === opUid && (
-                      <span className="text-primary-base">OP</span>
-                    )}{" "}
-                    <span className="text-label-sm font-light text-text-soft-400">
-                      •{" "}
-                      {formatDistance(comment.createdAt, new Date(), {
-                        addSuffix: true,
-                      })}
-                    </span>
-                  </span>
-                  <div className="flex items-center gap-2">
-                    {adminsSet.has(comment.authorUid) && (
-                      <Badge.Root
-                        className="w-fit capitalize"
-                        size="small"
-                        color="blue"
-                        variant="light"
-                      >
-                        Admin
-                      </Badge.Root>
+                    {!comment?.deletedAt ? (
+                      <>
+                        {comment.author.name}{" "}
+                        {comment?.authorUid === opUid && (
+                          <span className="text-primary-base">OP</span>
+                        )}{" "}
+                        <span className="text-label-sm font-light text-text-soft-400">
+                          •{" "}
+                          {formatDistance(comment.createdAt, new Date(), {
+                            addSuffix: true,
+                          })}
+                        </span>
+                      </>
+                    ) : (
+                      "[Deleted]"
                     )}
-                  </div>
+                  </span>
+                  {!comment?.deletedAt && (
+                    <div className="flex items-center gap-2">
+                      {adminsSet.has(comment.authorUid) && (
+                        <Badge.Root
+                          className="w-fit capitalize"
+                          size="small"
+                          color="blue"
+                          variant="light"
+                        >
+                          Admin
+                        </Badge.Root>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
-              <p className="text-label-md font-normal text-text-sub-600">
-                {comment.content}
-              </p>
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: comment.content,
+                }}
+                className="tiptap ProseMirror"
+              ></div>
+
               <footer className="flex items-center gap-2">
                 <LikesButton
                   collectionGroup="comments"
@@ -207,28 +295,31 @@ const CommentsList: React.FC<CommentsListProps> = ({
                   Reply
                   <Button.Icon as={RiMessage2Line} />
                 </Button.Root>
+                <Button.Root
+                  onClick={() => {
+                    updateCommentMutation.mutate({
+                      id: comment?.id,
+                      communityId,
+                      collectionGroup,
+                      collectionGroupDocId,
+                      status: "hidden",
+                      deletedAt: new Date().toISOString(),
+                    })
+                  }}
+                  size="xxsmall"
+                  variant="error"
+                  mode="ghost"
+                >
+                  <Button.Icon as={RiDeleteBinLine} />
+                </Button.Root>
               </footer>
               {replyToCommentId === comment.id && (
-                <div className="rounded-[16px] bg-bg-weak-50 p-1 ring-1 ring-stroke-soft-200 drop-shadow-2xl">
-                  <div className="overflow-hidden rounded-xl ring-1 ring-stroke-soft-200 drop-shadow-xl">
-                    <Textarea.Root
-                      className="rounded-none"
-                      placeholder="Jot down your thoughts..."
-                    >
-                      <Textarea.CharCounter current={78} max={200} />
-                    </Textarea.Root>
-                    <div className="-mt-[9px] w-full bg-bg-weak-50 pt-[9px]">
-                      <div className="w-full p-1.5">
-                        <FancyButton.Root
-                          className="rounded-[4px"
-                          size="xsmall"
-                        >
-                          Reply
-                        </FancyButton.Root>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <CommentWysiwyg
+                  isPending={commentMutation.isPending}
+                  handleComment={handleComment}
+                  parentCommentId={comment.id}
+                  rootParentCommentId={comment.rootParentCommentId || ""}
+                />
               )}
             </div>
             {comment.replies && comment.replies.length > 0 && (
@@ -250,52 +341,4 @@ const CommentsList: React.FC<CommentsListProps> = ({
       {children}
     </ul>
   )
-}
-
-{
-  /* <Button.Root
-onClick={async () => {
-  const generateTitle = () => {
-    const intro = faker.helpers.arrayElement([
-      "How to",
-      "Why You Should",
-      "The Ultimate Guide to",
-      "Top 10 Ways to",
-      "Understanding",
-      "What You Need to Know About",
-      "The Hidden Secrets of",
-    ])
-
-    const topic = faker.hacker.noun()
-    const detail = faker.company.catchPhrase()
-
-    return `${intro} ${topic}: ${detail}`
-  }
-  commentMutation.mutate({
-    authorUid: me.data?.uid || "",
-    author: {
-      id: me.data?.uid || "",
-      name: `${me.data?.firstName} ${me.data?.lastName}` || "",
-      avatarUrl: me.data?.imageUrl || "",
-    },
-    id: crypto.randomUUID(),
-    content: generateTitle(),
-    createdAt: new Date().toISOString(),
-    status: "posted",
-    communityId,
-    collectionGroup,
-    collectionGroupDocId,
-    parentCommentId: comment.id,
-    rootParentCommentId: comment.rootParentCommentId,
-    byMe: true,
-  })
-}}
-disabled={commentMutation.isPending || me.isLoading}
-size="xxsmall"
-variant="neutral"
-mode="ghost"
->
-<Button.Icon as={RiMessage2Line} />
-Reply
-</Button.Root> */
 }

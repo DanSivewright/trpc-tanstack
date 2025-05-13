@@ -175,6 +175,7 @@ const communityCommentSchema = z.object({
   }),
   content: z.string(),
   createdAt: z.string(),
+  updatedAt: z.string().optional().nullable(),
   status: z.enum(["posted", "user-edited", "hidden"]),
   communityId: z.string(),
   collectionGroup: z.enum(["threads", "articles", "courses"]),
@@ -182,6 +183,7 @@ const communityCommentSchema = z.object({
   parentCommentId: z.string().optional().nullable(),
   rootParentCommentId: z.string().optional().nullable(),
   likesCount: z.number().optional().nullable(),
+  deletedAt: z.string().optional().nullable(),
   byMe: z.boolean().optional().nullable(),
 })
 export const communityLikeSchema = z.object({

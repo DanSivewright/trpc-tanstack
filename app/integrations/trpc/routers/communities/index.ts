@@ -13,6 +13,8 @@ import {
   createCommentSchema,
   createCommunityThread,
   createCommunityThreadSchema,
+  updateComment,
+  updateCommentSchema,
   upsertLike,
   upsertLikeSchema,
 } from "./mutations"
@@ -169,6 +171,11 @@ export const communitiesRouter = {
         input,
         ctx,
       })
+    }),
+  updateComment: protectedProcedure
+    .input(updateCommentSchema)
+    .mutation(async ({ input }) => {
+      return updateComment(input)
     }),
   interactionsCountForCollectionGroup: protectedProcedure
     .input(interactionsCountForCollectionGroupSchema)

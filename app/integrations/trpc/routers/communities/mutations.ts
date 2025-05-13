@@ -275,3 +275,67 @@ export const createComment = async (
 
   return payload
 }
+
+export const updateCommentSchema = communityCommentSchema.partial().extend({
+  id: z.string(),
+  communityId: z.string(),
+  collectionGroup: z.enum(["threads", "articles", "courses"]),
+  collectionGroupDocId: z.string(),
+})
+export const updateComment = async (
+  input: z.infer<typeof updateCommentSchema>
+) => {
+  let payload = {
+    ...input,
+    updatedAt: new Date().toISOString(),
+    status: input?.deletedAt ? "hidden" : "user-edited",
+  } as z.infer<typeof updateCommentSchema>
+
+  const snap = await db
+    .collection("communities")
+    .doc(input.communityId)
+    .collection("comments")
+    .doc(input.id)
+    .get()
+
+  if (!snap.exists) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Comment not found",
+    })
+  }
+
+  const docRef = snap.ref
+  await docRef.update(payload)
+
+  const storage = useStorage()
+  const keys = await storage.keys()
+  const deleteKeys = [
+    generateCacheKey({
+      type: "query",
+      path: "communities.interactionsCountForCollectionGroup",
+      input: {
+        collectionGroup: input.collectionGroup,
+        collectionGroupDocId: input.collectionGroupDocId,
+        communityId: input.communityId,
+        interactionType: "comments",
+      },
+    }),
+    // INVALIDATE COMMENTS TO COLLECTION GROUP
+    generateCacheKey({
+      type: "query",
+      path: "communities.comments",
+      input: {
+        communityId: input.communityId,
+        collectionGroup: input.collectionGroup,
+        collectionGroupDocId: input.collectionGroupDocId,
+      },
+    }),
+  ]
+  await Promise.all(
+    deleteKeys.map((key) =>
+      storage.remove(keys.find((k) => k.includes(key)) as string)
+    )
+  )
+  return payload
+}

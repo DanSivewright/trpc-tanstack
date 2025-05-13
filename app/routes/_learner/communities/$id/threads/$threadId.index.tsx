@@ -46,6 +46,7 @@ import { Grid } from "@/components/grid"
 import Image from "@/components/image"
 import { Section } from "@/components/section"
 
+import CommentWysiwyg from "../../-components/comment-wysiwyg"
 import Comments from "../../-components/comments"
 import LikesButton from "../../-components/likes-button"
 
@@ -151,6 +152,37 @@ function RouteComponent() {
       })
     },
   })
+
+  const handleComment = async ({
+    htmlString,
+    parentCommentId,
+    rootParentCommentId,
+  }: {
+    htmlString: string
+    parentCommentId: string | null
+    rootParentCommentId: string | null
+  }) => {
+    const id = crypto.randomUUID()
+    commentMutation.mutate({
+      authorUid: me.data?.uid || "",
+      author: {
+        id: me.data?.uid || "",
+        name: `${me.data?.firstName} ${me.data?.lastName}` || "",
+        avatarUrl: me.data?.imageUrl || "",
+      },
+      id,
+      content: htmlString,
+      createdAt: new Date().toISOString(),
+      status: "posted",
+      communityId: params.id,
+      collectionGroup: "threads",
+      collectionGroupDocId: thread?.data?.id,
+      rootParentCommentId,
+      parentCommentId,
+      likesCount: 0,
+      byMe: true,
+    })
+  }
 
   const titleRef = useRef(null)
   const isFirstRender = useRef(true)
@@ -390,98 +422,17 @@ function RouteComponent() {
           </Tooltip.Root>
         </div>
       </header>
-      <Section className="mx-auto flex w-full max-w-screen-lg flex-col items-start justify-end gap-4 px-8 xl:px-0">
-        <div className="flex w-full flex-col gap-1 rounded-10 bg-bg-soft-200 p-1 pb-1.5 shadow-regular-md">
-          <Input.Root className="shadow-none">
-            <Input.Wrapper>
-              <Input.Icon as={RiSearchLine} />
-              <Input.Field type="text" placeholder="Join the conversation" />
-            </Input.Wrapper>
-          </Input.Root>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <FancyButton.Root size="xsmall" variant="basic">
-                    <FancyButton.Icon as={RiAttachmentLine} />
-                  </FancyButton.Root>
-                </Tooltip.Trigger>
-                <Tooltip.Content>
-                  <span>Attach</span>
-                </Tooltip.Content>
-              </Tooltip.Root>
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <FancyButton.Root size="xsmall" variant="basic">
-                    <FancyButton.Icon as={RiVideoAddLine} />
-                  </FancyButton.Root>
-                </Tooltip.Trigger>
-                <Tooltip.Content>
-                  <span>Video</span>
-                </Tooltip.Content>
-              </Tooltip.Root>
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <FancyButton.Root size="xsmall" variant="basic">
-                    <FancyButton.Icon as={RiVoiceAiLine} />
-                  </FancyButton.Root>
-                </Tooltip.Trigger>
-                <Tooltip.Content>
-                  <span>Voice</span>
-                </Tooltip.Content>
-              </Tooltip.Root>
-            </div>
-            <FancyButton.Root
-              onClick={async () => {
-                const generateTitle = () => {
-                  const intro = faker.helpers.arrayElement([
-                    "How to",
-                    "Why You Should",
-                    "The Ultimate Guide to",
-                    "Top 10 Ways to",
-                    "Understanding",
-                    "What You Need to Know About",
-                    "The Hidden Secrets of",
-                  ])
-
-                  const topic = faker.hacker.noun() // or use faker.commerce.productName()
-                  const detail = faker.company.catchPhrase() // or faker.hacker.phrase()
-
-                  return `${intro} ${topic}: ${detail}`
-                }
-                const id = crypto.randomUUID()
-                commentMutation.mutate({
-                  authorUid: me.data?.uid || "",
-                  author: {
-                    id: me.data?.uid || "",
-                    name: `${me.data?.firstName} ${me.data?.lastName}` || "",
-                    avatarUrl: me.data?.imageUrl || "",
-                  },
-                  id,
-                  content: generateTitle(),
-                  createdAt: new Date().toISOString(),
-                  status: "posted",
-                  communityId: params.id,
-                  collectionGroup: "threads",
-                  collectionGroupDocId: thread?.data?.id,
-                  rootParentCommentId: null,
-                  parentCommentId: null,
-                  likesCount: 0,
-                  byMe: true,
-                })
-              }}
-              disabled={commentMutation.isPending || me.isLoading}
-              size="xsmall"
-              variant="neutral"
-            >
-              Share
-              <FancyButton.Icon
-                className={cn(commentMutation.isPending && "animate-spin")}
-                as={commentMutation.isPending ? RiLoaderLine : RiSendPlaneLine}
-              />
-            </FancyButton.Root>
-          </div>
-        </div>
+      <Section
+        side="b"
+        className="mx-auto mt-8 flex w-full max-w-screen-lg flex-col items-start justify-end gap-10 px-8 xl:px-0"
+      >
+        <CommentWysiwyg
+          placeholder="Join the conversation..."
+          handleComment={handleComment}
+          isPending={commentMutation.isPending}
+          parentCommentId={null}
+          rootParentCommentId={null}
+        />
         <Suspense fallback={<div>Loading comments...</div>}>
           <Comments
             opUid={thread?.data?.authorUid}
@@ -492,95 +443,6 @@ function RouteComponent() {
             {...search}
           />
         </Suspense>
-        {/* <ul className="flex flex-col gap-8 pl-6">
-          {comments?.map((c) => (
-            <li className="relative flex flex-col gap-2 pl-6" key={c.id}>
-              <div className="relative flex flex-col gap-2">
-                {c.replies && c?.replies?.length ? (
-                  <div className="absolute -left-[25px] bottom-0 top-10 w-px bg-stroke-soft-200"></div>
-                ) : null}
-                <div className="-ml-10 flex items-center gap-2">
-                  <Avatar.Root size="32">
-                    <Avatar.Image src={c.author.avatarUrl} />
-                  </Avatar.Root>
-                  <span className="text-label-sm font-medium">
-                    {c.author.name}{" "}
-                    <span className="text-label-sm font-light text-text-soft-400">
-                      •{" "}
-                      {formatDistance(c.createdAt, new Date(), {
-                        addSuffix: true,
-                      })}
-                    </span>
-                  </span>
-                </div>
-                <p className="text-label-md font-normal text-text-sub-600">
-                  {c.content}
-                </p>
-                <footer className="flex items-center gap-2">
-                  <Button.Root size="xxsmall" variant="neutral" mode="ghost">
-                    <Button.Icon as={RiThumbUpLine} />
-                    {c.likesCount || 0}
-                  </Button.Root>
-                  <Button.Root size="xxsmall" variant="neutral" mode="ghost">
-                    <Button.Icon as={RiThumbDownLine} />
-                  </Button.Root>
-                  <Button.Root
-                    onClick={async () => {
-                      const generateTitle = () => {
-                        const intro = faker.helpers.arrayElement([
-                          "How to",
-                          "Why You Should",
-                          "The Ultimate Guide to",
-                          "Top 10 Ways to",
-                          "Understanding",
-                          "What You Need to Know About",
-                          "The Hidden Secrets of",
-                        ])
-
-                        const topic = faker.hacker.noun() // or use faker.commerce.productName()
-                        const detail = faker.company.catchPhrase() // or faker.hacker.phrase()
-
-                        return `${intro} ${topic}: ${detail}`
-                      }
-                      commentMutation.mutate({
-                        authorUid: me.data?.uid || "",
-                        author: {
-                          id: me.data?.uid || "",
-                          name:
-                            `${me.data?.firstName} ${me.data?.lastName}` || "",
-                          avatarUrl: me.data?.imageUrl || "",
-                        },
-                        id: crypto.randomUUID(),
-                        content: generateTitle(),
-                        createdAt: new Date().toISOString(),
-                        status: "posted",
-                        communityId: params.id,
-                        collectionGroup: "threads",
-                        collectionGroupDocId: thread?.data?.id,
-                        parentCommentId: c.id,
-                        byMe: true,
-                      })
-                    }}
-                    disabled={commentMutation.isPending || me.isLoading}
-                    size="xxsmall"
-                    variant="neutral"
-                    mode="ghost"
-                  >
-                    <Button.Icon as={RiMessage2Line} />
-                    Reply {c.commentsCount && c.commentsCount}
-                  </Button.Root>
-                </footer>
-              </div>
-              {c.replies && c?.replies?.length ? (
-                <ul className="flex flex-col gap-8 pl-6">
-                  {c.replies.map((r) => (
-                    <li key={r.id}>{r.content}</li>
-                  ))}
-                </ul>
-              ) : null}
-            </li>
-          ))}
-        </ul> */}
       </Section>
     </>
   )

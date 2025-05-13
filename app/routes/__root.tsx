@@ -13,6 +13,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query"
 
 import { NotificationProvider } from "@/components/ui/notification-provider"
+import { Toaster } from "@/components/ui/toast"
 import { Provider as TooltipProvider } from "@/components/ui/tooltip"
 import CacheBuster from "@/components/cache-buster"
 import { AuthProvider } from "@/components/providers/auth-provider"
@@ -69,6 +70,8 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <ReactQueryDevtools buttonPosition="bottom-left" />
         <TailwindIndicator />
         <NotificationProvider />
+        <Toaster />
+
         <Scripts />
       </body>
     </html>
