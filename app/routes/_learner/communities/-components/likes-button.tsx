@@ -115,6 +115,7 @@ const LikesButton: React.FC<Omit<Props, "interactionType">> = ({
               },
               collectionGroup,
               collectionGroupDocId,
+              deletedAt: null,
               communityId,
               createdAt: new Date().toISOString(),
             })

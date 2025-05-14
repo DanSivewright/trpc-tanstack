@@ -34,6 +34,7 @@ import {
   Outlet,
   redirect,
   retainSearchParams,
+  stripSearchParams,
   useLocation,
 } from "@tanstack/react-router"
 import { isBefore } from "date-fns"
@@ -68,6 +69,10 @@ import VerifiedIcon from "@/components/verified-icon"
 
 import { communityTags } from "../../create/$id/community"
 
+const searchDefaultValues = {
+  replyToCommentId: "",
+  replyContent: "",
+}
 export const Route = createFileRoute(
   "/_learner/communities/$id/courses/$courseId"
 )({
@@ -76,13 +81,18 @@ export const Route = createFileRoute(
     typeUid: z.string(),
     settingsOpen: z.boolean().default(false),
     deleteCourseOpen: z.boolean().default(false),
+    replyToCommentId: z.string().default(searchDefaultValues.replyToCommentId),
+    replyContent: z.string().default(searchDefaultValues.replyContent),
   }),
   loaderDeps: ({ search }) => ({
     type: search.type,
     typeUid: search.typeUid,
   }),
   search: {
-    middlewares: [retainSearchParams(true)],
+    middlewares: [
+      retainSearchParams(true),
+      stripSearchParams(searchDefaultValues),
+    ],
   },
   beforeLoad: ({ search, params }) => {
     if (!search.type || !search.typeUid) {

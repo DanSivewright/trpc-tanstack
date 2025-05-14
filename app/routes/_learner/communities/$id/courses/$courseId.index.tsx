@@ -1,21 +1,22 @@
-import { useMemo } from "react"
+import { Suspense, useCallback, useMemo } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
+import { RiLoaderLine } from "@remixicon/react"
 import {
-  RiLoaderLine,
-  RiMessage2Line,
-  RiThumbDownLine,
-  RiThumbUpLine,
-} from "@remixicon/react"
-import { useQueries, useSuspenseQuery } from "@tanstack/react-query"
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { formatDistance, intervalToDuration } from "date-fns"
+import { intervalToDuration } from "date-fns"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Section } from "@/components/section"
 
-import { commentsData } from "../../-components/comments-data"
+import CommentWysiwyg from "../../-components/comment-wysiwyg"
+import Comments from "../../-components/comments"
 
 export const Route = createFileRoute(
   "/_learner/communities/$id/courses/$courseId/"
@@ -24,6 +25,8 @@ export const Route = createFileRoute(
     return {
       type: search.type,
       typeUid: search.typeUid,
+      replyToCommentId: search.replyToCommentId,
+      replyContent: search.replyContent,
     }
   },
   loader: async ({ context, params: { id, courseId }, deps }) => {
@@ -56,7 +59,16 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const search = Route.useSearch()
   const trpc = useTRPC()
+  const queryClient = useQueryClient()
+  const params = Route.useParams()
+  const navigate = Route.useNavigate()
 
+  const course = useSuspenseQuery(
+    trpc.communities.courseDetail.queryOptions({
+      communityId: params.id,
+      courseId: params.courseId,
+    })
+  )
   const modules = useSuspenseQuery(
     trpc.content.modules.queryOptions({
       params: {
@@ -65,7 +77,7 @@ function RouteComponent() {
       },
     })
   )
-
+  const me = useQuery(trpc.people.me.queryOptions())
   const moduleVersions = useQueries({
     queries: (modules?.data || []).map((m) => ({
       ...trpc.content.modulesVersion.queryOptions({
@@ -98,6 +110,101 @@ function RouteComponent() {
     const minutes = duration.minutes || 0
     return `${hours}h ${minutes}m`
   }, [lessons])
+
+  const commentMutation = useMutation({
+    ...trpc.communities.comment.mutationOptions(),
+    onMutate: async (newComment) => {
+      await queryClient.cancelQueries({
+        queryKey: trpc.communities.comments.queryOptions({
+          collectionGroup: "courses",
+          collectionGroupDocId: params.courseId,
+          communityId: params.id,
+        }).queryKey,
+      })
+
+      queryClient.setQueryData(
+        trpc.communities.comments.queryOptions({
+          collectionGroup: "courses",
+          collectionGroupDocId: params.courseId,
+          communityId: params.id,
+        }).queryKey,
+        (old) => [newComment, ...(old && old.length ? old : [])]
+      )
+
+      return undefined
+    },
+    onError: (_, previousComments) => {
+      queryClient.setQueryData(
+        trpc.communities.comments.queryOptions({
+          collectionGroup: "courses",
+          collectionGroupDocId: params.courseId,
+          communityId: params.id,
+        }).queryKey,
+        // @ts-ignore
+        previousComments
+      )
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: trpc.communities.comments.queryOptions({
+          collectionGroup: "courses",
+          collectionGroupDocId: params.courseId,
+          communityId: params.id,
+        }).queryKey,
+      })
+    },
+  })
+  const commentsCount = useQuery(
+    trpc.communities.interactionsCountForCollectionGroup.queryOptions({
+      collectionGroup: "courses",
+      collectionGroupDocId: params.courseId,
+      interactionType: "comments",
+      communityId: params.id,
+    })
+  )
+
+  const onShowReply = useCallback((commentId: string, content?: string) => {
+    navigate({
+      resetScroll: false,
+      search: (old) => ({
+        ...old,
+        replyToCommentId: commentId,
+        ...(content && { replyContent: content }),
+      }),
+    })
+  }, [])
+
+  const handleComment = async ({
+    htmlString,
+    parentCommentId,
+    rootParentCommentId,
+  }: {
+    htmlString: string
+    parentCommentId: string | null
+    rootParentCommentId: string | null
+  }) => {
+    const id = crypto.randomUUID()
+    commentMutation.mutate({
+      authorUid: me.data?.uid || "",
+      author: {
+        id: me.data?.uid || "",
+        name: `${me.data?.firstName} ${me.data?.lastName}` || "",
+        avatarUrl: me.data?.imageUrl || "",
+      },
+      id,
+      content: htmlString,
+      createdAt: new Date().toISOString(),
+      status: "posted",
+      communityId: params.id,
+      collectionGroup: "courses",
+      collectionGroupDocId: params.courseId,
+      rootParentCommentId: id,
+      parentCommentId,
+      likesCount: 0,
+      deletedAt: null,
+      byMe: true,
+    })
+  }
 
   return (
     <>
@@ -194,180 +301,28 @@ function RouteComponent() {
       </ul>
       <Section className="flex flex-col gap-5">
         <header className="flex items-end justify-between">
-          <h3 className="text-title-h6">Comments</h3>
+          <h3 className="text-title-h6">
+            Comments ({commentsCount.data?.total || 0})
+          </h3>
         </header>
-        <ul className="flex flex-col gap-8 pl-6">
-          {commentsData.map((comment) => {
-            return (
-              <li
-                className="relative flex flex-col gap-2 pl-6"
-                key={comment.id}
-              >
-                <div className="relative flex flex-col gap-2">
-                  {comment.replies && comment?.replies?.length ? (
-                    <div className="absolute -left-[25px] bottom-0 top-10 w-px bg-stroke-soft-200"></div>
-                  ) : null}
-                  <div className="-ml-10 flex items-center gap-2">
-                    <Avatar.Root size="32">
-                      <Avatar.Image src={comment.author.avatar} />
-                    </Avatar.Root>
-                    <span className="text-label-sm font-medium">
-                      {comment.author.name}{" "}
-                      <span className="text-label-sm font-light text-text-soft-400">
-                        •{" "}
-                        {formatDistance(comment.date, new Date(), {
-                          addSuffix: true,
-                        })}
-                      </span>
-                    </span>
-                  </div>
-                  <p className="text-label-md font-normal text-text-sub-600">
-                    {comment.content}
-                  </p>
-                  <footer className="flex items-center gap-2">
-                    <Button.Root size="xxsmall" variant="neutral" mode="ghost">
-                      <Button.Icon as={RiThumbUpLine} />
-                      {comment.likes}
-                    </Button.Root>
-                    <Button.Root size="xxsmall" variant="neutral" mode="ghost">
-                      <Button.Icon as={RiThumbDownLine} />
-                    </Button.Root>
-                    <Button.Root size="xxsmall" variant="neutral" mode="ghost">
-                      <Button.Icon as={RiMessage2Line} />
-                      Reply
-                    </Button.Root>
-                  </footer>
-                </div>
-                <ul className="flex flex-col gap-8 pl-6">
-                  {comment?.replies?.map((r, ri) => {
-                    const isNotLast = ri !== comment?.replies?.length - 1
-                    return (
-                      <li
-                        className="relative flex flex-col gap-2 pl-6"
-                        key={r.id}
-                      >
-                        {isNotLast && (
-                          <div className="absolute -bottom-4 -left-[49px] top-0 w-px bg-stroke-soft-200"></div>
-                        )}
-                        <div className="absolute -left-[49px] -top-4 h-[33px] w-[26px] rounded-bl-xl border-b border-l border-stroke-soft-200"></div>
-                        <div className="relative flex flex-col gap-2">
-                          {r.replies && r?.replies?.length ? (
-                            <div className="absolute -left-[25px] bottom-0 top-10 w-px bg-stroke-soft-200"></div>
-                          ) : null}
-                          <div className="-ml-10 flex items-center gap-2">
-                            <Avatar.Root size="32">
-                              <Avatar.Image src={r.author.avatar} />
-                            </Avatar.Root>
-                            <span className="text-label-sm font-medium">
-                              {r.author.name}{" "}
-                              <span className="text-label-sm font-light text-text-soft-400">
-                                •{" "}
-                                {formatDistance(r.date, new Date(), {
-                                  addSuffix: true,
-                                })}
-                              </span>
-                            </span>
-                          </div>
-                          <p className="text-label-md font-normal text-text-sub-600">
-                            {r.content}
-                          </p>
-                          <footer className="flex items-center gap-2">
-                            <Button.Root
-                              size="xxsmall"
-                              variant="neutral"
-                              mode="ghost"
-                            >
-                              <Button.Icon as={RiThumbUpLine} />
-                              {r.likes}
-                            </Button.Root>
-                            <Button.Root
-                              size="xxsmall"
-                              variant="neutral"
-                              mode="ghost"
-                            >
-                              <Button.Icon as={RiThumbDownLine} />
-                            </Button.Root>
-                            <Button.Root
-                              size="xxsmall"
-                              variant="neutral"
-                              mode="ghost"
-                            >
-                              <Button.Icon as={RiMessage2Line} />
-                              Reply
-                            </Button.Root>
-                          </footer>
-                        </div>
-                        <ul className="flex flex-col gap-8 pl-6">
-                          {r?.replies?.map((sr, ri) => {
-                            const isNotLast = ri !== r?.replies?.length - 1
-                            return (
-                              <li
-                                className="relative flex flex-col gap-2 pl-6"
-                                key={sr.id}
-                              >
-                                {isNotLast && (
-                                  <div className="absolute -bottom-4 -left-[49px] top-0 w-px bg-stroke-soft-200"></div>
-                                )}
-                                <div className="absolute -left-[49px] -top-4 h-[33px] w-[26px] rounded-bl-xl border-b border-l border-stroke-soft-200"></div>
-                                <div className="relative flex flex-col gap-2">
-                                  {sr.replies && sr?.replies?.length ? (
-                                    <div className="absolute -left-[25px] bottom-0 top-10 w-px bg-stroke-soft-200"></div>
-                                  ) : null}
-                                  <div className="-ml-10 flex items-center gap-2">
-                                    <Avatar.Root size="32">
-                                      <Avatar.Image src={sr.author.avatar} />
-                                    </Avatar.Root>
-                                    <span className="text-label-sm font-medium">
-                                      {sr.author.name}{" "}
-                                      <span className="text-label-sm font-light text-text-soft-400">
-                                        •{" "}
-                                        {formatDistance(sr.date, new Date(), {
-                                          addSuffix: true,
-                                        })}
-                                      </span>
-                                    </span>
-                                  </div>
-                                  <p className="text-label-md font-normal text-text-sub-600">
-                                    {sr.content}
-                                  </p>
-                                  <footer className="flex items-center gap-2">
-                                    <Button.Root
-                                      size="xxsmall"
-                                      variant="neutral"
-                                      mode="ghost"
-                                    >
-                                      <Button.Icon as={RiThumbUpLine} />
-                                      {sr.likes}
-                                    </Button.Root>
-                                    <Button.Root
-                                      size="xxsmall"
-                                      variant="neutral"
-                                      mode="ghost"
-                                    >
-                                      <Button.Icon as={RiThumbDownLine} />
-                                    </Button.Root>
-                                    <Button.Root
-                                      size="xxsmall"
-                                      variant="neutral"
-                                      mode="ghost"
-                                    >
-                                      <Button.Icon as={RiMessage2Line} />
-                                      Reply
-                                    </Button.Root>
-                                  </footer>
-                                </div>
-                              </li>
-                            )
-                          })}
-                        </ul>
-                      </li>
-                    )
-                  })}
-                </ul>
-              </li>
-            )
-          })}
-        </ul>
+        <CommentWysiwyg
+          placeholder="Join the conversation..."
+          handleComment={handleComment}
+          isPending={commentMutation.isPending}
+          parentCommentId={null}
+          rootParentCommentId={null}
+        />
+        <Suspense fallback={<div>Loading comments...</div>}>
+          <Comments
+            opUid={course?.data?.authorUid}
+            communityId={params.id}
+            collectionGroup="courses"
+            collectionGroupDocId={params.courseId}
+            onShowReply={onShowReply}
+            replyToCommentId={search.replyToCommentId}
+            replyContent={search.replyContent}
+          />
+        </Suspense>
       </Section>
     </>
   )

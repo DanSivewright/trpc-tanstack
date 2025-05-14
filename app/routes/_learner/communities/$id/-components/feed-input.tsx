@@ -173,7 +173,7 @@ const FeedInput: React.FC<Props> = ({}) => {
     .merge(
       communityThreadSchema
         .pick({
-          caption: true,
+          content: true,
           meta: true,
         })
         .extend({
@@ -203,7 +203,7 @@ const FeedInput: React.FC<Props> = ({}) => {
     defaultValues: {
       id: "",
       title: "",
-      caption: "",
+      content: "",
       type: "thread",
       authorUid: me.data?.uid,
       author: {
@@ -255,9 +255,13 @@ const FeedInput: React.FC<Props> = ({}) => {
                 ...f,
                 url,
                 path: `communities/${params.id}/${f.name}`,
+                mimeType: f.file.type,
               }
             }
-            return f
+            return {
+              ...f,
+              mimeType: f.mimeType || "unset",
+            }
           })
         )
         const featureImage = uploadedImages.find((x) => x.featured)
@@ -342,7 +346,6 @@ const FeedInput: React.FC<Props> = ({}) => {
         }
       }
       const createdThread = await createThread.mutateAsync(payload)
-      console.log(":::", createdThread)
 
       notification({
         title: "Thread Created",
@@ -607,12 +610,12 @@ const FeedInput: React.FC<Props> = ({}) => {
                         )
                       }}
                     </form.Field>
-                    <form.Field name="caption">
+                    <form.Field name="content">
                       {(field) => {
                         return (
                           <div className="flex flex-col gap-2">
                             <Label.Root htmlFor={field.name}>
-                              Post Caption
+                              Post Content
                               <Label.Asterisk />
                             </Label.Root>
                             <Textarea.Root

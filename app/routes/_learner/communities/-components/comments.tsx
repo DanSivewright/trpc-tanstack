@@ -1,19 +1,18 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
 import type { getCommunityCommentsSchema } from "@/integrations/trpc/routers/communities/queries"
+import type { memberSchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
 import { buildNestedCommentsTree } from "@/utils/build-nested-comments-tree"
 import { cn } from "@/utils/cn"
 import {
   RiAddLine,
   RiDeleteBinLine,
-  RiGlobalLine,
+  RiErrorWarningFill,
   RiListRadio,
   RiLoaderLine,
   RiMessage2Line,
   RiMoreLine,
   RiStarFill,
-  RiThumbUpFill,
-  RiThumbUpLine,
 } from "@remixicon/react"
 import {
   useMutation,
@@ -21,7 +20,12 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { format, formatDistance } from "date-fns"
-import { motion, useAnimation } from "motion/react"
+import {
+  motion,
+  useAnimation,
+  useMotionValue,
+  useMotionValueEvent,
+} from "motion/react"
 import type { z } from "zod"
 
 import { Avatar } from "@/components/ui/avatar"
@@ -29,6 +33,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Divider } from "@/components/ui/divider"
 import { Dropdown } from "@/components/ui/dropdown"
+import { Modal } from "@/components/ui/modal"
 import { toast } from "@/components/ui/toast"
 import * as AlertToast from "@/components/ui/toast-alert"
 import { Tooltip } from "@/components/ui/tooltip"
@@ -184,6 +189,7 @@ const CommentsList: React.FC<CommentsListProps> = ({
       parentCommentId,
       rootParentCommentId,
       byMe: true,
+      deletedAt: null,
     })
   }
   if (comments.length === 0) {
@@ -230,7 +236,7 @@ const CommentsList: React.FC<CommentsListProps> = ({
                 <Tooltip.Root>
                   <Tooltip.Trigger>
                     <Avatar.Root size="32">
-                      {!comment?.deletedAt && (
+                      {comment?.status !== "hidden" && (
                         <>
                           {comment.author.avatarUrl ? (
                             <Avatar.Image src={comment.author.avatarUrl} />
@@ -241,7 +247,7 @@ const CommentsList: React.FC<CommentsListProps> = ({
                       )}
                     </Avatar.Root>
                   </Tooltip.Trigger>
-                  {!comment?.deletedAt && (
+                  {comment?.status !== "hidden" && (
                     <Tooltip.Content
                       size="medium"
                       variant="light"
@@ -288,7 +294,7 @@ const CommentsList: React.FC<CommentsListProps> = ({
                 </Tooltip.Root>
                 <div className="flex flex-col">
                   <span className="text-label-sm font-medium">
-                    {!comment?.deletedAt ? (
+                    {comment?.status !== "hidden" ? (
                       <>
                         {comment.author.name}{" "}
                         {comment?.authorUid === opUid && (
@@ -305,7 +311,7 @@ const CommentsList: React.FC<CommentsListProps> = ({
                       "[Deleted]"
                     )}
                   </span>
-                  {!comment?.deletedAt && (
+                  {comment?.status !== "hidden" && (
                     <div className="flex items-center gap-2">
                       {adminsSet.has(comment.authorUid) && (
                         <Badge.Root
@@ -328,87 +334,56 @@ const CommentsList: React.FC<CommentsListProps> = ({
                 className="tiptap ProseMirror"
               ></div>
 
-              <footer className="flex items-center gap-2">
-                <LikesButton
-                  collectionGroup="comments"
-                  collectionGroupDocId={comment.id}
-                  communityId={communityId}
-                  mode="lighter"
-                  hideText
-                />
-                <Button.Root
-                  size="xxsmall"
-                  variant="neutral"
-                  mode="lighter"
-                  onClick={() =>
-                    onShowReply?.(
-                      comment.id === replyToCommentId ? "" : comment.id,
-                      comment.id === replyToCommentId ? "" : replyContent
-                    )
-                  }
-                >
-                  Reply
-                  <Button.Icon as={RiMessage2Line} />
-                </Button.Root>
-                <Dropdown.Root>
-                  <Dropdown.Trigger asChild>
+              {comment?.status !== "hidden" && (
+                <>
+                  <footer className="flex items-center gap-2">
+                    <LikesButton
+                      collectionGroup="comments"
+                      collectionGroupDocId={comment.id}
+                      communityId={communityId}
+                      mode="lighter"
+                      hideText
+                    />
                     <Button.Root
                       size="xxsmall"
                       variant="neutral"
                       mode="lighter"
-                      // onClick={() => {
-                      //   updateCommentMutation.mutate({
-                      //     id: comment?.id,
-                      //     communityId,
-                      //     collectionGroup,
-                      //     collectionGroupDocId,
-                      //     status: "hidden",
-                      //     deletedAt: new Date().toISOString(),
-                      //   })
-                      // }}
-                      // size="xxsmall"
-                      // variant="error"
-                      // mode="ghost"
+                      onClick={() =>
+                        onShowReply?.(
+                          comment.id === replyToCommentId ? "" : comment.id,
+                          comment.id === replyToCommentId ? "" : replyContent
+                        )
+                      }
                     >
-                      <Button.Icon as={RiMoreLine} />
+                      Reply
+                      <Button.Icon as={RiMessage2Line} />
                     </Button.Root>
-                  </Dropdown.Trigger>
-                  <Dropdown.Content
-                    align="end"
-                    className="bg-white/80 backdrop-blur"
-                  >
-                    <Dropdown.Group>
-                      <Dropdown.Item>
-                        <Dropdown.ItemIcon
-                          className="fill-warning-base"
-                          as={RiStarFill}
-                        />
-                        Feature Comment
-                      </Dropdown.Item>
-                      <Dropdown.Item>
-                        <Dropdown.ItemIcon as={RiListRadio} />
-                        Add To Feed
-                      </Dropdown.Item>
-                    </Dropdown.Group>
-                    <Divider.Root variant="line-spacing" />
-                    <Dropdown.Group>
-                      <DeleteComment
+                    {community?.data?.membership?.role === "admin" ||
+                    comment?.authorUid === me?.data?.uid ? (
+                      <CommentDropdown
                         communityId={communityId}
                         collectionGroup={collectionGroup}
                         collectionGroupDocId={collectionGroupDocId}
                         comment={comment}
+                        member={memmber!}
+                        isAdmin={
+                          (community?.data?.membership?.role as string) ===
+                          "admin"
+                            ? true
+                            : false
+                        }
                       />
-                    </Dropdown.Group>
-                  </Dropdown.Content>
-                </Dropdown.Root>
-              </footer>
-              {replyToCommentId === comment.id && (
-                <CommentWysiwyg
-                  isPending={commentMutation.isPending}
-                  handleComment={handleComment}
-                  parentCommentId={comment.id}
-                  rootParentCommentId={comment.rootParentCommentId || ""}
-                />
+                    ) : null}
+                  </footer>
+                  {replyToCommentId === comment.id && (
+                    <CommentWysiwyg
+                      isPending={commentMutation.isPending}
+                      handleComment={handleComment}
+                      parentCommentId={comment.id}
+                      rootParentCommentId={comment.rootParentCommentId || ""}
+                    />
+                  )}
+                </>
               )}
             </div>
             {comment.replies && comment.replies.length > 0 && (
@@ -432,17 +407,75 @@ const CommentsList: React.FC<CommentsListProps> = ({
   )
 }
 
-function DeleteComment({
+function CommentDropdown({
   communityId,
   collectionGroup,
   collectionGroupDocId,
   comment,
+  member,
+  isAdmin,
 }: Omit<CommentsListProps, "comments" | "depth"> & {
   comment: ReturnType<typeof buildNestedCommentsTree>[number]
+  member: z.infer<typeof memberSchema>
+  isAdmin: boolean
 }) {
-  const trpc = useTRPC()
+  const [open, setOpen] = useState(false)
+
+  return (
+    <Dropdown.Root open={open} onOpenChange={setOpen}>
+      <Dropdown.Trigger asChild>
+        <Button.Root size="xxsmall" variant="neutral" mode="lighter">
+          <Button.Icon as={RiMoreLine} />
+        </Button.Root>
+      </Dropdown.Trigger>
+      <Dropdown.Content align="end" className="bg-white/80 backdrop-blur">
+        <Dropdown.Group>
+          <Dropdown.Item>
+            <Dropdown.ItemIcon className="fill-warning-base" as={RiStarFill} />
+            Feature Comment
+          </Dropdown.Item>
+          <Dropdown.Item>
+            <Dropdown.ItemIcon as={RiListRadio} />
+            Add To Feed
+          </Dropdown.Item>
+        </Dropdown.Group>
+        <Divider.Root variant="line-spacing" />
+        <Dropdown.Group>
+          <SoftDeleteComment
+            open={open}
+            setOpen={setOpen}
+            communityId={communityId}
+            collectionGroup={collectionGroup}
+            collectionGroupDocId={collectionGroupDocId}
+            comment={comment}
+            member={member!}
+          />
+        </Dropdown.Group>
+      </Dropdown.Content>
+    </Dropdown.Root>
+  )
+}
+
+function SoftDeleteComment({
+  communityId,
+  collectionGroup,
+  collectionGroupDocId,
+  comment,
+  setOpen,
+}: Omit<CommentsListProps, "comments" | "depth"> & {
+  comment: ReturnType<typeof buildNestedCommentsTree>[number]
+  open: boolean
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>
+  member: z.infer<typeof memberSchema>
+}) {
   const HOLD_DURATION = 1000
-  const [_, setIsHolding] = useState(false)
+  const [deleteCommentOpen, setDeleteCommentOpen] = useState(false)
+
+  const trpc = useTRPC()
+  const startTimeRef = useRef<number>(0)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const deleteModeRef = useRef<"delete" | "hide" | undefined>(undefined)
+
   const controls = useAnimation()
   const queryClient = useQueryClient()
 
@@ -456,7 +489,72 @@ function DeleteComment({
           communityId,
         }).queryKey,
       })
+
+      queryClient.setQueryData(
+        trpc.communities.comments.queryOptions({
+          collectionGroup,
+          collectionGroupDocId,
+          communityId,
+        }).queryKey,
+        (old) => {
+          if (deleteModeRef.current === "hide") {
+            return old?.map((c) => {
+              if (c.id === newComment.id) {
+                return { ...c, status: "hidden" as const }
+              }
+              return c
+            })
+          } else {
+            return old?.filter(
+              (c) =>
+                c.id !== newComment.id &&
+                c.rootParentCommentId !== newComment.id
+            )
+          }
+        }
+      )
       return undefined
+    },
+    onError: (_, previousComments) => {
+      queryClient.setQueryData(
+        trpc.communities.comments.queryOptions({
+          collectionGroup,
+          collectionGroupDocId,
+          communityId,
+        }).queryKey,
+        // @ts-ignore
+        previousComments
+      )
+      toast.custom((t) => (
+        <AlertToast.Root
+          t={t}
+          status="error"
+          message="Error! Your comment has not been deleted."
+        />
+      ))
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: trpc.communities.comments.queryOptions({
+          collectionGroup,
+          collectionGroupDocId,
+          communityId,
+        }).queryKey,
+      })
+      setOpen(false)
+    },
+    onSuccess: () => {
+      toast.custom((t) => (
+        <AlertToast.Root
+          t={t}
+          status="information"
+          message={
+            deleteModeRef.current === "hide"
+              ? "Comment hidden."
+              : "Comment deleted."
+          }
+        />
+      ))
     },
   })
 
@@ -465,7 +563,27 @@ function DeleteComment({
   ) {
     e.preventDefault()
     e.stopPropagation()
-    setIsHolding(true)
+    startTimeRef.current = Date.now()
+
+    if (timerRef.current) clearTimeout(timerRef.current)
+
+    timerRef.current = setTimeout(() => {
+      if (!updateCommentMutation.isPending) {
+        if (comment?.replies && comment?.replies?.length) {
+          setDeleteCommentOpen(true)
+        } else {
+          updateCommentMutation.mutate({
+            id: comment.id,
+            communityId,
+            collectionGroup,
+            collectionGroupDocId,
+            status: "hidden",
+            deletedAt: new Date().toISOString(),
+          })
+        }
+      }
+    }, HOLD_DURATION)
+
     controls.set({ width: "0%" })
     await controls.start({
       width: "100%",
@@ -481,51 +599,139 @@ function DeleteComment({
   ) {
     e.preventDefault()
     e.stopPropagation()
-    setIsHolding(false)
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
     controls.stop()
+    if (updateCommentMutation.isPending) return
     controls.start({
       width: "0%",
       transition: { duration: 0.1 },
     })
-    updateCommentMutation.mutate({
-      id: comment.id,
-      communityId,
-      collectionGroup,
-      collectionGroupDocId,
-      status: "hidden",
-      deletedAt: new Date().toISOString(),
-    })
   }
+
   return (
-    <Dropdown.Item
-      disabled={updateCommentMutation.isPending}
-      onClick={(e) => {
-        e.preventDefault()
-        e.stopPropagation()
-      }}
-      onMouseDown={handleHoldStart}
-      onMouseUp={handleHoldEnd}
-      onMouseLeave={handleHoldEnd}
-      onTouchStart={handleHoldStart}
-      onTouchEnd={handleHoldEnd}
-      onTouchCancel={handleHoldEnd}
-      className="relative overflow-hidden bg-error-lighter text-error-dark data-[highlighted]:bg-error-lighter"
-    >
-      <motion.div
-        initial={{ width: "0%" }}
-        animate={controls}
-        className={cn("absolute left-0 top-0 z-0 h-full", "bg-error-light")}
-      />
-      <Dropdown.ItemIcon
-        className={cn(
-          "relative z-10",
-          updateCommentMutation.isPending && "animate-spin"
-        )}
-        as={updateCommentMutation.isPending ? RiLoaderLine : RiDeleteBinLine}
-      />
-      <span className="relative z-10">
-        {updateCommentMutation.isPending ? "Deleting..." : "Delete Comment"}
-      </span>
-    </Dropdown.Item>
+    <>
+      <Modal.Root open={deleteCommentOpen} onOpenChange={setDeleteCommentOpen}>
+        <Modal.Content className="max-w-[440px]">
+          <Modal.Body className="flex flex-col items-center justify-center gap-4 text-center">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-10 bg-error-lighter">
+              <RiErrorWarningFill className="size-6 text-error-base" />
+            </div>
+            <div className="space-y-1">
+              <div className="text-label-md text-text-strong-950">
+                Delete Comment
+              </div>
+              <div className="text-paragraph-sm text-text-sub-600">
+                Are you sure you want to delete this comment? This action cannot
+                be undone. <br />
+                <span className="font-bold">
+                  This comment and all replies will be deleted
+                </span>
+              </div>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Modal.Close asChild>
+              <Button.Root
+                variant="neutral"
+                mode="stroke"
+                size="small"
+                className="w-full"
+                onClick={() => {
+                  setOpen(false)
+                }}
+              >
+                Cancel
+              </Button.Root>
+            </Modal.Close>
+            <Button.Root
+              size="small"
+              variant="error"
+              mode="lighter"
+              className="w-full"
+              disabled={updateCommentMutation.isPending}
+              onClick={async () => {
+                deleteModeRef.current = "hide"
+                updateCommentMutation.mutate({
+                  id: comment.id,
+                  communityId,
+                  collectionGroup,
+                  collectionGroupDocId,
+                  status: "hidden",
+                })
+              }}
+            >
+              {updateCommentMutation.isPending &&
+              deleteModeRef.current === "hide" ? (
+                <RiLoaderLine className="animate-spin" />
+              ) : (
+                <Button.Icon as={RiDeleteBinLine} />
+              )}
+              Hide Author
+            </Button.Root>
+            <Button.Root
+              size="small"
+              variant="error"
+              className="w-full"
+              disabled={updateCommentMutation.isPending}
+              onClick={async () => {
+                deleteModeRef.current = "delete"
+                updateCommentMutation.mutate({
+                  id: comment.id,
+                  communityId,
+                  collectionGroup,
+                  collectionGroupDocId,
+                  status: "hidden",
+                  deletedAt: new Date().toISOString(),
+                })
+              }}
+            >
+              {updateCommentMutation.isPending &&
+              deleteModeRef.current === "delete" ? (
+                <RiLoaderLine className="animate-spin" />
+              ) : (
+                <Button.Icon as={RiDeleteBinLine} />
+              )}
+              Delete
+            </Button.Root>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal.Root>
+      <Dropdown.Item
+        disabled={updateCommentMutation.isPending}
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          if (updateCommentMutation.isPending) return
+        }}
+        {...(!updateCommentMutation.isPending && {
+          onMouseDown: handleHoldStart,
+          onMouseUp: handleHoldEnd,
+          onMouseLeave: handleHoldEnd,
+          onTouchStart: handleHoldStart,
+          onTouchEnd: handleHoldEnd,
+          onTouchCancel: handleHoldEnd,
+        })}
+        className="relative overflow-hidden bg-error-lighter text-error-dark data-[highlighted]:bg-error-lighter"
+      >
+        <motion.div
+          initial={{ width: "0%" }}
+          animate={controls}
+          className={cn("absolute left-0 top-0 z-0 h-full", "bg-error-light")}
+        />
+        <Dropdown.ItemIcon
+          className={cn(
+            "relative z-10",
+            updateCommentMutation.isPending && "animate-spin"
+          )}
+          as={updateCommentMutation.isPending ? RiLoaderLine : RiDeleteBinLine}
+        />
+        <span className="relative z-10">
+          {updateCommentMutation.isPending ? "Deleting..." : "Delete Comment"}
+        </span>
+      </Dropdown.Item>
+    </>
   )
 }

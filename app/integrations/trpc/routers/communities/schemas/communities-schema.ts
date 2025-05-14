@@ -3,7 +3,7 @@ import { z } from "zod"
 import { ContentDetailSchema } from "../../content/schemas/content-detail-schema"
 import { paletteSchema } from "../../palette/schemas/palette-schema"
 
-const memberSchema = z.object({
+export const memberSchema = z.object({
   id: z.string(),
   role: z.enum(["admin", "member"]),
   joinedAt: z.string().nullable().optional(),
@@ -85,6 +85,7 @@ const communityCollectionGroupBaseSchema = z.object({
         url: z.string().optional().nullable(),
         path: z.string().optional().nullable(),
         size: z.number().optional().nullable(),
+        mimeType: z.string().optional().nullable(),
       })
     )
     .optional()
@@ -102,7 +103,7 @@ const communityCollectionGroupBaseSchema = z.object({
     .optional()
     .nullable(),
   title: z.string().min(1, { message: "Title is required" }),
-  caption: z.string(),
+  content: z.string(),
   views: z.number().optional().nullable(),
   status: z.enum(["draft", "published"]),
   accessibile: z.enum(["public", "community"]),
@@ -145,7 +146,7 @@ const communityCourseSchema = communityCollectionGroupBaseSchema.extend({
   publicationUid: z.string(),
   typeAccessor: z.enum(["courses", "programs"]),
   enrolments: z.array(communityEnrolmentsSchema).optional().nullable(),
-
+  caption: z.string(),
   content: ContentDetailSchema.optional().nullable(),
 })
 
@@ -162,7 +163,6 @@ const communityArticleSchema = communityCollectionGroupBaseSchema.extend({
 
 const communityThreadSchema = communityCollectionGroupBaseSchema.extend({
   type: z.literal("thread"),
-  content: z.any().optional().nullable(),
 })
 
 const communityCommentSchema = z.object({
@@ -194,6 +194,7 @@ export const communityLikeSchema = z.object({
     name: z.string(),
     avatarUrl: z.string(),
   }),
+  deletedAt: z.string().optional().nullable(),
   createdAt: z.string(),
   communityId: z.string(),
   collectionGroup: z.enum(["threads", "articles", "courses", "comments"]),
@@ -215,6 +216,7 @@ const communityFeedItemBaseSchema = z.object({
   communityId: z.string(),
   isFeatured: z.boolean().optional().nullable(),
   isFeaturedUntil: z.string().optional().nullable(),
+  groupDocId: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
 
@@ -225,6 +227,7 @@ const communityFeedItemBaseSchema = z.object({
 export const threadFeedItemSchema = communityFeedItemBaseSchema.extend({
   type: z.literal("thread"),
   group: z.literal("threads"),
+
   // this may cause an error
   input: z.object({
     communityId: z.string(),

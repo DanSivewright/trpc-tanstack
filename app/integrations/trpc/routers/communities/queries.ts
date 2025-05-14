@@ -578,6 +578,7 @@ export const getinteractionsCountForCollectionGroup = async (
             .doc(options.input.communityId)
             .collection(options.input.interactionType)
             .where("collectionGroup", "==", options.input.collectionGroup)
+            .where("deletedAt", "==", null)
             .where(
               "collectionGroupDocId",
               "==",
@@ -648,6 +649,7 @@ export const getCommunityComments = async (
           .collection("communities")
           .doc(options.input.communityId)
           .collection("comments")
+          .where("deletedAt", "==", null)
           .where("collectionGroup", "==", options.input.collectionGroup)
           .where(
             "collectionGroupDocId",

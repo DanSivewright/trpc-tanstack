@@ -4,7 +4,6 @@ import { cn } from "@/utils/cn"
 import {
   RiAttachmentLine,
   RiDownloadLine,
-  RiEyeLine,
   RiMessageLine,
 } from "@remixicon/react"
 import { useQuery } from "@tanstack/react-query"
@@ -107,7 +106,7 @@ const FeedTread: React.FC<Props> = (feedThread) => {
 
         <p className="text-title-h6">{thread?.title}</p>
         <p className="line-clamp-5 text-label-md font-normal text-text-sub-600">
-          {thread?.caption}
+          {thread?.content}
         </p>
         {thread?.attachments &&
         thread?.attachments?.length === 1 &&
@@ -225,15 +224,6 @@ const FeedTread: React.FC<Props> = (feedThread) => {
             </Button.Root>
           </Tooltip.Trigger>
           <Tooltip.Content side="bottom">Comments</Tooltip.Content>
-        </Tooltip.Root>
-        <Tooltip.Root>
-          <Tooltip.Trigger asChild>
-            <Button.Root variant="neutral" mode="ghost" size="xxsmall">
-              <Button.Icon as={RiEyeLine} />
-              55
-            </Button.Root>
-          </Tooltip.Trigger>
-          <Tooltip.Content side="bottom">Views</Tooltip.Content>
         </Tooltip.Root>
       </div>
     </div>
