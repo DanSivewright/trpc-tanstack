@@ -11,7 +11,6 @@ export const createRouter = () => {
       context: {
         ...TanstackQuery.getContext(),
       },
-      scrollRestoration: true,
       defaultPreloadStaleTime: 0,
       defaultPreload: "intent",
       Wrap: (props: { children: React.ReactNode }) => {

@@ -1,4 +1,6 @@
+import { storage } from "@/integrations/firebase/client"
 import { Editor } from "@tiptap/react"
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage"
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 
@@ -24,23 +26,36 @@ export const isNodeInSchema = (nodeName: string, editor: Editor | null) =>
  * Handles image upload with progress tracking and abort capability
  */
 export const handleImageUpload = async (
-  _file: File,
+  file: File,
   onProgress?: (event: { progress: number }) => void,
   abortSignal?: AbortSignal
 ): Promise<string> => {
-  // Simulate upload progress
-  for (let progress = 0; progress <= 100; progress += 10) {
+  try {
+    const storageRef = ref(storage, `communities/${file.name}`)
+    const uploadTask = uploadBytesResumable(storageRef, file)
+
+    // Handle upload progress
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+        onProgress?.({ progress })
+      },
+      (error) => {
+        throw error
+      }
+    )
+
+    // Wait for upload to complete
+    await uploadTask
+    const url = await getDownloadURL(uploadTask.snapshot.ref)
+    return url
+  } catch (error) {
     if (abortSignal?.aborted) {
       throw new Error("Upload cancelled")
     }
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    onProgress?.({ progress })
+    throw error
   }
-
-  return "/images/placeholder-image.png"
-
-  // Uncomment to use actual file conversion:
-  // return convertFileToBase64(file, abortSignal)
 }
 
 /**

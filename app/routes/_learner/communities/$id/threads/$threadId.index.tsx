@@ -119,6 +119,7 @@ function RouteComponent() {
   const onShowReply = useCallback((commentId: string, content?: string) => {
     navigate({
       resetScroll: false,
+      replace: true,
       search: (old) => ({
         ...old,
         replyToCommentId: commentId,
@@ -234,11 +235,6 @@ function RouteComponent() {
       >
         <nav className="mx-auto flex w-full max-w-screen-lg items-center gap-6 px-8 py-2 xl:px-0">
           <Link
-            onClick={(e) => {
-              e.preventDefault()
-              onBack()
-              return false
-            }}
             className="flex items-center gap-3"
             to="/communities/$id"
             params={params}
@@ -312,9 +308,12 @@ function RouteComponent() {
         <h1 ref={titleRef} className="text-pretty text-title-h2">
           {thread?.data?.title}
         </h1>
-        <p className="text-label-md font-normal text-text-sub-600">
-          {thread?.data?.content}
-        </p>
+        <div
+          dangerouslySetInnerHTML={{
+            __html: thread?.data?.content,
+          }}
+          className="tiptap ProseMirror"
+        ></div>
 
         <div className="flex w-full flex-col gap-2">
           {thread?.data?.attachments?.length ? (
@@ -502,6 +501,7 @@ function ThreadDropdown() {
             onClick={() => {
               navigate({
                 resetScroll: false,
+                replace: true,
                 search: (prev) => ({
                   ...prev,
                   settingsThreadOpen: true,
@@ -531,6 +531,7 @@ function ThreadDropdown() {
             onClick={() => {
               navigate({
                 resetScroll: false,
+                replace: true,
                 search: (prev) => ({
                   ...prev,
                   deleteThreadOpen: true,
@@ -577,6 +578,7 @@ function DeleteThreadModal() {
         console.log(open)
         navigate({
           resetScroll: false,
+          replace: true,
           search: (prev) => ({
             ...prev,
             deleteThreadOpen: open,
@@ -1221,7 +1223,7 @@ function ThreadSettings() {
                 <ThreadWysiwyg
                   handleChange={handleEditorChange}
                   placeholder="Write something…"
-                  defaultContent={thread.data?.content || ""}
+                  defaultContent={thread?.data?.content ?? ""}
                 />
               </div>
               <form.Field name="tags" mode="array">

@@ -8,8 +8,12 @@ import { generateCacheKey, useStorage } from "@/lib/cache"
 
 import {
   communityCommentSchema,
+  communityFeedItemInputSchema,
+  communityFeedItemSchema,
+  communityFeedSchema,
   communityLikeSchema,
   communityThreadSchema,
+  courseFeedItemSchema,
   threadFeedItemSchema,
 } from "./schemas/communities-schema"
 
@@ -92,23 +96,30 @@ export const updateCommunityThread = async (
   const storage = useStorage()
   const keys = await storage.keys()
 
-  const threadsKey = generateCacheKey({
-    type: "query",
-    path: "communities.threads",
-    input: {
-      communityId: input.communityId,
-    },
-  })
-  const threadDetailKey = generateCacheKey({
-    type: "query",
-    path: "communities.threadDetail",
-    input: {
-      communityId: input.communityId,
-      threadId: input.id,
-    },
-  })
-
-  const deleteKeys = [threadsKey, threadDetailKey]
+  const deleteKeys = [
+    generateCacheKey({
+      type: "query",
+      path: "communities.threads",
+      input: {
+        communityId: input.communityId,
+      },
+    }),
+    generateCacheKey({
+      type: "query",
+      path: "communities.threadDetail",
+      input: {
+        communityId: input.communityId,
+        threadId: input.id,
+      },
+    }),
+    generateCacheKey({
+      type: "query",
+      path: "communities.feed",
+      input: {
+        communityId: input.communityId,
+      },
+    }),
+  ]
 
   await Promise.all(
     deleteKeys.map((key) =>
@@ -170,8 +181,7 @@ export const createCommunityThread = async (
       .collection("communities")
       .doc(input.communityId)
       .collection("feed")
-      .doc(input.id)
-      .set(threadFeedItem)
+      .add(threadFeedItem)
   )
 
   if (addFeedItem.error || !addFeedItem.success) {
@@ -548,14 +558,6 @@ export const deleteThreadAndRelations = async (
     }),
     generateCacheKey({
       type: "query",
-      path: "communities.threadDetail",
-      input: {
-        communityId: input.communityId,
-        threadId: input.id,
-      },
-    }),
-    generateCacheKey({
-      type: "query",
       path: "communities.threads",
       input: {
         communityId: input.communityId,
@@ -568,10 +570,48 @@ export const deleteThreadAndRelations = async (
         communityId: input.communityId,
       },
     }),
+    generateCacheKey({
+      type: "query",
+      path: "communities.threadDetail",
+      input: {
+        communityId: input.communityId,
+        threadId: input.id,
+      },
+    }),
   ]
   await Promise.all(
     deleteKeys.map((key) =>
       storage.remove(keys.find((k) => k.includes(key)) as string)
     )
   )
+}
+
+export const createCommunityFeedItemSchema = communityFeedItemInputSchema
+export const createCommunityFeedItem = async (
+  input: z.infer<typeof createCommunityFeedItemSchema>
+) => {
+  const snap = await tryCatch(
+    db
+      .collection("communities")
+      .doc(input.communityId)
+      .collection("feed")
+      .add(input)
+  )
+  if (snap.error || !snap.success) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Error: failed to create feed item",
+    })
+  }
+  const storage = useStorage()
+  const keys = await storage.keys()
+  const feedKey = generateCacheKey({
+    type: "query",
+    path: "communities.feed",
+    input: {
+      communityId: input.communityId,
+    },
+  })
+  await storage.remove(keys.find((k) => k.includes(feedKey)) as string)
+  return input
 }

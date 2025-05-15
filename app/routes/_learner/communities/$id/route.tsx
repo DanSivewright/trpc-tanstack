@@ -57,9 +57,20 @@ function RouteComponent() {
                 Feed
               </Link>
             </TabMenuHorizontal.Trigger>
-            <TabMenuHorizontal.Trigger value={`/communities/${id}/articles`}>
-              <TabMenuHorizontal.Icon as={RiArticleLine} />
-              Articles
+            <TabMenuHorizontal.Trigger
+              asChild
+              value={`/communities/${id}/articles`}
+            >
+              <Link
+                to="/communities/$id/articles"
+                params={{
+                  id,
+                }}
+                preload="intent"
+              >
+                <TabMenuHorizontal.Icon as={RiArticleLine} />
+                Articles
+              </Link>
             </TabMenuHorizontal.Trigger>
             <TabMenuHorizontal.Trigger
               value={`/communities/${id}/threads`}
@@ -73,7 +84,7 @@ function RouteComponent() {
                 preload="intent"
               >
                 <TabMenuHorizontal.Icon as={RiHashtag} />
-                Thread
+                Threads
               </Link>
             </TabMenuHorizontal.Trigger>
             <TabMenuHorizontal.Trigger

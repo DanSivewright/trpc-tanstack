@@ -11,9 +11,11 @@ import { Link } from "@tanstack/react-router"
 import { formatDistance } from "date-fns"
 import type { z } from "zod"
 
+import { useElementSize } from "@/hooks/use-element-size"
 import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { FileFormatIcon } from "@/components/ui/file-format-icon"
+import { LinkButton } from "@/components/ui/link-button"
 import { Tag } from "@/components/ui/tag"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Grid } from "@/components/grid"
@@ -36,6 +38,7 @@ const FeedTread: React.FC<Props> = (feedThread) => {
     })
   )
 
+  const contentSize = useElementSize()
   return (
     <div className="flex flex-col gap-2">
       <Link
@@ -105,9 +108,36 @@ const FeedTread: React.FC<Props> = (feedThread) => {
         ) : null}
 
         <p className="text-title-h6">{thread?.title}</p>
-        <p className="line-clamp-5 text-label-md font-normal text-text-sub-600">
-          {thread?.content}
-        </p>
+        {thread?.content && (
+          <div className="relative max-h-72 overflow-hidden">
+            <div
+              ref={contentSize.ref}
+              dangerouslySetInnerHTML={{
+                __html: thread?.content,
+              }}
+              className="tiptap ProseMirror"
+            ></div>
+            {contentSize.height > 288 && (
+              <div className="absolute inset-x-0 bottom-0 z-10 flex h-1/2 flex-col items-center justify-end bg-gradient-to-t from-bg-white-0 to-transparent pb-12">
+                <LinkButton.Root
+                  variant="primary"
+                  size="small"
+                  className="relative z-10"
+                >
+                  Go to thread
+                </LinkButton.Root>
+                <div className="gradient-blur">
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         {thread?.attachments &&
         thread?.attachments?.length === 1 &&
         thread?.images?.length === 0 ? (

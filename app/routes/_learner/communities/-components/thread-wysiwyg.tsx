@@ -1,12 +1,21 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Highlight } from "@tiptap/extension-highlight"
 import Placeholder from "@tiptap/extension-placeholder"
+import { Subscript } from "@tiptap/extension-subscript"
+import { Superscript } from "@tiptap/extension-superscript"
+import { TaskItem } from "@tiptap/extension-task-item"
+import { TaskList } from "@tiptap/extension-task-list"
+import { TextAlign } from "@tiptap/extension-text-align"
+import { Typography } from "@tiptap/extension-typography"
 import { Underline } from "@tiptap/extension-underline"
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react"
 import { StarterKit } from "@tiptap/starter-kit"
 
+import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils"
 import { Link } from "@/components/tiptap-extension/link-extension"
+import { Selection } from "@/components/tiptap-extension/selection-extension"
 import { TrailingNode } from "@/components/tiptap-extension/trailing-node-extension"
+import { ImageUploadNode } from "@/components/tiptap-node/image-upload-node/image-upload-node-extension"
 
 import "@/components/tiptap-node/code-block-node/code-block-node.scss"
 import "@/components/tiptap-node/image-node/image-node.scss"
@@ -23,11 +32,13 @@ import {
   ToolbarGroup,
   ToolbarSeparator,
 } from "@/components/tiptap-ui-primitive/toolbar"
+import { HeadingDropdownMenu } from "@/components/tiptap-ui/heading-dropdown-menu"
 import {
   HighlightContent,
   HighlighterButton,
   HighlightPopover,
 } from "@/components/tiptap-ui/highlight-popover"
+import { ImageUploadButton } from "@/components/tiptap-ui/image-upload-button"
 import {
   LinkButton,
   LinkContent,
@@ -36,6 +47,7 @@ import {
 import { ListDropdownMenu } from "@/components/tiptap-ui/list-dropdown-menu"
 import { MarkButton } from "@/components/tiptap-ui/mark-button"
 import { NodeButton } from "@/components/tiptap-ui/node-button"
+import { TextAlignButton } from "@/components/tiptap-ui/text-align-button"
 import { UndoRedoButton } from "@/components/tiptap-ui/undo-redo-button"
 
 type Props = {
@@ -62,7 +74,6 @@ const ThreadWysiwyg: React.FC<Props> = ({
     onUpdate: ({ editor }) => {
       handleDebouncedChanges(editor.getHTML())
     },
-    content: defaultContent,
     editorProps: {
       attributes: {
         autocomplete: "off",
@@ -74,16 +85,36 @@ const ThreadWysiwyg: React.FC<Props> = ({
       },
     },
     extensions: [
+      StarterKit,
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      Underline,
+      TaskList,
+      TaskItem.configure({ nested: true }),
+      Highlight.configure({ multicolor: true }),
+      Typography,
+      Superscript,
+      Subscript,
       Placeholder.configure({
         placeholder,
       }),
-      StarterKit,
-      Underline,
-      Highlight.configure({ multicolor: true }),
+      Selection,
+      ImageUploadNode.configure({
+        accept: "image/*",
+        maxSize: MAX_FILE_SIZE,
+        limit: 3,
+        upload: handleImageUpload,
+        onError: (error) => console.error("Upload failed:", error),
+      }),
       TrailingNode,
       Link.configure({ openOnClick: false }),
     ],
   })
+
+  useEffect(() => {
+    if (editor && defaultContent) {
+      editor.commands.setContent(defaultContent)
+    }
+  }, [editor, defaultContent])
 
   return (
     <EditorContext.Provider value={{ editor }}>
@@ -141,7 +172,9 @@ const MainToolbarContent = ({
       </ToolbarGroup>
 
       <ToolbarSeparator />
+
       <ToolbarGroup>
+        <HeadingDropdownMenu levels={[1, 2, 3, 4]} />
         <ListDropdownMenu types={["bulletList", "orderedList", "taskList"]} />
         <NodeButton type="codeBlock" />
         <NodeButton type="blockquote" />
@@ -168,6 +201,21 @@ const MainToolbarContent = ({
       <ToolbarGroup>
         <MarkButton type="superscript" />
         <MarkButton type="subscript" />
+      </ToolbarGroup>
+
+      <ToolbarSeparator />
+
+      <ToolbarGroup>
+        <TextAlignButton align="left" />
+        <TextAlignButton align="center" />
+        <TextAlignButton align="right" />
+        <TextAlignButton align="justify" />
+      </ToolbarGroup>
+
+      <ToolbarSeparator />
+
+      <ToolbarGroup>
+        <ImageUploadButton text="Add" />
       </ToolbarGroup>
     </>
   )

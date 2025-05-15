@@ -8,6 +8,7 @@ import type { z } from "zod"
 import { FancyButton } from "@/components/ui/fancy-button"
 import { Section } from "@/components/section"
 
+import FeedComment from "./feed-comment"
 import FeedCourse from "./feed-course"
 import FeedThread from "./feed-thread"
 
@@ -21,6 +22,7 @@ const components: {
 } = {
   thread: FeedThread,
   course: FeedCourse,
+  comment: FeedComment,
 }
 
 const FeedList: React.FC<Props> = ({}) => {
@@ -80,7 +82,7 @@ const FeedList: React.FC<Props> = ({}) => {
     )
   }
   return (
-    <Section side="b" className="mt-6 flex flex-col gap-16">
+    <Section side="b" className="mt-6 flex flex-col gap-12">
       {feed?.data?.map((item) => {
         const Block = components[item.type]
         if (!Block) return null

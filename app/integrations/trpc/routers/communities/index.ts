@@ -11,6 +11,8 @@ import { protectedProcedure } from "../../init"
 import {
   createComment,
   createCommentSchema,
+  createCommunityFeedItem,
+  createCommunityFeedItemSchema,
   createCommunityThread,
   createCommunityThreadSchema,
   deleteThreadAndRelations,
@@ -26,6 +28,8 @@ import {
   getAllCommunities,
   getAllCommunitiesAdminOf,
   getAllJoinedCommunities,
+  getCommunityArticles,
+  getCommunityArticlesSchema,
   getCommunityComments,
   getCommunityCommentsSchema,
   getCommunityCourseDetail,
@@ -126,6 +130,19 @@ export const communitiesRouter = {
         ctx,
       })
     }),
+  articles: protectedProcedure
+    .input(getCommunityArticlesSchema)
+    // @ts-ignore
+    .query(async ({ ctx, input, type, path }) => {
+      return getCommunityArticles({
+        cacheGroup: CACHE_GROUP,
+        type,
+        path,
+        input,
+        ctx,
+      })
+    }),
+
   threads: protectedProcedure
     .input(getCommunityThreadsSchema)
     // @ts-ignore
@@ -162,6 +179,11 @@ export const communitiesRouter = {
         input,
         ctx,
       })
+    }),
+  createFeedItem: protectedProcedure
+    .input(createCommunityFeedItemSchema)
+    .mutation(async ({ input }) => {
+      return createCommunityFeedItem(input)
     }),
 
   comments: protectedProcedure
@@ -344,8 +366,8 @@ export const communitiesRouter = {
       }
 
       await batch.commit()
-      await Promise.all(
-        Array.from(enrolmentsMap.entries()).map(
+      await Promise.all([
+        ...Array.from(enrolmentsMap.entries()).map(
           ([publicationUid, enrolleeUids]) => {
             return tryCatch(
               fetcher({
@@ -365,8 +387,29 @@ export const communitiesRouter = {
               })
             )
           }
-        )
-      )
+        ),
+        ...input?.map((course) => {
+          return createCommunityFeedItem({
+            communityId: course?.communityId,
+            authorUid: course?.authorUid,
+            author: course?.author,
+            type: "course",
+            group: "courses",
+            groupDocId: course?.id,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            descriptor: "",
+            source: "user",
+            verb: "created",
+            input: {
+              communityId: course?.communityId,
+              courseId: course?.id,
+            },
+            isFeatured: false,
+            isFeaturedUntil: null,
+          })
+        }),
+      ])
       const storage = useStorage()
       const keys = await storage.keys()
       const coursesKeys = Array.from(communityIds).map((cid) => {
@@ -377,8 +420,22 @@ export const communitiesRouter = {
         })
       })
 
+      const deleteKeys = [
+        ...coursesKeys,
+        ...input?.map((course) => {
+          return generateCacheKey({
+            type: "query",
+            path: "communities.feed",
+            input: {
+              //
+              communityId: course?.communityId,
+            },
+          })
+        }),
+      ]
+
       await Promise.all(
-        coursesKeys.map((key) =>
+        deleteKeys.map((key) =>
           storage.remove(keys.find((k) => k.includes(key)) as string)
         )
       )

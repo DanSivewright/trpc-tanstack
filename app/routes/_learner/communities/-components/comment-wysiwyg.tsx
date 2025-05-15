@@ -1,6 +1,7 @@
 import { useRef, useState } from "react"
 import { Highlight } from "@tiptap/extension-highlight"
 import Placeholder from "@tiptap/extension-placeholder"
+import { Typography } from "@tiptap/extension-typography"
 import { Underline } from "@tiptap/extension-underline"
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react"
 import { StarterKit } from "@tiptap/starter-kit"
@@ -87,6 +88,7 @@ const CommentWysiwyg: React.FC<Props> = ({
       Underline,
       Highlight.configure({ multicolor: true }),
       TrailingNode,
+      Typography,
       Link.configure({ openOnClick: false }),
     ],
   })

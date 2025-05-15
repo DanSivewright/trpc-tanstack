@@ -8,13 +8,16 @@ import { cachedFunction, generateCacheKey } from "@/lib/cache"
 import { trpcQuerySchema, type TRPCQuerySchema } from "../../schema"
 import { getContentDetail } from "../content/queries"
 import type {
+  commentFeedItemSchema,
   communitiesAllSchema,
   communitiesJoinedSchema,
+  communityArticleSchema,
   communityCommentSchema,
   communityCourseSchema,
   communityEnrolmentsSchema,
   communitySchema,
   communityThreadSchema,
+  courseFeedItemSchema,
   threadFeedItemSchema,
 } from "./schemas/communities-schema"
 
@@ -432,6 +435,57 @@ export const getCommunityThreads = async (
   return cachedFetcher()
 }
 
+export const getCommunityArticlesSchema = z.object({
+  communityId: z.string(),
+})
+const getCommunityArticlesOptions = trpcQuerySchema.extend({
+  input: getCommunityArticlesSchema,
+})
+export const getCommunityArticles = async (
+  options: z.infer<typeof getCommunityArticlesOptions>
+) => {
+  const cachedFetcher = cachedFunction(
+    async () => {
+      const snap = await tryCatch(
+        db
+          .collection("communities")
+          .doc(options.input.communityId)
+          .collection("articles")
+          .get()
+      )
+      let articles: any = []
+
+      if (snap.error || !snap.success) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: snap.error?.message || "Threads not found",
+        })
+      }
+
+      if (snap.success && snap.data) {
+        snap.data.forEach((doc) => {
+          articles.push({
+            ...doc.data(),
+            id: doc.id,
+          })
+        })
+      }
+
+      return articles as z.infer<typeof communityArticleSchema>[]
+    },
+    {
+      name: generateCacheKey({
+        path: options.path,
+        type: options.type,
+        input: options.input,
+      }),
+      maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
+      group: options.cacheGroup,
+    }
+  )
+  return cachedFetcher()
+}
+
 export const getCommunityThreadDetailSchema = z.object({
   communityId: z.string(),
   threadId: z.string(),
@@ -513,13 +567,14 @@ export const getCommunityFeed = async (
       }
 
       for (const doc of snap.data.docs) {
+        let sourceData
         let collectionGroupData
         switch (doc.data().group) {
           case "threads":
             const threadSourceItem = doc?.data() as z.infer<
               typeof threadFeedItemSchema
             >
-            collectionGroupData = await getCommunityThreadDetail({
+            sourceData = await getCommunityThreadDetail({
               type: "query",
               path: "communities.threadDetail",
               input: {
@@ -531,6 +586,42 @@ export const getCommunityFeed = async (
             })
 
             break
+
+          case "comments":
+            // collectionGrouData
+            const commentsGroupItem = doc?.data() as z.infer<
+              typeof commentFeedItemSchema
+            >
+
+            if (commentsGroupItem?.input?.accessorGroup === "threads") {
+              collectionGroupData = await getCommunityThreadDetail({
+                type: "query",
+                path: "communities.threadDetail",
+                input: {
+                  communityId: commentsGroupItem.input.communityId,
+                  threadId: commentsGroupItem.input.accessorGroupDocId,
+                },
+                ctx: options.ctx,
+                cacheGroup: options.cacheGroup,
+              })
+            }
+
+            break
+          case "courses":
+            const courseSourceItem = doc?.data() as z.infer<
+              typeof courseFeedItemSchema
+            >
+            sourceData = await getCommunityCourseDetail({
+              type: "query",
+              path: "communities.courseDetail",
+              input: {
+                communityId: courseSourceItem.input.communityId,
+                courseId: courseSourceItem.input.courseId,
+              },
+              ctx: options.ctx,
+              cacheGroup: options.cacheGroup,
+            })
+            break
           default:
             break
         }
@@ -538,7 +629,8 @@ export const getCommunityFeed = async (
         feed.push({
           ...doc.data(),
           id: doc.id,
-          data: collectionGroupData,
+          data: sourceData,
+          groupData: collectionGroupData,
         })
       }
 

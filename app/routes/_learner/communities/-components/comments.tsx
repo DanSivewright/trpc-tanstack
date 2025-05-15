@@ -19,6 +19,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { useLocation, useNavigate } from "@tanstack/react-router"
 import { format, formatDistance } from "date-fns"
 import {
   motion,
@@ -86,6 +87,25 @@ const CommentsList: React.FC<CommentsListProps> = ({
 }) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+  const { hash } = useLocation()
+  const hasScrollIntoViewOnceRef = useRef(false)
+
+  useEffect(() => {
+    if (hash && !hasScrollIntoViewOnceRef.current) {
+      hasScrollIntoViewOnceRef.current = true
+      const commentElement = document.getElementById(hash)
+      if (commentElement) {
+        commentElement.scrollIntoView({ behavior: "smooth" })
+        setTimeout(() => {
+          window.history.replaceState(
+            null,
+            "",
+            window.location.pathname + window.location.search
+          )
+        }, 500)
+      }
+    }
+  }, [hash])
 
   const me = useSuspenseQuery(trpc.people.me.queryOptions())
   const community = useSuspenseQuery(
@@ -210,7 +230,7 @@ const CommentsList: React.FC<CommentsListProps> = ({
     )
   }
   return (
-    <ul className="flex w-full flex-col gap-8 pl-6">
+    <ul className="flex w-full flex-col gap-6 pl-6">
       {comments.map((comment, ci) => {
         const isNotLast = ci !== comments.length - 1 && depth !== 0
         const memmber = community?.data?.members?.find(
@@ -219,6 +239,7 @@ const CommentsList: React.FC<CommentsListProps> = ({
         return (
           <li
             //
+            id={comment.id}
             key={comment.id}
             className="relative flex w-full flex-col gap-2 pl-6"
           >
@@ -228,7 +249,10 @@ const CommentsList: React.FC<CommentsListProps> = ({
             {depth !== 0 && (
               <div className="absolute -left-[49px] -top-4 h-[33px] w-[26px] rounded-bl-xl border-b border-l border-stroke-soft-200"></div>
             )}
-            <div className="relative flex flex-col gap-2">
+            <div className="relative flex flex-col gap-2 py-2">
+              {comment.isFeatured && comment.status !== "hidden" && (
+                <div className="absolute inset-y-0 -left-12 right-0 -z-10 border-l-2 border-warning-base bg-gradient-to-r from-warning-lighter via-warning-lighter to-transparent"></div>
+              )}
               {comment.replies && comment?.replies?.length ? (
                 <div className="absolute -left-[25px] bottom-0 top-10 w-px bg-stroke-soft-200"></div>
               ) : null}
@@ -341,13 +365,13 @@ const CommentsList: React.FC<CommentsListProps> = ({
                       collectionGroup="comments"
                       collectionGroupDocId={comment.id}
                       communityId={communityId}
-                      mode="lighter"
+                      mode={comment?.isFeatured ? "stroke" : "lighter"}
                       hideText
                     />
                     <Button.Root
                       size="xxsmall"
                       variant="neutral"
-                      mode="lighter"
+                      mode={comment?.isFeatured ? "stroke" : "lighter"}
                       onClick={() =>
                         onShowReply?.(
                           comment.id === replyToCommentId ? "" : comment.id,
@@ -419,27 +443,166 @@ function CommentDropdown({
   member: z.infer<typeof memberSchema>
   isAdmin: boolean
 }) {
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+
   const [open, setOpen] = useState(false)
+
+  const updateCommentMutation = useMutation({
+    ...trpc.communities.updateComment.mutationOptions(),
+    onMutate: async (newComment) => {
+      await queryClient.cancelQueries({
+        queryKey: trpc.communities.comments.queryOptions({
+          collectionGroup,
+          collectionGroupDocId,
+          communityId,
+        }).queryKey,
+      })
+
+      queryClient.setQueryData(
+        trpc.communities.comments.queryOptions({
+          collectionGroup,
+          collectionGroupDocId,
+          communityId,
+        }).queryKey,
+        (old) =>
+          old?.map((c) => {
+            if (c.id === newComment.id) {
+              return { ...c, isFeatured: newComment.isFeatured }
+            }
+            return c
+          })
+      )
+      return undefined
+    },
+    onError: (_, previousComments) => {
+      queryClient.setQueryData(
+        trpc.communities.comments.queryOptions({
+          collectionGroup,
+          collectionGroupDocId,
+          communityId,
+        }).queryKey,
+        // @ts-ignore
+        previousComments
+      )
+      toast.custom((t) => (
+        <AlertToast.Root
+          t={t}
+          status="error"
+          message="Error! Your comment has not been deleted."
+        />
+      ))
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: trpc.communities.comments.queryOptions({
+          collectionGroup,
+          collectionGroupDocId,
+          communityId,
+        }).queryKey,
+      })
+      setOpen(false)
+    },
+    onSuccess: () => {
+      toast.custom((t) => (
+        <AlertToast.Root
+          t={t}
+          status="success"
+          message={
+            !comment.isFeatured ? "Comment unfeatured." : "Comment featured."
+          }
+        />
+      ))
+    },
+  })
+
+  const createFeedItemMutation = useMutation({
+    ...trpc.communities.createFeedItem.mutationOptions(),
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: trpc.communities.feed.queryOptions({
+          communityId,
+        }).queryKey,
+      })
+      setOpen(false)
+    },
+    onSuccess: () => {
+      toast.custom((t) => (
+        <AlertToast.Root
+          t={t}
+          status="success"
+          message="Comment added to feed."
+        />
+      ))
+    },
+  })
 
   return (
     <Dropdown.Root open={open} onOpenChange={setOpen}>
       <Dropdown.Trigger asChild>
-        <Button.Root size="xxsmall" variant="neutral" mode="lighter">
+        <Button.Root
+          mode={comment?.isFeatured ? "stroke" : "lighter"}
+          size="xxsmall"
+          variant="neutral"
+        >
           <Button.Icon as={RiMoreLine} />
         </Button.Root>
       </Dropdown.Trigger>
       <Dropdown.Content align="end" className="bg-white/80 backdrop-blur">
-        <Dropdown.Group>
-          <Dropdown.Item>
-            <Dropdown.ItemIcon className="fill-warning-base" as={RiStarFill} />
-            Feature Comment
-          </Dropdown.Item>
-          <Dropdown.Item>
-            <Dropdown.ItemIcon as={RiListRadio} />
-            Add To Feed
-          </Dropdown.Item>
-        </Dropdown.Group>
-        <Divider.Root variant="line-spacing" />
+        {isAdmin && (
+          <>
+            <Dropdown.Group>
+              <Dropdown.Item
+                disabled={updateCommentMutation.isPending}
+                onClick={async () => {
+                  updateCommentMutation.mutate({
+                    id: comment.id,
+                    communityId,
+                    collectionGroup,
+                    collectionGroupDocId,
+                    isFeatured: !comment.isFeatured,
+                  })
+                }}
+              >
+                <Dropdown.ItemIcon
+                  className="fill-warning-base"
+                  as={RiStarFill}
+                />
+                {comment.isFeatured ? "Unfeature" : "Feature"} Comment
+              </Dropdown.Item>
+              <Dropdown.Item
+                disabled={createFeedItemMutation.isPending}
+                onClick={async () => {
+                  createFeedItemMutation.mutate({
+                    communityId,
+                    verb: "commented",
+                    descriptor: comment?.content,
+                    createdAt: new Date().toISOString(),
+                    source: "user",
+                    type: "comment",
+                    group: "comments",
+                    groupDocId: comment?.id,
+                    authorUid: comment?.authorUid,
+                    author: comment?.author,
+                    isFeatured: null,
+                    isFeaturedUntil: null,
+                    input: {
+                      accessorGroup: collectionGroup,
+                      accessorGroupDocId: collectionGroupDocId,
+                      communityId,
+                      commentId: comment?.id,
+                    },
+                    updatedAt: new Date().toISOString(),
+                  })
+                }}
+              >
+                <Dropdown.ItemIcon as={RiListRadio} />
+                Add To Feed
+              </Dropdown.Item>
+            </Dropdown.Group>
+            <Divider.Root variant="line-spacing" />
+          </>
+        )}
         <Dropdown.Group>
           <SoftDeleteComment
             open={open}

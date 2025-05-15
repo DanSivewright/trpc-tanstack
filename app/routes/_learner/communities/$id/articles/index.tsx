@@ -1,6 +1,9 @@
 import React, { useState } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
-import type { communityThreadSchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
+import type {
+  communityArticleSchema,
+  communityThreadSchema,
+} from "@/integrations/trpc/routers/communities/schemas/communities-schema"
 import { defineMeta, filterFn } from "@/utils/filters"
 import { highlightText } from "@/utils/highlight-text"
 import {
@@ -41,7 +44,7 @@ import { Table } from "@/components/ui/table"
 import { Section } from "@/components/section"
 import TableFilters from "@/components/table-filters"
 
-export const Route = createFileRoute("/_learner/communities/$id/threads/")({
+export const Route = createFileRoute("/_learner/communities/$id/articles/")({
   validateSearch: z.object({
     q: z.string().default(""),
   }),
@@ -50,13 +53,13 @@ export const Route = createFileRoute("/_learner/communities/$id/threads/")({
   },
   loader: async ({ params, context }) => {
     await context.queryClient.ensureQueryData(
-      context.trpc.communities.threads.queryOptions({
+      context.trpc.communities.articles.queryOptions({
         communityId: params.id,
       })
     )
   },
   component: RouteComponent,
-  pendingComponent: () => <ThreadsSkeleton />,
+  pendingComponent: () => <ArticlesSkeleton />,
 })
 
 function RouteComponent() {
@@ -70,8 +73,8 @@ function RouteComponent() {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [sorting, setSorting] = useState<SortingState>([])
 
-  const threads = useSuspenseQuery(
-    trpc.communities.threads.queryOptions({
+  const articles = useSuspenseQuery(
+    trpc.communities.articles.queryOptions({
       communityId: params.id,
     })
   )
@@ -79,10 +82,6 @@ function RouteComponent() {
   const updateTableFilters = (name: keyof typeof search, value: unknown) => {
     const newValue = typeof value === "function" ? value(search[name]) : value
 
-    console.log("filt", {
-      name,
-      newValue,
-    })
     navigate({
       resetScroll: false,
       search: (prev) => ({
@@ -94,7 +93,7 @@ function RouteComponent() {
 
   const table = useReactTable({
     columns,
-    data: threads.data,
+    data: articles.data,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -122,9 +121,9 @@ function RouteComponent() {
       spacer="p"
       className="mx-auto flex max-w-screen-lg flex-col gap-3 px-8 xl:px-0"
     >
-      {threads?.data?.length === 0 ? (
+      {articles?.data?.length === 0 ? (
         <div className="gutter relative mt-4 flex w-full flex-col gap-2 overflow-hidden rounded-xl bg-bg-weak-50 py-16">
-          <h1 className="relative z-10 text-title-h4">No threads found</h1>
+          <h1 className="relative z-10 text-title-h4">No articles found</h1>
           <p className="relative z-10 text-label-sm font-light text-text-soft-400">
             Can't find what you're looking for? Make a new thread.
           </p>
@@ -137,9 +136,9 @@ function RouteComponent() {
       ) : (
         <>
           <h1 className="align-baseline text-title-h4">
-            Threads{" "}
+            Articles{" "}
             <span className="text-label-sm font-light text-text-soft-400">
-              ({threads?.data?.length || 0})
+              ({articles?.data?.length || 0})
             </span>
           </h1>
           <Divider.Root />
@@ -155,7 +154,7 @@ function RouteComponent() {
                           updateTableFilters("q", e.target.value)
                         }}
                         type="text"
-                        placeholder="Search threads by title..."
+                        placeholder="Search articles by title..."
                       />
                     </Input.Wrapper>
                   </Input.Root>
@@ -208,10 +207,11 @@ function RouteComponent() {
                     <Table.Cell colSpan={table.getAllColumns().length}>
                       <div className="gutter relative mt-4 flex w-full flex-col gap-2 overflow-hidden rounded-xl bg-bg-weak-50 py-16">
                         <h1 className="relative z-10 text-title-h4">
-                          No threads found
+                          No articles found
                         </h1>
                         <p className="relative z-10 text-label-sm font-light text-text-soft-400">
-                          Can't find what you're looking for? Make a new thread.
+                          Can't find what you're looking for? Make a new
+                          article.
                         </p>
 
                         <RiAddLine
@@ -231,7 +231,7 @@ function RouteComponent() {
   )
 }
 
-const columns: ColumnDef<z.infer<typeof communityThreadSchema>>[] = [
+const columns: ColumnDef<z.infer<typeof communityArticleSchema>>[] = [
   {
     id: "title",
     header: "Title",
@@ -370,7 +370,7 @@ const columns: ColumnDef<z.infer<typeof communityThreadSchema>>[] = [
   },
 ]
 
-function ThreadsSkeleton() {
+function ArticlesSkeleton() {
   return (
     <Section
       size="sm"
@@ -385,7 +385,7 @@ function ThreadsSkeleton() {
         </Input.Root>
       </div>
       <div className="flex flex-col">
-        <h2 className="text-label-md text-text-soft-400">Threads</h2>
+        <h2 className="text-label-md text-text-soft-400">Articles</h2>
         <ul className="flex flex-col gap-2">
           {Array.from({ length: 10 }).map((_, index) => (
             <li

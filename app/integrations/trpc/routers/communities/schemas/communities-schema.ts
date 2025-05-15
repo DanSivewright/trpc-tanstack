@@ -153,12 +153,6 @@ const communityCourseSchema = communityCollectionGroupBaseSchema.extend({
 const communityArticleSchema = communityCollectionGroupBaseSchema.extend({
   type: z.literal("article"),
   duration: z.number(),
-  content: z.any().optional().nullable(),
-  featuredImageUrl: z.string(),
-  featuredImagePath: z.string(),
-  meta: z.object({
-    colors: paletteSchema,
-  }),
 })
 
 const communityThreadSchema = communityCollectionGroupBaseSchema.extend({
@@ -173,6 +167,7 @@ const communityCommentSchema = z.object({
     name: z.string(),
     avatarUrl: z.string(),
   }),
+  isFeatured: z.boolean().optional().nullable(),
   content: z.string(),
   createdAt: z.string(),
   updatedAt: z.string().optional().nullable(),
@@ -220,7 +215,7 @@ const communityFeedItemBaseSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 
-  verb: z.enum(["created", "updated", "deleted", "commented"]).or(z.string()),
+  verb: z.enum(["created", "updated", "deleted", "commented"]),
   descriptor: z.string(),
 })
 
@@ -228,7 +223,6 @@ export const threadFeedItemSchema = communityFeedItemBaseSchema.extend({
   type: z.literal("thread"),
   group: z.literal("threads"),
 
-  // this may cause an error
   input: z.object({
     communityId: z.string(),
     threadId: z.string(),
@@ -246,9 +240,39 @@ export const courseFeedItemSchema = communityFeedItemBaseSchema.extend({
   data: communityCourseSchema.optional().nullable(),
 })
 
+export const commentFeedItemSchema = communityFeedItemBaseSchema.extend({
+  type: z.literal("comment"),
+  group: z.literal("comments"),
+  input: z.object({
+    communityId: z.string(),
+    commentId: z.string(),
+    accessorGroup: z.enum(["threads", "articles", "courses"]),
+    accessorGroupDocId: z.string(),
+  }),
+  data: communityCommentSchema.optional().nullable(),
+  groupData: communityThreadSchema
+    .or(communityCourseSchema)
+    .or(communityArticleSchema)
+    .optional()
+    .nullable(),
+})
 export const communityFeedSchema = z.array(
-  z.discriminatedUnion("type", [threadFeedItemSchema, courseFeedItemSchema])
+  z.discriminatedUnion("type", [
+    threadFeedItemSchema,
+    courseFeedItemSchema,
+    commentFeedItemSchema,
+  ])
 )
+export const communityFeedItemSchema = z.discriminatedUnion("type", [
+  threadFeedItemSchema,
+  courseFeedItemSchema,
+  commentFeedItemSchema,
+])
+export const communityFeedItemInputSchema = z.discriminatedUnion("type", [
+  threadFeedItemSchema.omit({ id: true, data: true }),
+  courseFeedItemSchema.omit({ id: true, data: true }),
+  commentFeedItemSchema.omit({ id: true, data: true }),
+])
 
 const communitiesAllSchema = z.array(communitySchema)
 const communitiesJoinedSchema = communitiesAllSchema
