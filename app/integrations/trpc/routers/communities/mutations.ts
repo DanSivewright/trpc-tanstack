@@ -29,6 +29,8 @@ export const createCommunityThreadSchema = communityThreadSchema
     accessibile: true,
     tags: true,
     attachments: true,
+    isFeatured: true,
+    isFeaturedUntil: true,
   })
   .merge(
     communityThreadSchema
@@ -68,6 +70,7 @@ export const updateCommunityThread = async (
   input: z.infer<typeof updateCommunityThreadSchema>
 ) => {
   //   await db.collectionGroup("threads").doc(input.id).set(payload)
+  console.log(":::", input)
   const snap = await tryCatch(
     db
       .collection("communities")

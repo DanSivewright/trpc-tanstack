@@ -26,36 +26,41 @@ export const isNodeInSchema = (nodeName: string, editor: Editor | null) =>
  * Handles image upload with progress tracking and abort capability
  */
 export const handleImageUpload = async (
-  file: File,
+  _file: File,
   onProgress?: (event: { progress: number }) => void,
   abortSignal?: AbortSignal
 ): Promise<string> => {
-  try {
-    const storageRef = ref(storage, `communities/${file.name}`)
-    const uploadTask = uploadBytesResumable(storageRef, file)
+  // Simulate upload progress
+  // for (let progress = 0; progress <= 100; progress += 10) {
+  //   if (abortSignal?.aborted) {
+  //     throw new Error("Upload cancelled")
+  //   }
+  //   await new Promise((resolve) => setTimeout(resolve, 500))
+  //   onProgress?.({ progress })
+  // }
+  const storageRef = ref(storage, `communities/${_file.name}`)
+  const uploadTask = uploadBytesResumable(storageRef, _file)
 
-    // Handle upload progress
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-        onProgress?.({ progress })
-      },
-      (error) => {
-        throw error
-      }
-    )
-
-    // Wait for upload to complete
-    await uploadTask
-    const url = await getDownloadURL(uploadTask.snapshot.ref)
-    return url
-  } catch (error) {
-    if (abortSignal?.aborted) {
-      throw new Error("Upload cancelled")
+  // Handle upload progress
+  uploadTask.on(
+    "state_changed",
+    (snapshot) => {
+      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+      onProgress?.({ progress })
+    },
+    (error) => {
+      throw error
     }
-    throw error
-  }
+  )
+
+  // Wait for upload to complete
+  await uploadTask
+  const url = await getDownloadURL(uploadTask.snapshot.ref)
+  console.log(":::", url)
+  return url
+
+  // Uncomment to use actual file conversion:
+  // return convertFileToBase64(file, abortSignal)
 }
 
 /**

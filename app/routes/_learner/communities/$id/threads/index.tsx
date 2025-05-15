@@ -7,7 +7,11 @@ import {
   RiAccountCircleLine,
   RiAddLine,
   RiCalendarLine,
+  RiCheckboxCircleFill,
+  RiForbidFill,
   RiHeading,
+  RiStarFill,
+  RiStarLine,
 } from "@remixicon/react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import {
@@ -364,6 +368,45 @@ const columns: ColumnDef<z.infer<typeof communityThreadSchema>>[] = [
               {format(row.original?.publishedAt, "MMM d, yyyy")}
             </span>
           )}
+        </div>
+      )
+    },
+  },
+  {
+    id: "featured",
+    header: "Featured",
+    // accessorKey: "isFeatured",
+    accessorFn: (row) => (row.isFeatured ? "yes" : "no"),
+    filterFn: filterFn("option"),
+    meta: {
+      displayName: "Featured",
+      type: "option",
+      icon: RiStarFill,
+      options: [
+        {
+          label: "Featured",
+          value: "yes",
+          icon: <RiCheckboxCircleFill className="fill-success-base" />,
+        },
+        {
+          label: "Not Featured",
+          value: "no",
+          icon: <RiForbidFill className="fill-faded-base" />,
+        },
+      ],
+    },
+    cell: ({ getValue, row }) => {
+      const value = getValue() as string
+      if (value === "no") return null
+      return (
+        <div className="flex items-center gap-2">
+          <StatusBadge.Root status="completed">
+            <StatusBadge.Icon as={RiCheckboxCircleFill} />
+            Featured{" "}
+            {row.original?.isFeaturedUntil
+              ? `Until: ${format(row.original?.isFeaturedUntil, "MMM d, yyyy")}`
+              : ""}
+          </StatusBadge.Root>
         </div>
       )
     },

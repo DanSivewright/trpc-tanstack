@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { Highlight } from "@tiptap/extension-highlight"
+import { Image } from "@tiptap/extension-image"
 import Placeholder from "@tiptap/extension-placeholder"
 import { Subscript } from "@tiptap/extension-subscript"
 import { Superscript } from "@tiptap/extension-superscript"
@@ -98,6 +99,7 @@ const ThreadWysiwyg: React.FC<Props> = ({
         placeholder,
       }),
       Selection,
+      Image,
       ImageUploadNode.configure({
         accept: "image/*",
         maxSize: MAX_FILE_SIZE,

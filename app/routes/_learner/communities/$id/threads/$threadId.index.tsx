@@ -791,8 +791,8 @@ function ThreadSettings() {
       accessibile: thread.data?.accessibile,
       tags: thread.data?.tags,
       attachments: thread.data?.attachments,
-      isFeatured: thread.data?.isFeatured,
-      isFeaturedUntil: thread.data?.isFeaturedUntil,
+      isFeatured: thread.data?.isFeatured || false,
+      isFeaturedUntil: thread.data?.isFeaturedUntil || null,
       updatedAt: thread.data?.updatedAt,
       images: [
         ...(thread.data?.images || []),
@@ -825,7 +825,6 @@ function ThreadSettings() {
         author: thread.data?.author,
       } as z.infer<typeof formSchema>
 
-      console.log("formImages:::", formImages)
       if (formImages && formImages?.length > 0) {
         const uploadedImages = await Promise.all(
           formImages?.map(async (f) => {
@@ -930,8 +929,15 @@ function ThreadSettings() {
           }
         }
       }
+      console.log("payload:::", payload)
       // @ts-ignore
-      await updateThread.mutateAsync(payload)
+      await updateThread.mutateAsync({
+        ...payload,
+        isFeatured: data?.value?.isFeatured ? true : false,
+        isFeaturedUntil: data?.value?.isFeaturedUntil
+          ? new Date(data?.value?.isFeaturedUntil).toISOString()
+          : null,
+      })
 
       navigate({
         resetScroll: false,
