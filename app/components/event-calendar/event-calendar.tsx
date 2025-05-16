@@ -66,7 +66,8 @@ export interface EventCalendarProps {
   onEventUpdate?: (event: CalendarEvent) => void
   onEventDelete?: (eventId: string) => void
   className?: string
-  initialView?: CalendarView
+  view: CalendarView
+  setView: React.Dispatch<React.SetStateAction<CalendarView>>
 }
 
 export function EventCalendar({
@@ -75,11 +76,11 @@ export function EventCalendar({
   onEventUpdate,
   onEventDelete,
   className,
-  initialView = "month",
+  view,
+  setView,
 }: EventCalendarProps) {
   // Use the shared calendar context instead of local state
   const { currentDate, setCurrentDate } = useCalendarContext()
-  const [view, setView] = useState<CalendarView>(initialView)
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const { open } = useSidebar()
@@ -284,7 +285,7 @@ export function EventCalendar({
 
   return (
     <div
-      className="has-data-[slot=month-view]:flex-1 flex flex-col rounded-lg"
+      className="has-data-[slot=month-view]:flex-1 flex flex-col rounded-lg bg-bg-white-0 drop-shadow-xl"
       style={
         {
           "--event-height": `${EventHeight}px`,

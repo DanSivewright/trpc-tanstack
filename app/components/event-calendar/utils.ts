@@ -16,7 +16,7 @@ export function getEventColorClasses(color?: EventColor | string): string {
       return "bg-[#ddd6ff50] hover:bg-[#ddd6ff40] text-feature-dark"
     case "rose":
       return "bg-[#fecdd350] hover:bg-[#fecdd340] text-highlighted-dark"
-    case "emerald":
+    case "teal":
       return "bg-[#a7f3d050] hover:bg-[#a7f3d040] text-stable-dark"
     case "orange":
       return "bg-[#fed7aa50] hover:bg-[#fed7aa40] text-away-dark"

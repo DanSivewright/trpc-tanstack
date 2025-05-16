@@ -1,59 +1,28 @@
 import { db } from "@/integrations/firebase/server"
 import { tryCatch } from "@/utils/try-catch"
-import { TRPCError } from "@trpc/server"
 import merge from "lodash.merge"
 import { z } from "zod"
 
 import { generateCacheKey, useStorage } from "@/lib/cache"
-import { fetcher } from "@/lib/query"
 
 import { protectedProcedure } from "../../init"
-import {
-  createComment,
-  createCommentSchema,
-  createCommunityFeedItem,
-  createCommunityFeedItemSchema,
-  createCommunityThread,
-  createCommunityThreadSchema,
-  deleteThreadAndRelations,
-  deleteThreadAndRelationsSchema,
-  updateComment,
-  updateCommentSchema,
-  updateCommunityThread,
-  updateCommunityThreadSchema,
-  upsertLike,
-  upsertLikeSchema,
-} from "./mutations"
+import { communityArticlesRouter } from "./articles"
+import { communityCommentsRouter } from "./comments"
+import { communityCoursesRouter } from "./courses"
+import { communityEventsRouter } from "./events"
+import { communitiesFeedRouter } from "./feed"
+import { upsertLike, upsertLikeSchema } from "./mutations"
 import {
   getAllCommunities,
   getAllCommunitiesAdminOf,
   getAllJoinedCommunities,
-  getCommunityArticles,
-  getCommunityArticlesSchema,
-  getCommunityComments,
-  getCommunityCommentsSchema,
-  getCommunityCourseDetail,
-  getCommunityCourseDetailSchema,
-  getCommunityCourseEnrolments,
-  getCommunityCourseEnrolmentsSchema,
-  getCommunityCourses,
-  getCommunityCoursesSchema,
   getCommunityDetail,
   getCommunityDetailSchema,
-  getCommunityFeed,
-  getCommunityFeedSchema,
-  getCommunityThreadDetail,
-  getCommunityThreadDetailSchema,
-  getCommunityThreads,
-  getCommunityThreadsSchema,
   getinteractionsCountForCollectionGroup,
   interactionsCountForCollectionGroupSchema,
 } from "./queries"
-import {
-  communityCourseSchema,
-  communityEnrolmentsSchema,
-  communitySchema,
-} from "./schemas/communities-schema"
+import { communitySchema } from "./schemas/communities-schema"
+import { communityThreadsRouter } from "./threads"
 
 const CACHE_GROUP = "communities"
 
@@ -87,132 +56,6 @@ export const communitiesRouter = {
     // @ts-ignore
     .query(async ({ ctx, input, type, path, signal }) => {
       return getCommunityDetail({
-        cacheGroup: CACHE_GROUP,
-        type,
-        path,
-        input,
-        ctx,
-      })
-    }),
-  courses: protectedProcedure
-    .input(getCommunityCoursesSchema)
-    // @ts-ignore
-    .query(async ({ ctx, input, type, path }) => {
-      return getCommunityCourses({
-        cacheGroup: CACHE_GROUP,
-        type,
-        path,
-        input,
-        ctx,
-      })
-    }),
-  courseDetail: protectedProcedure
-    .input(getCommunityCourseDetailSchema)
-    // @ts-ignore
-    .query(async ({ ctx, input, type, path }) => {
-      return getCommunityCourseDetail({
-        cacheGroup: CACHE_GROUP,
-        type,
-        path,
-        input,
-        ctx,
-      })
-    }),
-  courseEnrolments: protectedProcedure
-    .input(getCommunityCourseEnrolmentsSchema)
-    // @ts-ignore
-    .query(async ({ ctx, input, type, path }) => {
-      return getCommunityCourseEnrolments({
-        cacheGroup: CACHE_GROUP,
-        type,
-        path,
-        input,
-        ctx,
-      })
-    }),
-  articles: protectedProcedure
-    .input(getCommunityArticlesSchema)
-    // @ts-ignore
-    .query(async ({ ctx, input, type, path }) => {
-      return getCommunityArticles({
-        cacheGroup: CACHE_GROUP,
-        type,
-        path,
-        input,
-        ctx,
-      })
-    }),
-
-  threads: protectedProcedure
-    .input(getCommunityThreadsSchema)
-    // @ts-ignore
-    .query(async ({ ctx, input, type, path }) => {
-      return getCommunityThreads({
-        cacheGroup: CACHE_GROUP,
-        type,
-        path,
-        input,
-        ctx,
-      })
-    }),
-
-  threadDetail: protectedProcedure
-    .input(getCommunityThreadDetailSchema)
-    // @ts-ignore
-    .query(async ({ ctx, input, type, path }) => {
-      return getCommunityThreadDetail({
-        cacheGroup: CACHE_GROUP,
-        type,
-        path,
-        input,
-        ctx,
-      })
-    }),
-  feed: protectedProcedure
-    .input(getCommunityFeedSchema)
-    // @ts-ignore
-    .query(async ({ ctx, input, type, path }) => {
-      return getCommunityFeed({
-        cacheGroup: CACHE_GROUP,
-        type,
-        path,
-        input,
-        ctx,
-      })
-    }),
-  createFeedItem: protectedProcedure
-    .input(createCommunityFeedItemSchema)
-    .mutation(async ({ input }) => {
-      return createCommunityFeedItem(input)
-    }),
-
-  comments: protectedProcedure
-    .input(getCommunityCommentsSchema)
-    // @ts-ignore
-    .query(async ({ ctx, input, type, path }) => {
-      return getCommunityComments({
-        cacheGroup: CACHE_GROUP,
-        type,
-        path,
-        input,
-        ctx,
-      })
-    }),
-  updateComment: protectedProcedure
-    .input(updateCommentSchema)
-    .mutation(async ({ input }) => {
-      return updateComment(input)
-    }),
-  deleteThread: protectedProcedure
-    .input(deleteThreadAndRelationsSchema)
-    .mutation(async ({ input }) => {
-      return deleteThreadAndRelations(input)
-    }),
-  interactionsCountForCollectionGroup: protectedProcedure
-    .input(interactionsCountForCollectionGroupSchema)
-    // @ts-ignore
-    .query(async ({ ctx, input, type, path }) => {
-      return getinteractionsCountForCollectionGroup({
         cacheGroup: CACHE_GROUP,
         type,
         path,
@@ -286,170 +129,6 @@ export const communitiesRouter = {
       )
     }),
 
-  createCourses: protectedProcedure
-    .input(
-      z.array(
-        communityCourseSchema
-          .pick({
-            id: true,
-            authorUid: true,
-            author: true,
-            communityId: true,
-            typeUid: true,
-            type: true,
-            typeAccessor: true,
-            publicationUid: true,
-          })
-          .merge(
-            communityCourseSchema
-              .omit({
-                publicationUid: true,
-                id: true,
-                authorUid: true,
-                author: true,
-                communityId: true,
-                typeUid: true,
-                type: true,
-                typeAccessor: true,
-              })
-              .partial()
-          )
-      )
-    )
-    .mutation(async ({ input, ctx }) => {
-      const batch = db.batch()
-
-      const enrolmentsMap = new Map<string, Set<string>>()
-      const communityIds = new Set<string>()
-      for (const course of input) {
-        const { enrolments, ...courseData } = course
-        communityIds.add(course.communityId)
-        const courseRef = db
-          .collection("communities")
-          .doc(course.communityId)
-          .collection("courses")
-          .doc(course.id)
-
-        batch.set(courseRef, {
-          ...courseData,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        })
-
-        // Create enrolments collection group if enrolments exist
-        if (enrolments && enrolments.length > 0) {
-          enrolmentsMap.set(
-            course.publicationUid,
-            enrolmentsMap.get(course.publicationUid)
-              ? new Set([
-                  ...(enrolmentsMap.get(course.publicationUid) ?? []),
-                  ...enrolments?.map((e) => e.enrolleeUid),
-                ])
-              : new Set(enrolments?.map((e) => e.enrolleeUid))
-          )
-          for (const enrolment of enrolments) {
-            const enrolmentRef = db
-              .collection("communities")
-              .doc(course.communityId)
-              .collection("enrolments")
-              .doc(enrolment.id)
-
-            batch.set(enrolmentRef, {
-              ...enrolment,
-              communityId: course.communityId,
-              courseDocId: course.id,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            })
-          }
-        }
-      }
-
-      await batch.commit()
-      await Promise.all([
-        ...Array.from(enrolmentsMap.entries()).map(
-          ([publicationUid, enrolleeUids]) => {
-            return tryCatch(
-              fetcher({
-                key: "enrol:people",
-                ctx,
-                input: {
-                  params: {
-                    publicationUid,
-                  },
-                  body: {
-                    personUids: Array.from(enrolleeUids),
-                  },
-                  query: {
-                    companyUid: ctx.companyUid ?? "",
-                  },
-                },
-              })
-            )
-          }
-        ),
-        ...input?.map((course) => {
-          return createCommunityFeedItem({
-            communityId: course?.communityId,
-            authorUid: course?.authorUid,
-            author: course?.author,
-            type: "course",
-            group: "courses",
-            groupDocId: course?.id,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            descriptor: "",
-            source: "user",
-            verb: "created",
-            input: {
-              communityId: course?.communityId,
-              courseId: course?.id,
-            },
-            isFeatured: false,
-            isFeaturedUntil: null,
-          })
-        }),
-      ])
-      const storage = useStorage()
-      const keys = await storage.keys()
-      const coursesKeys = Array.from(communityIds).map((cid) => {
-        return generateCacheKey({
-          type: "query",
-          path: "communities.courses",
-          input: { communityId: cid },
-        })
-      })
-
-      const deleteKeys = [
-        ...coursesKeys,
-        ...input?.map((course) => {
-          return generateCacheKey({
-            type: "query",
-            path: "communities.feed",
-            input: {
-              //
-              communityId: course?.communityId,
-            },
-          })
-        }),
-      ]
-
-      await Promise.all(
-        deleteKeys.map((key) =>
-          storage.remove(keys.find((k) => k.includes(key)) as string)
-        )
-      )
-    }),
-  createThread: protectedProcedure
-    .input(createCommunityThreadSchema)
-    .mutation(async ({ input }) => {
-      return createCommunityThread(input)
-    }),
-  updateThread: protectedProcedure
-    .input(updateCommunityThreadSchema)
-    .mutation(async ({ input }) => {
-      return updateCommunityThread(input)
-    }),
   update: protectedProcedure
     .input(
       communitySchema
@@ -563,248 +242,30 @@ export const communitiesRouter = {
         )
       }
     }),
-  updateCourse: protectedProcedure
-    .input(
-      communityCourseSchema
-        .pick({
-          status: true,
-          accessibile: true,
-          title: true,
-          tags: true,
-          caption: true,
-          isFeatured: true,
-          isFeaturedUntil: true,
-        })
-        .partial()
-        .extend({
-          id: z.string(),
-          communityId: z.string(),
-        })
-    )
-    .mutation(async ({ input }) => {
-      const { id, ...payload } = input
 
-      // First find the document in the collectionGroup
-      const snap = await db
-        .collection("communities")
-        .doc(input.communityId)
-        .collection("courses")
-        .doc(input.id)
-        .get()
+  threads: communityThreadsRouter,
+  feed: communitiesFeedRouter,
+  events: communityEventsRouter,
+  courses: communityCoursesRouter,
+  comments: communityCommentsRouter,
+  articles: communityArticlesRouter,
 
-      if (!snap.exists) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Course not found",
-        })
-      }
-
-      // Get the document reference and update it
-      const docRef = snap.ref
-      await docRef.update(payload)
-      const storage = useStorage()
-      const keys = await storage.keys()
-
-      const courseDetailKey = generateCacheKey({
-        type: "query",
-        path: "communities.courseDetail",
-        input: {
-          courseId: input.id,
-          communityId: input.communityId,
-        },
+  interactionsCountForCollectionGroup: protectedProcedure
+    .input(interactionsCountForCollectionGroupSchema)
+    // @ts-ignore
+    .query(async ({ ctx, input, type, path }) => {
+      return getinteractionsCountForCollectionGroup({
+        cacheGroup: CACHE_GROUP,
+        type,
+        path,
+        input,
+        ctx,
       })
-
-      const coursesKey = generateCacheKey({
-        type: "query",
-        path: "communities.courses",
-        input: {
-          communityId: input.communityId,
-        },
-      })
-
-      await Promise.all([
-        storage.remove(
-          keys.find((key) => key.includes(courseDetailKey)) as string
-        ),
-        storage.remove(keys.find((key) => key.includes(coursesKey)) as string),
-      ])
-
-      return { success: true }
     }),
-  deleteCourse: protectedProcedure
-    .input(
-      z.object({
-        communityId: z.string(),
-        courseId: z.string(),
-      })
-    )
-    .mutation(async ({ input }) => {
-      const { communityId, courseId } = input
 
-      // First delete all related enrolments from the collectionGroup
-      const enrolmentsSnap = await db
-        .collectionGroup("enrolments")
-        .where("communityId", "==", communityId)
-        .where("courseDocId", "==", courseId)
-        .get()
-
-      const batch = db.batch()
-      enrolmentsSnap.docs.forEach((doc) => {
-        batch.delete(doc.ref)
-      })
-
-      const courseRef = db
-        .collection("communities")
-        .doc(communityId)
-        .collection("courses")
-        .doc(courseId)
-      batch.delete(courseRef)
-
-      // Commit all deletions
-      const remove = await tryCatch(batch.commit())
-      console.log("remove:::", remove)
-
-      const storage = useStorage()
-      const keys = await storage.keys()
-
-      const deleteKeys = [
-        generateCacheKey({
-          type: "query",
-          path: "communities.courseDetail",
-          input: {
-            courseId: input.courseId,
-            communityId: input.communityId,
-          },
-        }),
-        generateCacheKey({
-          type: "query",
-          path: "communities.courses",
-          input: {
-            communityId: input.communityId,
-          },
-        }),
-        generateCacheKey({
-          type: "query",
-          path: "communities.courseEnrolments",
-          input: {
-            courseDocId: input.courseId,
-            communityId: input.communityId,
-          },
-        }),
-      ]
-
-      await Promise.all(
-        deleteKeys.map((key) =>
-          storage.remove(keys.find((k) => k.includes(key)) as string)
-        )
-      )
-
-      return { success: true }
-    }),
-  selfEnrolToCourse: protectedProcedure
-    .input(
-      communityEnrolmentsSchema
-        .pick({
-          courseDocId: true,
-          enrolleeUid: true,
-          enrollee: true,
-          publicationUid: true,
-        })
-        .extend({
-          communityId: z.string(),
-        })
-    )
-    .mutation(async ({ input, ctx }) => {
-      const payload = {
-        ...input,
-        id: crypto.randomUUID(),
-        enrolmentUid: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        authorUid: ctx.uid,
-      }
-      const enrolFb = await tryCatch(
-        db
-          .collection("communities")
-          .doc(input.communityId)
-          .collection("enrolments")
-          .doc(payload.id)
-          .set(payload)
-      )
-      if (enrolFb.error || !enrolFb.success) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to enrol to course",
-        })
-      }
-      const enrolDb = await tryCatch(
-        fetcher({
-          key: "enrol:people",
-          ctx,
-          input: {
-            params: {
-              publicationUid: input.publicationUid,
-            },
-            body: {
-              personUids: [input.enrolleeUid],
-            },
-            query: {
-              companyUid: ctx.companyUid ?? "",
-            },
-          },
-        })
-      )
-      if (enrolDb.error || !enrolDb.success) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to enrol to course on API",
-        })
-      }
-
-      const storage = useStorage()
-      const keys = await storage.keys()
-
-      const deleteKeys = [
-        generateCacheKey({
-          type: "query",
-          path: "communities.courseDetail",
-          input: {
-            courseId: input.courseDocId,
-            communityId: input.communityId,
-          },
-        }),
-        generateCacheKey({
-          type: "query",
-          path: "communities.courses",
-          input: {
-            communityId: input.communityId,
-          },
-        }),
-        generateCacheKey({
-          type: "query",
-          path: "communities.courseEnrolments",
-          input: {
-            courseDocId: input.courseDocId,
-            communityId: input.communityId,
-          },
-        }),
-      ]
-
-      await Promise.all(
-        deleteKeys.map((key) =>
-          storage.remove(keys.find((k) => k.includes(key)) as string)
-        )
-      )
-      return { success: true }
-    }),
   handleLike: protectedProcedure
     .input(upsertLikeSchema)
     .mutation(async ({ input }) => {
       return upsertLike(input)
-    }),
-  comment: protectedProcedure
-    .input(createCommentSchema)
-    .mutation(async ({ input }) => {
-      return createComment(input)
     }),
 }

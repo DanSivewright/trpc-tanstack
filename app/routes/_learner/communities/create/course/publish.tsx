@@ -125,7 +125,7 @@ function RouteComponent() {
   const me = useSuspenseQuery(trpc.people.me.queryOptions())
 
   const createCourses = useMutation(
-    trpc.communities.createCourses.mutationOptions()
+    trpc.communities.courses.create.mutationOptions()
   )
 
   const formSchema = z.object({

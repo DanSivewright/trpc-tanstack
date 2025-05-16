@@ -31,7 +31,7 @@ const FeedList: React.FC<Props> = ({}) => {
     from: "/_learner/communities/$id/",
   })
   const feed = useSuspenseQuery(
-    trpc.communities.feed.queryOptions({
+    trpc.communities.feed.all.queryOptions({
       communityId: params.id,
     })
   )

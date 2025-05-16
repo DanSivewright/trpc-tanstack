@@ -107,23 +107,23 @@ const FeedInput: React.FC<Props> = ({}) => {
   const wrapperRef = useElementSize()
 
   const createThread = useMutation({
-    ...trpc.communities.createThread.mutationOptions(),
+    ...trpc.communities.threads.create.mutationOptions(),
     onMutate: async (newThread) => {
       await Promise.all([
         queryClient.cancelQueries({
-          queryKey: trpc.communities.threads.queryOptions({
+          queryKey: trpc.communities.threads.all.queryOptions({
             communityId: params.id,
           }).queryKey,
         }),
         queryClient.cancelQueries({
-          queryKey: trpc.communities.feed.queryOptions({
+          queryKey: trpc.communities.feed.all.queryOptions({
             communityId: params.id,
           }).queryKey,
         }),
       ])
 
       queryClient.setQueryData(
-        trpc.communities.threads.queryOptions({
+        trpc.communities.threads.all.queryOptions({
           communityId: params.id,
         }).queryKey,
         // @ts-ignore
@@ -136,7 +136,7 @@ const FeedInput: React.FC<Props> = ({}) => {
     },
     onError: (_, previousThreads) => {
       queryClient.setQueryData(
-        trpc.communities.threads.queryOptions({
+        trpc.communities.threads.all.queryOptions({
           communityId: params.id,
         }).queryKey,
         // @ts-ignore
@@ -145,12 +145,12 @@ const FeedInput: React.FC<Props> = ({}) => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: trpc.communities.threads.queryOptions({
+        queryKey: trpc.communities.threads.all.queryOptions({
           communityId: params.id,
         }).queryKey,
       })
       queryClient.invalidateQueries({
-        queryKey: trpc.communities.feed.queryOptions({
+        queryKey: trpc.communities.feed.all.queryOptions({
           communityId: params.id,
         }).queryKey,
       })

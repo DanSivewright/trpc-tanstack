@@ -37,7 +37,7 @@ import {
   stripSearchParams,
   useLocation,
 } from "@tanstack/react-router"
-import { isBefore } from "date-fns"
+import { endOfDay, isBefore, startOfDay } from "date-fns"
 import { z } from "zod"
 
 import { useNotification } from "@/hooks/use-notification"
@@ -106,7 +106,7 @@ export const Route = createFileRoute(
   },
   loader: async ({ context, deps, params: { id, courseId } }) => {
     context.queryClient.prefetchQuery(
-      context.trpc.communities.courseDetail.queryOptions({
+      context.trpc.communities.courses.detail.queryOptions({
         communityId: id,
         courseId,
       })
@@ -136,7 +136,7 @@ function RouteComponent() {
   const { notification } = useNotification()
 
   const course = useSuspenseQuery(
-    trpc.communities.courseDetail.queryOptions({
+    trpc.communities.courses.detail.queryOptions({
       communityId: params.id,
       courseId: params.courseId,
     })
@@ -470,7 +470,7 @@ function CourseHeader() {
   const trpc = useTRPC()
 
   const course = useSuspenseQuery(
-    trpc.communities.courseDetail.queryOptions({
+    trpc.communities.courses.detail.queryOptions({
       communityId: params.id,
       courseId: params.courseId,
     })
@@ -594,25 +594,25 @@ function CourseSettings() {
   const { notification } = useNotification()
 
   const course = useSuspenseQuery(
-    trpc.communities.courseDetail.queryOptions({
+    trpc.communities.courses.detail.queryOptions({
       communityId: params.id,
       courseId: params.courseId,
     })
   )
 
   const updateCourse = useMutation({
-    ...trpc.communities.updateCourse.mutationOptions(),
+    ...trpc.communities.courses.update.mutationOptions(),
     // @ts-ignore
     onMutate: async (newCourse) => {
       await queryClient.cancelQueries({
-        queryKey: trpc.communities.courseDetail.queryOptions({
+        queryKey: trpc.communities.courses.detail.queryOptions({
           communityId: params.id,
           courseId: params.courseId,
         }).queryKey,
       })
 
       const previousCourse = queryClient.getQueryData(
-        trpc.communities.courseDetail.queryOptions({
+        trpc.communities.courses.detail.queryOptions({
           communityId: params.id,
           courseId: params.courseId,
         }).queryKey
@@ -624,7 +624,7 @@ function CourseSettings() {
       }
 
       queryClient.setQueryData(
-        trpc.communities.courseDetail.queryOptions({
+        trpc.communities.courses.detail.queryOptions({
           communityId: params.id,
           courseId: params.courseId,
         }).queryKey,
@@ -634,7 +634,7 @@ function CourseSettings() {
     },
     onError: (_, previousCourse) => {
       queryClient.setQueryData(
-        trpc.communities.courseDetail.queryOptions({
+        trpc.communities.courses.detail.queryOptions({
           communityId: params.id,
           courseId: params.courseId,
         }).queryKey,
@@ -644,13 +644,13 @@ function CourseSettings() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: trpc.communities.courseDetail.queryOptions({
+        queryKey: trpc.communities.courses.detail.queryOptions({
           communityId: params.id,
           courseId: params.courseId,
         }).queryKey,
       })
       queryClient.invalidateQueries({
-        queryKey: trpc.communities.courses.queryOptions({
+        queryKey: trpc.communities.courses.all.queryOptions({
           communityId: params.id,
         }).queryKey,
       })
@@ -668,6 +668,7 @@ function CourseSettings() {
       communityId: true,
       isFeatured: true,
       isFeaturedUntil: true,
+      isFeaturedFrom: true,
     })
     .extend({
       tags: z.array(z.string()).min(1, "At least one tag is required"),
@@ -684,8 +685,9 @@ function CourseSettings() {
       title: course.data?.title,
       tags: course.data?.tags,
       caption: course.data?.caption,
-      isFeatured: course.data?.isFeatured,
-      isFeaturedUntil: course.data?.isFeaturedUntil,
+      isFeatured: course.data?.isFeatured ?? false,
+      isFeaturedUntil: course.data?.isFeaturedUntil ?? null,
+      isFeaturedFrom: course.data?.isFeaturedFrom ?? null,
     } as z.infer<typeof formSchema>,
     validators: {
       onSubmit: formSchema,
@@ -725,7 +727,15 @@ function CourseSettings() {
         return
       }
 
-      await updateCourse.mutateAsync(args.value)
+      await updateCourse.mutateAsync({
+        ...args.value,
+        isFeaturedUntil: args.value.isFeaturedUntil
+          ? endOfDay(new Date(args.value.isFeaturedUntil)).toISOString()
+          : null,
+        isFeaturedFrom: args.value.isFeatured
+          ? startOfDay(new Date()).toISOString()
+          : null,
+      })
       navigate({
         resetScroll: false,
         search: (prev) => ({
@@ -1130,16 +1140,16 @@ function DeleteCourseModal() {
   const navigate = Route.useNavigate()
 
   const deleteCourse = useMutation({
-    ...trpc.communities.deleteCourse.mutationOptions(),
+    ...trpc.communities.courses.delete.mutationOptions(),
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: trpc.communities.courseDetail.queryOptions({
+        queryKey: trpc.communities.courses.detail.queryOptions({
           communityId: params.id,
           courseId: params.courseId,
         }).queryKey,
       })
       queryClient.invalidateQueries({
-        queryKey: trpc.communities.courses.queryOptions({
+        queryKey: trpc.communities.courses.all.queryOptions({
           communityId: params.id,
         }).queryKey,
       })
@@ -1225,7 +1235,7 @@ function CourseEnrolmentButton() {
   const { notification } = useNotification()
 
   const course = useSuspenseQuery(
-    trpc.communities.courseDetail.queryOptions({
+    trpc.communities.courses.detail.queryOptions({
       communityId: params.id,
       courseId: params.courseId,
     })
@@ -1238,16 +1248,16 @@ function CourseEnrolmentButton() {
   const me = useQuery(trpc.people.me.queryOptions())
 
   const selfEnrolMutation = useMutation({
-    ...trpc.communities.selfEnrolToCourse.mutationOptions(),
+    ...trpc.communities.courses.enrol.mutationOptions(),
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: trpc.communities.courseDetail.queryOptions({
+        queryKey: trpc.communities.courses.detail.queryOptions({
           communityId: params.id,
           courseId: params.courseId,
         }).queryKey,
       })
       queryClient.invalidateQueries({
-        queryKey: trpc.communities.courses.queryOptions({
+        queryKey: trpc.communities.courses.all.queryOptions({
           communityId: params.id,
         }).queryKey,
       })

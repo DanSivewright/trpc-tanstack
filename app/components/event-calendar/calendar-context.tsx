@@ -1,49 +1,14 @@
 import { createContext, useContext, useState, type ReactNode } from "react"
 
-import { type EventColor } from "@/components/event-calendar"
-
-export const etiquettes = [
-  {
-    id: "my-events",
-    name: "My Events",
-    color: "emerald" as EventColor,
-    isActive: true,
-  },
-  {
-    id: "marketing-team",
-    name: "Marketing Team",
-    color: "orange" as EventColor,
-    isActive: true,
-  },
-  {
-    id: "interviews",
-    name: "Interviews",
-    color: "violet" as EventColor,
-    isActive: true,
-  },
-  {
-    id: "events-planning",
-    name: "Events Planning",
-    color: "blue" as EventColor,
-    isActive: true,
-  },
-  {
-    id: "holidays",
-    name: "Holidays",
-    color: "rose" as EventColor,
-    isActive: true,
-  },
-]
-
 interface CalendarContextType {
   // Date management
   currentDate: Date
   setCurrentDate: (date: Date) => void
 
-  // Etiquette visibility management
-  visibleColors: string[]
-  toggleColorVisibility: (color: string) => void
-  isColorVisible: (color: string | undefined) => boolean
+  // // Etiquette visibility management
+  // visibleColors: string[]
+  // toggleColorVisibility: (color: string) => void
+  // isColorVisible: (color: string | undefined) => boolean
 }
 
 const CalendarContext = createContext<CalendarContextType | undefined>(
@@ -65,41 +30,34 @@ interface CalendarProviderProps {
 export function CalendarProvider({ children }: CalendarProviderProps) {
   const [currentDate, setCurrentDate] = useState<Date>(new Date())
 
-  // Initialize visibleColors based on the isActive property in etiquettes
-  const [visibleColors, setVisibleColors] = useState<string[]>(() => {
-    // Filter etiquettes to get only those that are active
-    return etiquettes
-      .filter((etiquette) => etiquette.isActive)
-      .map((etiquette) => etiquette.color)
-  })
+  // const [visibleColors, setVisibleColors] = useState<string[]>(() => {
+  //   return calendars.filter((cal) => cal.isActive).map((cal) => cal.color)
+  // })
 
-  // Toggle visibility of a color
-  const toggleColorVisibility = (color: string) => {
-    setVisibleColors((prev) => {
-      if (prev.includes(color)) {
-        return prev.filter((c) => c !== color)
-      } else {
-        return [...prev, color]
-      }
-    })
-  }
+  // // Toggle visibility of a color
+  // const toggleColorVisibility = (color: string) => {
+  //   setVisibleColors((prev) => {
+  //     if (prev.includes(color)) {
+  //       return prev.filter((c) => c !== color)
+  //     } else {
+  //       return [...prev, color]
+  //     }
+  //   })
+  // }
 
-  // Check if a color is visible
-  const isColorVisible = (color: string | undefined) => {
-    if (!color) return true // Events without a color are always visible
-    return visibleColors.includes(color)
-  }
-
-  const value = {
-    currentDate,
-    setCurrentDate,
-    visibleColors,
-    toggleColorVisibility,
-    isColorVisible,
-  }
+  // // Check if a color is visible
+  // const isColorVisible = (color: string | undefined) => {
+  //   if (!color) return true // Events without a color are always visible
+  //   return visibleColors.includes(color)
+  // }
 
   return (
-    <CalendarContext.Provider value={value}>
+    <CalendarContext.Provider
+      value={{
+        currentDate,
+        setCurrentDate,
+      }}
+    >
       {children}
     </CalendarContext.Provider>
   )

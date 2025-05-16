@@ -53,7 +53,7 @@ const Comments: React.FC<Props> = (props) => {
   const trpc = useTRPC()
 
   const commentsQuery = useSuspenseQuery(
-    trpc.communities.comments.queryOptions({
+    trpc.communities.comments.all.queryOptions({
       communityId,
       collectionGroup,
       collectionGroupDocId,
@@ -123,10 +123,10 @@ const CommentsList: React.FC<CommentsListProps> = ({
   }, [community?.data?.members])
 
   const commentMutation = useMutation({
-    ...trpc.communities.comment.mutationOptions(),
+    ...trpc.communities.comments.create.mutationOptions(),
     onMutate: async (newComment) => {
       await queryClient.cancelQueries({
-        queryKey: trpc.communities.comments.queryOptions({
+        queryKey: trpc.communities.comments.all.queryOptions({
           collectionGroup,
           collectionGroupDocId,
           communityId,
@@ -134,7 +134,7 @@ const CommentsList: React.FC<CommentsListProps> = ({
       })
 
       queryClient.setQueryData(
-        trpc.communities.comments.queryOptions({
+        trpc.communities.comments.all.queryOptions({
           collectionGroup,
           collectionGroupDocId,
           communityId,
@@ -146,7 +146,7 @@ const CommentsList: React.FC<CommentsListProps> = ({
     },
     onError: (_, previousComments) => {
       queryClient.setQueryData(
-        trpc.communities.comments.queryOptions({
+        trpc.communities.comments.all.queryOptions({
           collectionGroup,
           collectionGroupDocId,
           communityId,
@@ -164,7 +164,7 @@ const CommentsList: React.FC<CommentsListProps> = ({
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: trpc.communities.comments.queryOptions({
+        queryKey: trpc.communities.comments.all.queryOptions({
           collectionGroup,
           collectionGroupDocId,
           communityId,
@@ -449,10 +449,10 @@ function CommentDropdown({
   const [open, setOpen] = useState(false)
 
   const updateCommentMutation = useMutation({
-    ...trpc.communities.updateComment.mutationOptions(),
+    ...trpc.communities.comments.update.mutationOptions(),
     onMutate: async (newComment) => {
       await queryClient.cancelQueries({
-        queryKey: trpc.communities.comments.queryOptions({
+        queryKey: trpc.communities.comments.all.queryOptions({
           collectionGroup,
           collectionGroupDocId,
           communityId,
@@ -460,7 +460,7 @@ function CommentDropdown({
       })
 
       queryClient.setQueryData(
-        trpc.communities.comments.queryOptions({
+        trpc.communities.comments.all.queryOptions({
           collectionGroup,
           collectionGroupDocId,
           communityId,
@@ -477,7 +477,7 @@ function CommentDropdown({
     },
     onError: (_, previousComments) => {
       queryClient.setQueryData(
-        trpc.communities.comments.queryOptions({
+        trpc.communities.comments.all.queryOptions({
           collectionGroup,
           collectionGroupDocId,
           communityId,
@@ -495,7 +495,7 @@ function CommentDropdown({
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: trpc.communities.comments.queryOptions({
+        queryKey: trpc.communities.comments.all.queryOptions({
           collectionGroup,
           collectionGroupDocId,
           communityId,
@@ -517,10 +517,10 @@ function CommentDropdown({
   })
 
   const createFeedItemMutation = useMutation({
-    ...trpc.communities.createFeedItem.mutationOptions(),
+    ...trpc.communities.feed.create.mutationOptions(),
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: trpc.communities.feed.queryOptions({
+        queryKey: trpc.communities.feed.all.queryOptions({
           communityId,
         }).queryKey,
       })
@@ -643,10 +643,10 @@ function SoftDeleteComment({
   const queryClient = useQueryClient()
 
   const updateCommentMutation = useMutation({
-    ...trpc.communities.updateComment.mutationOptions(),
+    ...trpc.communities.comments.update.mutationOptions(),
     onMutate: async (newComment) => {
       await queryClient.cancelQueries({
-        queryKey: trpc.communities.comments.queryOptions({
+        queryKey: trpc.communities.comments.all.queryOptions({
           collectionGroup,
           collectionGroupDocId,
           communityId,
@@ -654,7 +654,7 @@ function SoftDeleteComment({
       })
 
       queryClient.setQueryData(
-        trpc.communities.comments.queryOptions({
+        trpc.communities.comments.all.queryOptions({
           collectionGroup,
           collectionGroupDocId,
           communityId,
@@ -680,7 +680,7 @@ function SoftDeleteComment({
     },
     onError: (_, previousComments) => {
       queryClient.setQueryData(
-        trpc.communities.comments.queryOptions({
+        trpc.communities.comments.all.queryOptions({
           collectionGroup,
           collectionGroupDocId,
           communityId,
@@ -698,7 +698,7 @@ function SoftDeleteComment({
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: trpc.communities.comments.queryOptions({
+        queryKey: trpc.communities.comments.all.queryOptions({
           collectionGroup,
           collectionGroupDocId,
           communityId,

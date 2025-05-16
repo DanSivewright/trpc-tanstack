@@ -1,10 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { cn } from "@/utils/cn"
 // import Link from "next/link"
 import { RiCheckLine } from "@remixicon/react"
 
+import { cn } from "@/lib/utils"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Sidebar,
@@ -19,26 +19,36 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar"
+
 // import { etiquettes } from "@/components/big-calendar"
-import {
-  etiquettes,
-  useCalendarContext,
-} from "@/components/event-calendar/calendar-context"
 
 // import { NavUser } from "@/components/nav-user"
 // import SidebarCalendar from "@/components/sidebar-calendar"
 
 export function CommunityEventsSidebar({
+  calendars,
+  visibleCalendars,
+  setVisibleCalendars,
   ...props
-}: React.ComponentProps<typeof Sidebar>) {
-  const { isColorVisible, toggleColorVisibility } = useCalendarContext()
+}: React.ComponentProps<typeof Sidebar> & {
+  visibleCalendars: string[]
+  setVisibleCalendars: React.Dispatch<React.SetStateAction<string[]>>
+  calendars: {
+    id: string
+    name: string
+    color: string
+    background: string
+    isActive: boolean
+  }[]
+}) {
+  // const { isColorVisible, toggleColorVisibility } = useCalendarContext()
   const { open } = useSidebar()
   return (
     <Sidebar
       variant="inset"
       {...props}
       className={cn("z-0 bg-bg-weak-50 max-lg:p-3 lg:pe-1", {
-        "sticky top-12 h-[calc(100dvh-48px)]": open,
+        "sticky top-[92px] h-[calc(100dvh-92px)]": open,
       })}
     >
       <SidebarHeader>
@@ -64,52 +74,55 @@ export function CommunityEventsSidebar({
           <SidebarTrigger className="text-muted-foreground/80 hover:text-foreground/80 hover:bg-transparent!" />
         </div>
       </SidebarHeader>
-      <SidebarContent className="mt-3 gap-0 border-t pt-3">
-        <SidebarGroup className="px-1">
-          CALENDATR
-          {/* <SidebarCalendar /> */}
-        </SidebarGroup>
-        <SidebarGroup className="mt-3 border-t px-1 pt-4">
-          <SidebarGroupLabel className="text-muted-foreground/65 uppercase">
-            Calendars
+      <SidebarContent className="gap-0">
+        {/* <SidebarGroup className="px-1">
+          <SidebarCalendar />
+        </SidebarGroup> */}
+        <SidebarGroup className="mt-3 border-t px-0 pt-4">
+          <SidebarGroupLabel>
+            <span className="text-label-xs uppercase text-text-soft-400">
+              Calendars
+            </span>
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {etiquettes.map((item) => (
+              {calendars.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
                     asChild
-                    className="has-focus-visible:border-ring has-focus-visible:ring-ring/50 has-focus-visible:ring-[3px] relative justify-between rounded-md [&>svg]:size-auto"
+                    className="relative cursor-pointer justify-between rounded-md transition-colors hover:bg-bg-soft-200 [&>svg]:size-auto"
                   >
                     <span>
                       <span className="flex items-center justify-between gap-3 font-medium">
                         <Checkbox.Root
                           id={item.id}
                           className="peer sr-only hidden"
-                          checked={isColorVisible(item.color)}
+                          // className="peer sr-only hidden"
+                          checked={!visibleCalendars.includes(item.id)}
                           onCheckedChange={() =>
-                            toggleColorVisibility(item.color)
+                            setVisibleCalendars((prev) =>
+                              prev.includes(item.id)
+                                ? prev.filter((id) => id !== item.id)
+                                : [...prev, item.id]
+                            )
                           }
                         />
                         <RiCheckLine
-                          className="peer-not-data-[state=checked]:invisible"
+                          className="peer-data-[state=checked]:invisible"
                           size={16}
                           aria-hidden="true"
                         />
                         <label
                           htmlFor={item.id}
-                          className="peer-not-data-[state=checked]:line-through peer-not-data-[state=checked]:text-muted-foreground/65 after:absolute after:inset-0"
+                          className="text-label-md after:absolute after:inset-0 peer-data-[state=checked]:text-text-soft-400 peer-data-[state=checked]:line-through"
                         >
                           {item.name}
                         </label>
                       </span>
+
                       <span
-                        className="bg-(--event-color) size-1.5 rounded-full"
-                        style={
-                          {
-                            "--event-color": `var(--color-${item.color}-400)`,
-                          } as React.CSSProperties
-                        }
+                        className={"bg-blue-400/40 size-1.5 rounded-full"}
+                        // className={cn("size-1.5 rounded-full", item.background)}
                       ></span>
                     </span>
                   </SidebarMenuButton>

@@ -32,7 +32,7 @@ const FeedTread: React.FC<Props> = (feedThread) => {
   const commentsCount = useQuery(
     trpc.communities.interactionsCountForCollectionGroup.queryOptions({
       collectionGroup: feedThread.group,
-      collectionGroupDocId: feedThread.id,
+      collectionGroupDocId: feedThread.input.threadId,
       interactionType: "comments",
       communityId: feedThread.input.communityId,
     })

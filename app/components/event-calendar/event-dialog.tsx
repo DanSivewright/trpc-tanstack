@@ -210,7 +210,7 @@ export function EventDialog({
   return (
     <Modal.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <Modal.Content className="sm:max-w-[425px]">
-        <Modal.Header>
+        <Modal.Header className="px-4">
           <Modal.Title>{event?.id ? "Edit Event" : "Create Event"}</Modal.Title>
           <Modal.Description className="sr-only">
             {event?.id
@@ -223,7 +223,7 @@ export function EventDialog({
             {error}
           </div>
         )}
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 px-4 py-4">
           <div className="*:not-first:mt-1.5">
             <Label.Root>Title</Label.Root>
             <Input.Root>
@@ -442,7 +442,7 @@ export function EventDialog({
             </Radio.Group>
           </fieldset>
         </div>
-        <Modal.Footer className="flex-row sm:justify-between">
+        <Modal.Footer className="flex-row px-4 sm:justify-between">
           {event?.id && (
             <Button.Root
               size="small"

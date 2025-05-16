@@ -29,6 +29,7 @@ import { Route as LearnerCommunitiesIdRouteImport } from './routes/_learner/comm
 import { Route as LearnerCommunitiesCreateIndexImport } from './routes/_learner/communities/create/index'
 import { Route as LearnerCommunitiesIdIndexImport } from './routes/_learner/communities/$id/index'
 import { Route as LearnerCommunitiesCreateCourseRouteImport } from './routes/_learner/communities/create/course/route'
+import { Route as LearnerCommunitiesIdEventsRouteImport } from './routes/_learner/communities/$id/events/route'
 import { Route as LearnerCommunitiesCreateCourseIndexImport } from './routes/_learner/communities/create/course/index'
 import { Route as LearnerCommunitiesIdThreadsIndexImport } from './routes/_learner/communities/$id/threads/index'
 import { Route as LearnerCommunitiesIdEventsIndexImport } from './routes/_learner/communities/$id/events/index'
@@ -159,6 +160,13 @@ const LearnerCommunitiesCreateCourseRouteRoute =
     getParentRoute: () => LearnerRoute,
   } as any)
 
+const LearnerCommunitiesIdEventsRouteRoute =
+  LearnerCommunitiesIdEventsRouteImport.update({
+    id: '/events',
+    path: '/events',
+    getParentRoute: () => LearnerCommunitiesIdRouteRoute,
+  } as any)
+
 const LearnerCommunitiesCreateCourseIndexRoute =
   LearnerCommunitiesCreateCourseIndexImport.update({
     id: '/',
@@ -175,9 +183,9 @@ const LearnerCommunitiesIdThreadsIndexRoute =
 
 const LearnerCommunitiesIdEventsIndexRoute =
   LearnerCommunitiesIdEventsIndexImport.update({
-    id: '/events/',
-    path: '/events/',
-    getParentRoute: () => LearnerCommunitiesIdRouteRoute,
+    id: '/',
+    path: '/',
+    getParentRoute: () => LearnerCommunitiesIdEventsRouteRoute,
   } as any)
 
 const LearnerCommunitiesIdCoursesIndexRoute =
@@ -394,6 +402,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LearnerCommunitiesIndexImport
       parentRoute: typeof LearnerImport
     }
+    '/_learner/communities/$id/events': {
+      id: '/_learner/communities/$id/events'
+      path: '/events'
+      fullPath: '/communities/$id/events'
+      preLoaderRoute: typeof LearnerCommunitiesIdEventsRouteImport
+      parentRoute: typeof LearnerCommunitiesIdRouteImport
+    }
     '/_learner/communities/create/course': {
       id: '/_learner/communities/create/course'
       path: '/communities/create/course'
@@ -466,10 +481,10 @@ declare module '@tanstack/react-router' {
     }
     '/_learner/communities/$id/events/': {
       id: '/_learner/communities/$id/events/'
-      path: '/events'
-      fullPath: '/communities/$id/events'
+      path: '/'
+      fullPath: '/communities/$id/events/'
       preLoaderRoute: typeof LearnerCommunitiesIdEventsIndexImport
-      parentRoute: typeof LearnerCommunitiesIdRouteImport
+      parentRoute: typeof LearnerCommunitiesIdEventsRouteImport
     }
     '/_learner/communities/$id/threads/': {
       id: '/_learner/communities/$id/threads/'
@@ -546,6 +561,20 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
+interface LearnerCommunitiesIdEventsRouteRouteChildren {
+  LearnerCommunitiesIdEventsIndexRoute: typeof LearnerCommunitiesIdEventsIndexRoute
+}
+
+const LearnerCommunitiesIdEventsRouteRouteChildren: LearnerCommunitiesIdEventsRouteRouteChildren =
+  {
+    LearnerCommunitiesIdEventsIndexRoute: LearnerCommunitiesIdEventsIndexRoute,
+  }
+
+const LearnerCommunitiesIdEventsRouteRouteWithChildren =
+  LearnerCommunitiesIdEventsRouteRoute._addFileChildren(
+    LearnerCommunitiesIdEventsRouteRouteChildren,
+  )
+
 interface LearnerCommunitiesIdCoursesCourseIdRouteRouteChildren {
   LearnerCommunitiesIdCoursesCourseIdEnrolmentsRoute: typeof LearnerCommunitiesIdCoursesCourseIdEnrolmentsRoute
   LearnerCommunitiesIdCoursesCourseIdIndexRoute: typeof LearnerCommunitiesIdCoursesCourseIdIndexRoute
@@ -565,17 +594,19 @@ const LearnerCommunitiesIdCoursesCourseIdRouteRouteWithChildren =
   )
 
 interface LearnerCommunitiesIdRouteRouteChildren {
+  LearnerCommunitiesIdEventsRouteRoute: typeof LearnerCommunitiesIdEventsRouteRouteWithChildren
   LearnerCommunitiesIdIndexRoute: typeof LearnerCommunitiesIdIndexRoute
   LearnerCommunitiesIdCoursesCourseIdRouteRoute: typeof LearnerCommunitiesIdCoursesCourseIdRouteRouteWithChildren
   LearnerCommunitiesIdArticlesIndexRoute: typeof LearnerCommunitiesIdArticlesIndexRoute
   LearnerCommunitiesIdCoursesIndexRoute: typeof LearnerCommunitiesIdCoursesIndexRoute
-  LearnerCommunitiesIdEventsIndexRoute: typeof LearnerCommunitiesIdEventsIndexRoute
   LearnerCommunitiesIdThreadsIndexRoute: typeof LearnerCommunitiesIdThreadsIndexRoute
   LearnerCommunitiesIdThreadsThreadIdIndexRoute: typeof LearnerCommunitiesIdThreadsThreadIdIndexRoute
 }
 
 const LearnerCommunitiesIdRouteRouteChildren: LearnerCommunitiesIdRouteRouteChildren =
   {
+    LearnerCommunitiesIdEventsRouteRoute:
+      LearnerCommunitiesIdEventsRouteRouteWithChildren,
     LearnerCommunitiesIdIndexRoute: LearnerCommunitiesIdIndexRoute,
     LearnerCommunitiesIdCoursesCourseIdRouteRoute:
       LearnerCommunitiesIdCoursesCourseIdRouteRouteWithChildren,
@@ -583,7 +614,6 @@ const LearnerCommunitiesIdRouteRouteChildren: LearnerCommunitiesIdRouteRouteChil
       LearnerCommunitiesIdArticlesIndexRoute,
     LearnerCommunitiesIdCoursesIndexRoute:
       LearnerCommunitiesIdCoursesIndexRoute,
-    LearnerCommunitiesIdEventsIndexRoute: LearnerCommunitiesIdEventsIndexRoute,
     LearnerCommunitiesIdThreadsIndexRoute:
       LearnerCommunitiesIdThreadsIndexRoute,
     LearnerCommunitiesIdThreadsThreadIdIndexRoute:
@@ -693,6 +723,7 @@ export interface FileRoutesByFullPath {
   '/': typeof LearnerIndexRoute
   '/communities/$id': typeof LearnerCommunitiesIdRouteRouteWithChildren
   '/communities': typeof LearnerCommunitiesIndexRoute
+  '/communities/$id/events': typeof LearnerCommunitiesIdEventsRouteRouteWithChildren
   '/communities/create/course': typeof LearnerCommunitiesCreateCourseRouteRouteWithChildren
   '/communities/$id/': typeof LearnerCommunitiesIdIndexRoute
   '/communities/create': typeof LearnerCommunitiesCreateIndexRoute
@@ -703,7 +734,7 @@ export interface FileRoutesByFullPath {
   '/communities/create/course/select-courses': typeof LearnerCommunitiesCreateCourseSelectCoursesRoute
   '/communities/$id/articles': typeof LearnerCommunitiesIdArticlesIndexRoute
   '/communities/$id/courses': typeof LearnerCommunitiesIdCoursesIndexRoute
-  '/communities/$id/events': typeof LearnerCommunitiesIdEventsIndexRoute
+  '/communities/$id/events/': typeof LearnerCommunitiesIdEventsIndexRoute
   '/communities/$id/threads': typeof LearnerCommunitiesIdThreadsIndexRoute
   '/communities/create/course/': typeof LearnerCommunitiesCreateCourseIndexRoute
   '/communities/$id/courses/$courseId/enrolments': typeof LearnerCommunitiesIdCoursesCourseIdEnrolmentsRoute
@@ -767,6 +798,7 @@ export interface FileRoutesById {
   '/_learner/': typeof LearnerIndexRoute
   '/_learner/communities/$id': typeof LearnerCommunitiesIdRouteRouteWithChildren
   '/_learner/communities/': typeof LearnerCommunitiesIndexRoute
+  '/_learner/communities/$id/events': typeof LearnerCommunitiesIdEventsRouteRouteWithChildren
   '/_learner/communities/create/course': typeof LearnerCommunitiesCreateCourseRouteRouteWithChildren
   '/_learner/communities/$id/': typeof LearnerCommunitiesIdIndexRoute
   '/_learner/communities/create/': typeof LearnerCommunitiesCreateIndexRoute
@@ -808,6 +840,7 @@ export interface FileRouteTypes {
     | '/'
     | '/communities/$id'
     | '/communities'
+    | '/communities/$id/events'
     | '/communities/create/course'
     | '/communities/$id/'
     | '/communities/create'
@@ -818,7 +851,7 @@ export interface FileRouteTypes {
     | '/communities/create/course/select-courses'
     | '/communities/$id/articles'
     | '/communities/$id/courses'
-    | '/communities/$id/events'
+    | '/communities/$id/events/'
     | '/communities/$id/threads'
     | '/communities/create/course/'
     | '/communities/$id/courses/$courseId/enrolments'
@@ -879,6 +912,7 @@ export interface FileRouteTypes {
     | '/_learner/'
     | '/_learner/communities/$id'
     | '/_learner/communities/'
+    | '/_learner/communities/$id/events'
     | '/_learner/communities/create/course'
     | '/_learner/communities/$id/'
     | '/_learner/communities/create/'
@@ -1006,11 +1040,11 @@ export const routeTree = rootRoute
       "filePath": "_learner/communities/$id/route.tsx",
       "parent": "/_learner",
       "children": [
+        "/_learner/communities/$id/events",
         "/_learner/communities/$id/",
         "/_learner/communities/$id/courses/$courseId",
         "/_learner/communities/$id/articles/",
         "/_learner/communities/$id/courses/",
-        "/_learner/communities/$id/events/",
         "/_learner/communities/$id/threads/",
         "/_learner/communities/$id/threads/$threadId/"
       ]
@@ -1018,6 +1052,13 @@ export const routeTree = rootRoute
     "/_learner/communities/": {
       "filePath": "_learner/communities/index.tsx",
       "parent": "/_learner"
+    },
+    "/_learner/communities/$id/events": {
+      "filePath": "_learner/communities/$id/events/route.tsx",
+      "parent": "/_learner/communities/$id",
+      "children": [
+        "/_learner/communities/$id/events/"
+      ]
     },
     "/_learner/communities/create/course": {
       "filePath": "_learner/communities/create/course/route.tsx",
@@ -1077,7 +1118,7 @@ export const routeTree = rootRoute
     },
     "/_learner/communities/$id/events/": {
       "filePath": "_learner/communities/$id/events/index.tsx",
-      "parent": "/_learner/communities/$id"
+      "parent": "/_learner/communities/$id/events"
     },
     "/_learner/communities/$id/threads/": {
       "filePath": "_learner/communities/$id/threads/index.tsx",

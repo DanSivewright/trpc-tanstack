@@ -34,7 +34,7 @@ import {
   useCanGoBack,
   useRouter,
 } from "@tanstack/react-router"
-import { format, formatDistance } from "date-fns"
+import { endOfDay, format, formatDistance, startOfDay } from "date-fns"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
 import { AnimatePresence, motion, useInView } from "motion/react"
 import { Vibrant } from "node-vibrant/browser"
@@ -92,7 +92,7 @@ export const Route = createFileRoute(
   },
   loader: async ({ params, context }) => {
     await context.queryClient.ensureQueryData(
-      context.trpc.communities.threadDetail.queryOptions({
+      context.trpc.communities.threads.detail.queryOptions({
         communityId: params.id,
         threadId: params.threadId,
       })
@@ -129,7 +129,7 @@ function RouteComponent() {
   }, [])
 
   const thread = useSuspenseQuery(
-    trpc.communities.threadDetail.queryOptions({
+    trpc.communities.threads.detail.queryOptions({
       communityId: params.id,
       threadId: params.threadId,
     })
@@ -137,10 +137,10 @@ function RouteComponent() {
   const me = useQuery(trpc.people.me.queryOptions())
 
   const commentMutation = useMutation({
-    ...trpc.communities.comment.mutationOptions(),
+    ...trpc.communities.comments.create.mutationOptions(),
     onMutate: async (newComment) => {
       await queryClient.cancelQueries({
-        queryKey: trpc.communities.comments.queryOptions({
+        queryKey: trpc.communities.comments.all.queryOptions({
           collectionGroup: "threads",
           collectionGroupDocId: params.threadId,
           communityId: params.id,
@@ -148,7 +148,7 @@ function RouteComponent() {
       })
 
       queryClient.setQueryData(
-        trpc.communities.comments.queryOptions({
+        trpc.communities.comments.all.queryOptions({
           collectionGroup: "threads",
           collectionGroupDocId: params.threadId,
           communityId: params.id,
@@ -160,7 +160,7 @@ function RouteComponent() {
     },
     onError: (_, previousComments) => {
       queryClient.setQueryData(
-        trpc.communities.comments.queryOptions({
+        trpc.communities.comments.all.queryOptions({
           collectionGroup: "threads",
           collectionGroupDocId: params.threadId,
           communityId: params.id,
@@ -171,7 +171,7 @@ function RouteComponent() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: trpc.communities.comments.queryOptions({
+        queryKey: trpc.communities.comments.all.queryOptions({
           collectionGroup: "threads",
           collectionGroupDocId: params.threadId,
           communityId: params.id,
@@ -203,7 +203,7 @@ function RouteComponent() {
       status: "posted",
       communityId: params.id,
       collectionGroup: "threads",
-      collectionGroupDocId: thread?.data?.id,
+      collectionGroupDocId: params.threadId,
       rootParentCommentId: id,
       parentCommentId,
       likesCount: 0,
@@ -460,7 +460,7 @@ function ThreadDropdown() {
   const params = Route.useParams()
   const navigate = Route.useNavigate()
   const thread = useSuspenseQuery(
-    trpc.communities.threadDetail.queryOptions({
+    trpc.communities.threads.detail.queryOptions({
       communityId: params.id,
       threadId: params.threadId,
     })
@@ -557,7 +557,7 @@ function DeleteThreadModal() {
   const router = useRouter()
 
   const deleteThread = useMutation({
-    ...trpc.communities.deleteThread.mutationOptions(),
+    ...trpc.communities.threads.delete.mutationOptions(),
     onSuccess: () => {
       queryClient.invalidateQueries()
 
@@ -679,24 +679,24 @@ function ThreadSettings() {
   ]
 
   const thread = useSuspenseQuery(
-    trpc.communities.threadDetail.queryOptions({
+    trpc.communities.threads.detail.queryOptions({
       communityId: params.id,
       threadId: params.threadId,
     })
   )
 
   const updateThread = useMutation({
-    ...trpc.communities.updateThread.mutationOptions(),
+    ...trpc.communities.threads.update.mutationOptions(),
     onMutate: async (newThread) => {
       await queryClient.cancelQueries({
-        queryKey: trpc.communities.threadDetail.queryOptions({
+        queryKey: trpc.communities.threads.detail.queryOptions({
           communityId: params.id,
           threadId: newThread.id,
         }).queryKey,
       })
 
       queryClient.setQueryData(
-        trpc.communities.threadDetail.queryOptions({
+        trpc.communities.threads.detail.queryOptions({
           communityId: params.id,
           threadId: newThread.id,
         }).queryKey,
@@ -713,7 +713,7 @@ function ThreadSettings() {
     },
     onError: (_, previousThread) => {
       queryClient.setQueryData(
-        trpc.communities.threadDetail.queryOptions({
+        trpc.communities.threads.detail.queryOptions({
           communityId: params.id,
           threadId: params.threadId,
         }).queryKey,
@@ -723,18 +723,18 @@ function ThreadSettings() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: trpc.communities.threadDetail.queryOptions({
+        queryKey: trpc.communities.threads.detail.queryOptions({
           communityId: params.id,
           threadId: params.threadId,
         }).queryKey,
       })
       queryClient.invalidateQueries({
-        queryKey: trpc.communities.threads.queryOptions({
+        queryKey: trpc.communities.threads.all.queryOptions({
           communityId: params.id,
         }).queryKey,
       })
       queryClient.invalidateQueries({
-        queryKey: trpc.communities.feed.queryOptions({
+        queryKey: trpc.communities.feed.all.queryOptions({
           communityId: params.id,
         }).queryKey,
       })
@@ -793,6 +793,7 @@ function ThreadSettings() {
       attachments: thread.data?.attachments,
       isFeatured: thread.data?.isFeatured || false,
       isFeaturedUntil: thread.data?.isFeaturedUntil || null,
+      isFeaturedFrom: thread.data?.isFeaturedFrom || null,
       updatedAt: thread.data?.updatedAt,
       images: [
         ...(thread.data?.images || []),
@@ -929,13 +930,16 @@ function ThreadSettings() {
           }
         }
       }
-      console.log("payload:::", payload)
+
       // @ts-ignore
       await updateThread.mutateAsync({
         ...payload,
         isFeatured: data?.value?.isFeatured ? true : false,
         isFeaturedUntil: data?.value?.isFeaturedUntil
-          ? new Date(data?.value?.isFeaturedUntil).toISOString()
+          ? endOfDay(new Date(data?.value?.isFeaturedUntil)).toISOString()
+          : null,
+        isFeaturedFrom: data?.value?.isFeatured
+          ? startOfDay(new Date()).toISOString()
           : null,
       })
 

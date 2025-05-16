@@ -119,6 +119,7 @@ const communityCollectionGroupBaseSchema = z.object({
     .nullable()
     .optional(),
   isFeatured: z.boolean().optional().nullable(),
+  isFeaturedFrom: z.string().optional().nullable(),
   isFeaturedUntil: z.string().optional().nullable(),
 })
 
@@ -211,6 +212,7 @@ const communityFeedItemBaseSchema = z.object({
   communityId: z.string(),
   isFeatured: z.boolean().optional().nullable(),
   isFeaturedUntil: z.string().optional().nullable(),
+  isFeaturedFrom: z.string().optional().nullable(),
   groupDocId: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),

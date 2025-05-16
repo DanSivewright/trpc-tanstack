@@ -1,4 +1,7 @@
-export type CalendarView = "month" | "week" | "day" | "agenda"
+import { z } from "zod"
+
+export const CalendarViewSchema = z.enum(["month", "week", "day", "agenda"])
+export type CalendarView = z.infer<typeof CalendarViewSchema>
 
 export interface CalendarEvent {
   id: string
@@ -6,10 +9,11 @@ export interface CalendarEvent {
   description?: string
   start: Date
   end: Date
+  calendarId?: string
   allDay?: boolean
   color?: EventColor
   label?: string
   location?: string
 }
 
-export type EventColor = "blue" | "orange" | "violet" | "rose" | "emerald"
+export type EventColor = "blue" | "orange" | "violet" | "rose" | "teal"

@@ -32,7 +32,7 @@ export const Route = createFileRoute(
   loader: async ({ context, params: { id, courseId }, deps }) => {
     await Promise.all([
       context.queryClient.ensureQueryData(
-        context.trpc.communities.courseDetail.queryOptions({
+        context.trpc.communities.courses.detail.queryOptions({
           communityId: id,
           courseId,
         })
@@ -64,7 +64,7 @@ function RouteComponent() {
   const navigate = Route.useNavigate()
 
   const course = useSuspenseQuery(
-    trpc.communities.courseDetail.queryOptions({
+    trpc.communities.courses.detail.queryOptions({
       communityId: params.id,
       courseId: params.courseId,
     })
@@ -112,10 +112,10 @@ function RouteComponent() {
   }, [lessons])
 
   const commentMutation = useMutation({
-    ...trpc.communities.comment.mutationOptions(),
+    ...trpc.communities.comments.create.mutationOptions(),
     onMutate: async (newComment) => {
       await queryClient.cancelQueries({
-        queryKey: trpc.communities.comments.queryOptions({
+        queryKey: trpc.communities.comments.all.queryOptions({
           collectionGroup: "courses",
           collectionGroupDocId: params.courseId,
           communityId: params.id,
@@ -123,7 +123,7 @@ function RouteComponent() {
       })
 
       queryClient.setQueryData(
-        trpc.communities.comments.queryOptions({
+        trpc.communities.comments.all.queryOptions({
           collectionGroup: "courses",
           collectionGroupDocId: params.courseId,
           communityId: params.id,
@@ -135,7 +135,7 @@ function RouteComponent() {
     },
     onError: (_, previousComments) => {
       queryClient.setQueryData(
-        trpc.communities.comments.queryOptions({
+        trpc.communities.comments.all.queryOptions({
           collectionGroup: "courses",
           collectionGroupDocId: params.courseId,
           communityId: params.id,
@@ -146,7 +146,7 @@ function RouteComponent() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: trpc.communities.comments.queryOptions({
+        queryKey: trpc.communities.comments.all.queryOptions({
           collectionGroup: "courses",
           collectionGroupDocId: params.courseId,
           communityId: params.id,

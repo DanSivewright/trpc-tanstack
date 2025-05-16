@@ -64,7 +64,7 @@ export const Route = createFileRoute(
       })
     )
     context.queryClient.ensureQueryData(
-      context.trpc.communities.courseDetail.queryOptions({
+      context.trpc.communities.courses.detail.queryOptions({
         communityId: params.id,
         courseId: params.courseId,
       })
@@ -88,7 +88,7 @@ function EnrolmentsTable() {
   const navigate = Route.useNavigate()
 
   const course = useSuspenseQuery(
-    trpc.communities.courseDetail.queryOptions({
+    trpc.communities.courses.detail.queryOptions({
       communityId: params.id,
       courseId: params.courseId,
     })

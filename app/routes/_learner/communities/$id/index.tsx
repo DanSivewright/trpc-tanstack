@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_learner/communities/$id/")({
         })
       ),
       context.queryClient.ensureQueryData(
-        context.trpc.communities.feed.queryOptions({
+        context.trpc.communities.feed.all.queryOptions({
           communityId: id,
         })
       ),

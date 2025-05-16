@@ -54,7 +54,7 @@ export const Route = createFileRoute("/_learner/communities/$id/threads/")({
   },
   loader: async ({ params, context }) => {
     await context.queryClient.ensureQueryData(
-      context.trpc.communities.threads.queryOptions({
+      context.trpc.communities.threads.all.queryOptions({
         communityId: params.id,
       })
     )
@@ -75,7 +75,7 @@ function RouteComponent() {
   const [sorting, setSorting] = useState<SortingState>([])
 
   const threads = useSuspenseQuery(
-    trpc.communities.threads.queryOptions({
+    trpc.communities.threads.all.queryOptions({
       communityId: params.id,
     })
   )

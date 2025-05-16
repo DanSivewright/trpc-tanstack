@@ -44,7 +44,7 @@ export const Route = createFileRoute("/_learner/communities/$id/courses/")({
   },
   loader: async ({ params, context }) => {
     context.queryClient.prefetchQuery(
-      context.trpc.communities.courses.queryOptions({
+      context.trpc.communities.courses.all.queryOptions({
         communityId: params.id,
       })
     )
@@ -181,7 +181,7 @@ function RouteComponent() {
 function FeaturedCourse({ communityId }: { communityId: string }) {
   const trpc = useTRPC()
   const coursesQuery = useSuspenseQuery(
-    trpc.communities.courses.queryOptions({
+    trpc.communities.courses.all.queryOptions({
       communityId,
     })
   )
@@ -321,7 +321,7 @@ function CourseList() {
   )
   const me = useSuspenseQuery(trpc.people.me.queryOptions())
   const coursesQuery = useSuspenseQuery(
-    trpc.communities.courses.queryOptions({
+    trpc.communities.courses.all.queryOptions({
       communityId: params.id,
     })
   )
