@@ -10,18 +10,17 @@ export function getEventColorClasses(color?: EventColor | string): string {
 
   switch (eventColor) {
     case "sky":
-      return "bg-[#bedbff50] hover:bg-[#bedbff40] text-information-dark"
-    // return "bg-information-base text-information-dark"
+      return "bg-blue-200/50 hover:bg-blue-200/40 text-blue-900/90 dark:bg-blue-400/25 dark:hover:bg-blue-400/20 dark:text-blue-200 shadow-blue-700/8"
     case "violet":
-      return "bg-[#ddd6ff50] hover:bg-[#ddd6ff40] text-feature-dark"
+      return "bg-violet-200/50 hover:bg-violet-200/40 text-violet-900/90 dark:bg-violet-400/25 dark:hover:bg-violet-400/20 dark:text-violet-200 shadow-violet-700/8"
     case "rose":
-      return "bg-[#fecdd350] hover:bg-[#fecdd340] text-highlighted-dark"
-    case "teal":
-      return "bg-[#a7f3d050] hover:bg-[#a7f3d040] text-stable-dark"
+      return "bg-rose-200/50 hover:bg-rose-200/40 text-rose-900/90 dark:bg-rose-400/25 dark:hover:bg-rose-400/20 dark:text-rose-200 shadow-rose-700/8"
+    case "emerald":
+      return "bg-emerald-200/50 hover:bg-emerald-200/40 text-emerald-900/90 dark:bg-emerald-400/25 dark:hover:bg-emerald-400/20 dark:text-emerald-200 shadow-emerald-700/8"
     case "orange":
-      return "bg-[#fed7aa50] hover:bg-[#fed7aa40] text-away-dark"
+      return "bg-orange-200/50 hover:bg-orange-200/40 text-orange-900/90 dark:bg-orange-400/25 dark:hover:bg-orange-400/20 dark:text-orange-200 shadow-orange-700/8"
     default:
-      return "bg-[#bedbff50] hover:bg-[#bedbff40] text-information-dark"
+      return "bg-blue-200/50 hover:bg-blue-200/40 text-blue-900/90 dark:bg-blue-400/25 dark:hover:bg-blue-400/20 dark:text-blue-200 shadow-blue-700/8"
   }
 }
 

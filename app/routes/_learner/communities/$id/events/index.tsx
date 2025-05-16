@@ -27,21 +27,21 @@ const DEFAULT_CALENDARS_MAP: Record<
     id: "course",
     name: "Courses",
     color: "orange",
-    background: "bg-[#fed7aa]",
+    background: "bg-orange-400",
     isActive: true,
   },
   threads: {
     id: "thread",
     name: "Threads",
-    color: "teal",
-    background: "bg-[#a7f3d0]",
+    color: "emerald",
+    background: "bg-emerald-400",
     isActive: true,
   },
   articles: {
     id: "article",
     name: "Articles",
     color: "violet",
-    background: "bg-[#ddd6ff]",
+    background: "bg-violet-400",
     isActive: true,
   },
 }
@@ -82,7 +82,7 @@ function RouteComponent() {
           colGroup?.type === "course"
             ? "orange"
             : colGroup?.type === "thread"
-              ? "teal"
+              ? "emerald"
               : colGroup.type === "article"
                 ? "violet"
                 : "blue",

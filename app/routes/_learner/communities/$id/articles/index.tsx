@@ -1,9 +1,6 @@
 import React, { useState } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
-import type {
-  communityArticleSchema,
-  communityThreadSchema,
-} from "@/integrations/trpc/routers/communities/schemas/communities-schema"
+import type { communityArticleSchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
 import { defineMeta, filterFn } from "@/utils/filters"
 import { highlightText } from "@/utils/highlight-text"
 import {
@@ -53,7 +50,7 @@ export const Route = createFileRoute("/_learner/communities/$id/articles/")({
   },
   loader: async ({ params, context }) => {
     await context.queryClient.ensureQueryData(
-      context.trpc.communities.articles.queryOptions({
+      context.trpc.communities.articles.all.queryOptions({
         communityId: params.id,
       })
     )
@@ -74,7 +71,7 @@ function RouteComponent() {
   const [sorting, setSorting] = useState<SortingState>([])
 
   const articles = useSuspenseQuery(
-    trpc.communities.articles.queryOptions({
+    trpc.communities.articles.all.queryOptions({
       communityId: params.id,
     })
   )

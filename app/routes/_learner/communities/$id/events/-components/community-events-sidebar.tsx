@@ -1,7 +1,4 @@
-"use client"
-
 import * as React from "react"
-// import Link from "next/link"
 import { RiCheckLine } from "@remixicon/react"
 
 import { cn } from "@/lib/utils"
@@ -19,11 +16,6 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar"
-
-// import { etiquettes } from "@/components/big-calendar"
-
-// import { NavUser } from "@/components/nav-user"
-// import SidebarCalendar from "@/components/sidebar-calendar"
 
 export function CommunityEventsSidebar({
   calendars,
@@ -121,8 +113,7 @@ export function CommunityEventsSidebar({
                       </span>
 
                       <span
-                        className={"bg-blue-400/40 size-1.5 rounded-full"}
-                        // className={cn("size-1.5 rounded-full", item.background)}
+                        className={cn("size-1.5 rounded-full", item.background)}
                       ></span>
                     </span>
                   </SidebarMenuButton>
@@ -132,9 +123,6 @@ export function CommunityEventsSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      {/* <SidebarFooter>
-        FOOTER
-      </SidebarFooter> */}
     </Sidebar>
   )
 }
