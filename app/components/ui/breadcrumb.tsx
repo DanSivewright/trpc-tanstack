@@ -101,3 +101,5 @@ export {
   BreadcrumbItemIcon as Icon,
   BreadcrumbItemArrowIcon as ArrowIcon,
 }
+
+export * as Breadcrumb from "./breadcrumb"

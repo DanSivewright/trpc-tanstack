@@ -105,7 +105,7 @@ function RouteComponent() {
           visibleCalendars={visibleCalendars}
           setVisibleCalendars={setVisibleCalendars}
         />
-        <div className="flex h-[calc(100dvh-92px)] max-h-[calc(100dvh-92px)] flex-1 flex-col gap-4 overflow-y-scroll bg-bg-weak-50 p-2">
+        <div className="relative flex h-[calc(100dvh-92px)] max-h-[calc(100dvh-92px)] flex-1 flex-col gap-4 overflow-y-scroll bg-bg-weak-50 p-2">
           <EventCalendar
             className="rounded-lg ring-1 ring-stroke-soft-200"
             view={view}

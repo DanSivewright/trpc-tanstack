@@ -47,7 +47,7 @@ const ContinueSchema = z.object({
   moduleUid: z.string().nullable(),
 })
 
-const EnrolmentSchema = z.object({
+export const EnrolmentSchema = z.object({
   uid: z.string(),
   dueDate: z.string().nullable(),
   publicationBookingUid: z.string().nullable(),
