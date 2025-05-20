@@ -100,7 +100,7 @@ const ModuleSchema = z.object({
   weight: z.string(),
   dueDate: z
     .union([
-      z.object({ dueDate: z.string() }),
+      z.object({ fixed: z.string() }),
       z.object({
         dueDuration: z.string(),
         dueMeasurement: z.string(),

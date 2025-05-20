@@ -3,6 +3,7 @@ import { ContentDetailSchema } from "@/integrations/trpc/routers/content/schemas
 import { ContentEnrolmentsSchema } from "@/integrations/trpc/routers/content/schemas/content-enrolments-schema"
 import { ContentModulesSchema } from "@/integrations/trpc/routers/content/schemas/content-modules-schema"
 import { ContentModulesVersionSchema } from "@/integrations/trpc/routers/content/schemas/content-modules-version-schema"
+import { EnrolmentActivitySchema } from "@/integrations/trpc/routers/enrolments/schemas/enrolment-activity-schema"
 import { EnrolmentsAllSchema } from "@/integrations/trpc/routers/enrolments/schemas/enrolments-all-schema"
 import { EnrolmentsDetailSchema } from "@/integrations/trpc/routers/enrolments/schemas/enrolments-detail-schema"
 import { PeopleAllSchema } from "@/integrations/trpc/routers/people/schemas/people-all-schema"
@@ -55,8 +56,25 @@ export const queryConfig = {
           excludeMaterial: z.boolean().optional(),
         })
         .optional(),
+      addOns: z
+        .object({
+          withActivity: z.boolean().optional().nullable(),
+        })
+        .optional()
+        .nullable(),
     }),
-    as: EnrolmentsDetailSchema,
+    as: EnrolmentsDetailSchema.extend({
+      activity: z.array(EnrolmentActivitySchema).optional().nullable(),
+    }),
+  },
+  "enrolments:activity": {
+    path: "/learn/enrolments/:uid/activity",
+    input: z.object({
+      params: z.object({
+        uid: z.string(),
+      }),
+    }),
+    as: z.array(EnrolmentActivitySchema),
   },
   "people:me": {
     path: "/people/me",
