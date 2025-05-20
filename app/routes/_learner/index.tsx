@@ -96,7 +96,7 @@ export const Route = createFileRoute("/_learner/")({
         query: {
           contentType: "digital,mixded",
           include: "completed",
-          limit: 50,
+          limit: 100,
         },
       })
     )
@@ -134,7 +134,7 @@ function RouteComponent() {
       query: {
         contentType: "digital,mixded",
         include: "completed",
-        limit: 50,
+        limit: 100,
       },
     })
   )
