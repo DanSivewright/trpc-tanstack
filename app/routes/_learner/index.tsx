@@ -13,10 +13,8 @@ import { cn } from "@/utils/cn"
 import { filterFn } from "@/utils/filters"
 import { getTotalTrackableActivity } from "@/utils/get-total-trackable-activity"
 import { highlightText } from "@/utils/highlight-text"
-import * as Tabs from "@radix-ui/react-tabs"
 import {
   RiArrowDownSLine,
-  RiArrowRightLine,
   RiArrowRightSLine,
   RiBook2Line,
   RiCalendarLine,
@@ -27,7 +25,6 @@ import {
   RiFilterLine,
   RiHeading,
   RiLoaderLine,
-  RiPlayLine,
   RiRecordCircleLine,
   RiSearchLine,
   RiSortDesc,
@@ -35,8 +32,6 @@ import {
 } from "@remixicon/react"
 import {
   useQueries,
-  useQuery,
-  useQueryClient,
   useSuspenseQueries,
   useSuspenseQuery,
 } from "@tanstack/react-query"
@@ -74,12 +69,11 @@ import {
   startOfDay,
   startOfMonth,
 } from "date-fns"
-import Autoplay from "embla-carousel-autoplay"
 import { motion } from "motion/react"
 import { z } from "zod"
 
+import { useElementSize } from "@/hooks/use-element-size"
 import { Avatar } from "@/components/ui/avatar"
-import { AvatarGroupCompact } from "@/components/ui/avatar-group-compact"
 import { Badge } from "@/components/ui/badge"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
@@ -90,22 +84,39 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel"
 import { CompactButton } from "@/components/ui/compact-button"
-import { FancyButton } from "@/components/ui/fancy-button"
 import { Input } from "@/components/ui/input"
-import { LinkButton } from "@/components/ui/link-button"
 import { StarRating } from "@/components/ui/svg-rating-icons"
 import { Table } from "@/components/ui/table"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Grid } from "@/components/grid"
-import { Section } from "@/components/section"
 
+import UpcomingDeadlines from "./-components/upcoming-deadlines"
+
+const dr = {
+  mode: "m",
+  start: startOfDay(addDays(new Date(), -30)).toISOString(),
+  end: endOfDay(new Date()).toISOString(),
+} as const
 export const Route = createFileRoute("/_learner/")({
   validateSearch: z.object({
     q: z.string().default(""),
     expanded: z.custom<ExpandedState>().default({}),
+    dr: z
+      .object({
+        mode: z.enum(["d", "y", "h", "w", "b", "m", "custom"]).or(z.string()),
+        start: z.string(),
+        end: z.string(),
+      })
+      .default(dr),
   }),
   search: {
-    middlewares: [stripSearchParams({ q: "", expanded: {} })],
+    middlewares: [
+      stripSearchParams({
+        q: "",
+        expanded: {},
+        dr,
+      }),
+    ],
   },
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(
@@ -200,6 +211,10 @@ function RouteComponent() {
         }),
       })),
   })
+
+  const flatEnrolmentDetails = useMemo(() => {
+    return enrolmentDetails?.flatMap((e) => e.data)
+  }, [enrolmentDetails])
 
   const flatActivityMap = useMemo(() => {
     const map: Map<string, EnrolmentActivityType> = new Map()
@@ -347,6 +362,8 @@ function RouteComponent() {
       ),
   })
 
+  const heroSize = useElementSize()
+
   useEffect(() => {
     if (!api) {
       return
@@ -367,11 +384,6 @@ function RouteComponent() {
           loop: true,
         }}
         setApi={setApi}
-        // plugins={[
-        //   Autoplay({
-        //     delay: 3000,
-        //   }),
-        // ]}
       >
         <CarouselContent>
           {featuredEnrolments?.map((detail, detailIndex) => {
@@ -379,6 +391,19 @@ function RouteComponent() {
               (p) => p.data?.url === detail?.publication?.featureImageUrl
             )
             const progress = progressMapPerDetail.get(detail.uid) || 0
+            const flatLearning = detail?.publication?.material?.flatMap(
+              (m) => m.learning
+            )
+            const continueLessonUid =
+              detail?.continue?.lessonUid || flatLearning?.[0]?.uid
+            const continueLessonIndex = flatLearning?.findIndex(
+              (l) => l.uid === continueLessonUid
+            )
+            const allLearningAfterCurrentLesson =
+              flatLearning?.slice(continueLessonIndex)
+
+            console.log("continue:::", detail)
+
             return (
               <CarouselItem className="relative" key={detail.uid + "-feature"}>
                 <header className="relative z-10 h-[calc(50vh-44px)] w-screen bg-bg-weak-50 pb-5 pt-8">
@@ -406,193 +431,206 @@ function RouteComponent() {
                       className="absolute inset-0 z-0 h-full w-full object-cover"
                     />
                   )}
-                  <Grid
-                    style={{
-                      color: palette?.data?.LightMuted?.titleTextColor,
-                    }}
-                    className="gutter relative z-10 mx-auto h-full w-full max-w-screen-xl pb-6"
-                    gap="xs"
-                  >
-                    <div className="col-span-7 flex flex-col justify-end gap-2">
-                      {detail?.publication?.publishedBy && (
-                        <Tooltip.Root>
-                          <Tooltip.Trigger asChild>
-                            <div className="flex w-fit items-center gap-2 rounded-full bg-bg-white-0/70 p-0.5 pr-3 ring-1 ring-bg-white-0/70 backdrop-blur">
-                              <Avatar.Root size="20">
-                                <Avatar.Image
-                                  src={
-                                    detail?.publication?.publishedBy?.imageUrl
-                                  }
-                                />
-                              </Avatar.Root>
-                              <h2 className="text-label-sm font-light text-text-strong-950">
-                                {detail?.publication?.publishedBy?.name}
-                              </h2>
-                            </div>
-                          </Tooltip.Trigger>
-                          <Tooltip.Content>Publisher</Tooltip.Content>
-                        </Tooltip.Root>
-                      )}
-                      <h1 className="text-title-h4">
-                        {detail.publication.title}
-                      </h1>
-                      <p>
-                        {/* @ts-ignore */}
-                        {detail.publication.summary ||
-                          detail?.publication?.translations?.["1"]?.summary}
-                      </p>
-                      <Button.Root
-                        variant="neutral"
-                        mode="lighter"
-                        size="xsmall"
-                        className="w-fit"
+                  <div className="relative z-10 flex h-full flex-col justify-end gap-6 pb-10">
+                    <Grid
+                      style={{
+                        color: palette?.data?.LightMuted?.titleTextColor,
+                      }}
+                      className="gutter relative z-10 mx-auto w-full max-w-screen-xl"
+                      gap="xs"
+                    >
+                      <div
+                        ref={heroSize.ref}
+                        className="col-span-7 flex flex-col justify-end gap-2"
                       >
-                        <span>{detail?.continue ? "Continue" : "Start"}</span>
-                        <Button.Icon as={RiArrowRightLine} />
-                      </Button.Root>
-                    </div>
-                    <div className="col-span-5 w-full">
-                      <Tabs.Root
-                        defaultValue="progress"
-                        className="flex flex-col gap-3"
-                      >
-                        <Tabs.List className="flex w-full justify-end gap-3">
-                          <Tabs.Trigger asChild value="progress">
-                            <Button.Root
-                              size="xxsmall"
-                              variant="neutral"
-                              mode="stroke"
-                              className="rounded-full"
-                            >
-                              Progress
-                            </Button.Root>
-                          </Tabs.Trigger>
-                          <Tabs.Trigger value="test">Test</Tabs.Trigger>
-                        </Tabs.List>
-                        <Tabs.Content
-                          // style={{
-                          //   background: `rgba(${palette?.data?.LightMuted?.rgb?.join(",")}, 0.5)`,
-                          //   border: `1px solid rgba(${palette?.data?.LightMuted?.rgb?.join(",")}, 0.6)`,
-                          // }}
-                          value="progress"
-                          className="flex flex-col justify-between gap-4 rounded-[22px] border border-bg-white-0/25 bg-bg-white-0/20 p-3 backdrop-blur-lg"
-                        >
-                          <div className=""></div>
-                          {progress > 0 && (
-                            <article className="relative flex w-full flex-col justify-between gap-6 overflow-hidden rounded-10 bg-bg-white-0 p-4 shadow-regular-sm *:text-static-black lg:col-span-5">
-                              <header className="flex flex-col gap-1">
-                                <h2 className="capitalize">
-                                  {detail?.publication?.type} Progress
-                                </h2>
-                                <p className="text-label-xs text-text-soft-400">
-                                  {progress === 0 && (
-                                    <>
-                                      Start learning and watch your progress
-                                      grow.
-                                    </>
-                                  )}
-                                  {progress < 25 && progress > 0 && (
-                                    <>
-                                      You're just getting started! Keep going to
-                                      build momentum.
-                                    </>
-                                  )}
-
-                                  {progress >= 25 && progress < 50 && (
-                                    <>
-                                      You're making good progress! You've
-                                      completed a quarter of the course.
-                                    </>
-                                  )}
-
-                                  {progress >= 50 && progress < 75 && (
-                                    <>
-                                      Excellent work! You're more than halfway
-                                      through your learning journey.
-                                    </>
-                                  )}
-
-                                  {progress >= 75 && progress < 100 && (
-                                    <>
-                                      Almost there! Just a few more activities
-                                      to complete your course.
-                                    </>
-                                  )}
-
-                                  {progress === 100 && (
-                                    <>
-                                      Congratulations! You've completed all
-                                      activities in this course.
-                                    </>
-                                  )}
-                                </p>
-                              </header>
-                              <footer className="flex flex-col gap-1.5">
-                                <h3 className="text-title-h4">{progress}%</h3>
-                                <ul className="flex h-12 w-full items-center gap-1 overflow-hidden">
-                                  {Array.from({ length: 50 }).map((_, i) => {
-                                    const value = progress // 25% progress
-                                    const totalBars = 50
-                                    const barIndex = i + 1
-
-                                    // Calculate exact number of bars that should be filled
-                                    const exactBarsToFill =
-                                      (value / 100) * totalBars
-
-                                    // For full bars
-                                    const shouldFillCompletely =
-                                      barIndex <= Math.floor(exactBarsToFill)
-
-                                    // For partial fill (the transitioning bar)
-                                    const isTransitionBar =
-                                      barIndex === Math.ceil(exactBarsToFill)
-                                    const partialFillPercentage =
-                                      isTransitionBar
-                                        ? (exactBarsToFill % 1) * 100
-                                        : 0
-
-                                    // Final height calculation
-                                    const fillHeight = shouldFillCompletely
-                                      ? "100%"
-                                      : isTransitionBar
-                                        ? `${partialFillPercentage}%`
-                                        : "0%"
-
-                                    return (
-                                      <li
-                                        key={`progress-${i}-${detail?.uid}`}
-                                        className="relative h-full w-full bg-bg-white-0/10"
-                                      >
-                                        <motion.div
-                                          className="absolute inset-x-0 bottom-0 bg-success-base"
-                                          initial={{ height: "0%" }}
-                                          viewport={{
-                                            once: true,
-                                          }}
-                                          animate={{
-                                            height:
-                                              detailIndex + 1 === current
-                                                ? fillHeight
-                                                : "0%",
-                                          }}
-                                          transition={{
-                                            duration: 0.5,
-                                            delay: i * 0.02, // Stagger the animations
-                                            ease: "easeOut",
-                                          }}
-                                        />
-                                      </li>
-                                    )
-                                  })}
-                                </ul>
-                              </footer>
-                            </article>
+                        <div className="flex flex-wrap items-center gap-3">
+                          {detail?.dueDate && (
+                            <Badge.Root>
+                              <Badge.Icon as={RiCalendarLine} />
+                              {format(new Date(detail?.dueDate), "MMM d, yyyy")}
+                            </Badge.Root>
                           )}
-                        </Tabs.Content>
-                        <Tabs.Content value="test">Test</Tabs.Content>
-                      </Tabs.Root>
-                    </div>
-                  </Grid>
+                        </div>
+                        <h1 className="line-clamp-3 text-title-h2">
+                          {detail?.publication?.publishedBy && (
+                            <Tooltip.Root>
+                              <Tooltip.Trigger asChild>
+                                <Avatar.Root
+                                  className="mr-4 inline-flex"
+                                  size="32"
+                                >
+                                  <Avatar.Image
+                                    src={
+                                      detail?.publication?.publishedBy?.imageUrl
+                                    }
+                                  />
+                                </Avatar.Root>
+                              </Tooltip.Trigger>
+                              <Tooltip.Content>
+                                Publisher:{" "}
+                                {detail?.publication?.publishedBy?.name}
+                              </Tooltip.Content>
+                            </Tooltip.Root>
+                          )}
+
+                          {detail.publication.title}
+                        </h1>
+                        <p className="line-clamp-3 text-label-sm opacity-70">
+                          {detail.publication.summary ||
+                            detail?.publication?.translations?.["1"]?.summary}
+                        </p>
+                        {detail?.publication?.topics && (
+                          <div className="flex flex-wrap gap-2">
+                            {detail?.publication?.topics?.map((topic) => (
+                              <Badge.Root
+                                {...(palette?.data?.LightMuted?.rgb
+                                  ? {
+                                      style: {
+                                        backgroundColor: `rgba(${palette?.data?.DarkVibrant?.rgb?.join(",")}, 1)`,
+                                      },
+                                    }
+                                  : {
+                                      color: "blue",
+                                    })}
+                                key={topic}
+                              >
+                                {topic}
+                              </Badge.Root>
+                            ))}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-3 pt-3">
+                          <Button.Root
+                            variant="neutral"
+                            mode="lighter"
+                            className="rounded-full p-0.5 pl-3"
+                          >
+                            <span>Continue Learning</span>
+                            <div className="flex aspect-square h-full items-center justify-center rounded-full bg-bg-strong-950">
+                              <Button.Icon
+                                className="fill-bg-white-0"
+                                as={RiArrowRightSLine}
+                              />
+                            </div>
+                          </Button.Root>
+                          <Button.Root className="gap-6 rounded-full bg-bg-white-0/20 backdrop-blur-xl">
+                            <span>More Info</span>
+                            <Button.Icon as={RiArrowRightSLine} />
+                          </Button.Root>
+                        </div>
+                      </div>
+                      <div className="col-span-5 flex flex-col justify-end gap-3">
+                        {progress > 0 && (
+                          <article className="relative flex w-full flex-col justify-between gap-6 overflow-hidden rounded-10 bg-bg-white-0 p-4 shadow-regular-sm *:text-static-black lg:col-span-5">
+                            <header className="flex flex-col gap-1">
+                              <h2 className="capitalize">
+                                {detail?.publication?.type} Progress
+                              </h2>
+                              <p className="text-label-xs text-text-soft-400">
+                                {progress === 0 && (
+                                  <>
+                                    Start learning and watch your progress grow.
+                                  </>
+                                )}
+                                {progress < 25 && progress > 0 && (
+                                  <>
+                                    You're just getting started! Keep going to
+                                    build momentum.
+                                  </>
+                                )}
+
+                                {progress >= 25 && progress < 50 && (
+                                  <>
+                                    You're making good progress! You've
+                                    completed a quarter of the course.
+                                  </>
+                                )}
+
+                                {progress >= 50 && progress < 75 && (
+                                  <>
+                                    Excellent work! You're more than halfway
+                                    through your learning journey.
+                                  </>
+                                )}
+
+                                {progress >= 75 && progress < 100 && (
+                                  <>
+                                    Almost there! Just a few more activities to
+                                    complete your course.
+                                  </>
+                                )}
+
+                                {progress === 100 && (
+                                  <>
+                                    Congratulations! You've completed all
+                                    activities in this course.
+                                  </>
+                                )}
+                              </p>
+                            </header>
+                            <footer className="flex flex-col gap-1.5">
+                              <h3 className="text-title-h4">{progress}%</h3>
+                              <ul className="flex h-12 w-full items-center gap-1 overflow-hidden">
+                                {Array.from({ length: 50 }).map((_, i) => {
+                                  const value = progress // 25% progress
+                                  const totalBars = 50
+                                  const barIndex = i + 1
+
+                                  // Calculate exact number of bars that should be filled
+                                  const exactBarsToFill =
+                                    (value / 100) * totalBars
+
+                                  // For full bars
+                                  const shouldFillCompletely =
+                                    barIndex <= Math.floor(exactBarsToFill)
+
+                                  // For partial fill (the transitioning bar)
+                                  const isTransitionBar =
+                                    barIndex === Math.ceil(exactBarsToFill)
+                                  const partialFillPercentage = isTransitionBar
+                                    ? (exactBarsToFill % 1) * 100
+                                    : 0
+
+                                  // Final height calculation
+                                  const fillHeight = shouldFillCompletely
+                                    ? "100%"
+                                    : isTransitionBar
+                                      ? `${partialFillPercentage}%`
+                                      : "0%"
+
+                                  return (
+                                    <li
+                                      key={`progress-${i}-${detail?.uid}`}
+                                      className="relative h-full w-full bg-bg-soft-200"
+                                    >
+                                      <motion.div
+                                        className="absolute inset-x-0 bottom-0 bg-success-base"
+                                        initial={{ height: "0%" }}
+                                        viewport={{
+                                          once: true,
+                                        }}
+                                        animate={{
+                                          height:
+                                            detailIndex + 1 === current
+                                              ? fillHeight
+                                              : "0%",
+                                        }}
+                                        transition={{
+                                          duration: 0.5,
+                                          delay: i * 0.02, // Stagger the animations
+                                          ease: "easeOut",
+                                        }}
+                                      />
+                                    </li>
+                                  )
+                                })}
+                              </ul>
+                            </footer>
+                          </article>
+                        )}
+                      </div>
+                    </Grid>
+                  </div>
                 </header>
               </CarouselItem>
             )
@@ -600,12 +638,12 @@ function RouteComponent() {
         </CarouselContent>
       </Carousel>
       <div className="absolute inset-x-0 top-[calc(50vh-20px)] z-0 h-24 w-full rounded-t-20 bg-bg-white-0 drop-shadow-2xl"></div>
-      <Section
-        size="sm"
-        spacer="p"
-        className="relative z-10 -mt-5 rounded-t-20 bg-bg-white-0"
-      >
-        <div className="gutter z-10 mx-auto flex w-full max-w-screen-xl flex-col">
+      <div className="relative z-10 -mt-5 rounded-t-20 bg-bg-white-0 py-10">
+        <div className="gutter z-10 mx-auto flex w-full max-w-screen-xl flex-col gap-12">
+          <Grid gap="xs">
+            <UpcomingDeadlines enrolments={flatEnrolmentDetails} />
+            <div className="col-span-12 bg-red-50 xl:col-span-5">x</div>
+          </Grid>
           <section className="flex flex-col gap-6">
             <Breadcrumb.Root>
               <Breadcrumb.Item>
@@ -656,7 +694,7 @@ function RouteComponent() {
             />
           </section>
         </div>
-      </Section>
+      </div>
     </>
   )
 }
@@ -841,7 +879,6 @@ function EnrolmentTable<TData, TValue>({
                   <p className="relative z-10 text-label-sm font-light text-text-soft-400">
                     Can't find what you're looking for?
                   </p>
-
                   <RiSearchLine
                     className="absolute -top-24 right-24 z-0 rotate-[-20deg] text-text-soft-400 opacity-10"
                     size={450}
