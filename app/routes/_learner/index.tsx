@@ -13,8 +13,10 @@ import { cn } from "@/utils/cn"
 import { filterFn } from "@/utils/filters"
 import { getTotalTrackableActivity } from "@/utils/get-total-trackable-activity"
 import { highlightText } from "@/utils/highlight-text"
+import * as Tabs from "@radix-ui/react-tabs"
 import {
   RiArrowDownSLine,
+  RiArrowRightLine,
   RiArrowRightSLine,
   RiBook2Line,
   RiCalendarLine,
@@ -25,6 +27,7 @@ import {
   RiFilterLine,
   RiHeading,
   RiLoaderLine,
+  RiPlayLine,
   RiRecordCircleLine,
   RiSearchLine,
   RiSortDesc,
@@ -32,7 +35,9 @@ import {
 } from "@remixicon/react"
 import {
   useQueries,
+  useQuery,
   useQueryClient,
+  useSuspenseQueries,
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { createFileRoute, stripSearchParams } from "@tanstack/react-router"
@@ -60,13 +65,17 @@ import {
   addMonths,
   addYears,
   endOfDay,
+  endOfMonth,
   format,
   isBefore,
   isThisYear,
   isToday,
   isWithinInterval,
   startOfDay,
+  startOfMonth,
 } from "date-fns"
+import Autoplay from "embla-carousel-autoplay"
+import { motion } from "motion/react"
 import { z } from "zod"
 
 import { Avatar } from "@/components/ui/avatar"
@@ -74,11 +83,19 @@ import { AvatarGroupCompact } from "@/components/ui/avatar-group-compact"
 import { Badge } from "@/components/ui/badge"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel"
 import { CompactButton } from "@/components/ui/compact-button"
+import { FancyButton } from "@/components/ui/fancy-button"
 import { Input } from "@/components/ui/input"
 import { LinkButton } from "@/components/ui/link-button"
 import { StarRating } from "@/components/ui/svg-rating-icons"
 import { Table } from "@/components/ui/table"
+import { Tooltip } from "@/components/ui/tooltip"
 import { Grid } from "@/components/grid"
 import { Section } from "@/components/section"
 
@@ -128,6 +145,10 @@ type ColumnType = {
 }
 
 function RouteComponent() {
+  const [api, setApi] = useState<CarouselApi>()
+  const [current, setCurrent] = useState(0)
+  const [count, setCount] = useState(0)
+
   const trpc = useTRPC()
   const enrolments = useSuspenseQuery(
     trpc.enrolments.all.queryOptions({
@@ -162,7 +183,7 @@ function RouteComponent() {
     })
   }
 
-  const enrolmentDetails = useQueries({
+  const enrolmentDetails = useSuspenseQueries({
     queries: enrolments?.data?.enrolments
       .filter((x) => x.publication?.type === "course")
       ?.map((e) => ({
@@ -285,110 +306,356 @@ function RouteComponent() {
     })
   }, [formattedEnrolments, enrolmentDetails, progressMapPerDetail])
 
+  const featuredEnrolments = useMemo(() => {
+    const notCompleted = enrolments?.data?.enrolments?.filter(
+      (e) => e.currentState !== "completed"
+    )
+    const sortedByCreatedAt = notCompleted?.sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    )
+    const onlyIntercalCourses = sortedByCreatedAt?.filter(
+      (e) => e.publication.type === "course"
+    )
+    const dueThisMonth = onlyIntercalCourses?.filter((e) => {
+      if (!e.dueDate) return false
+      const dueDate = endOfDay(new Date(e.dueDate))
+      const start = startOfMonth(new Date())
+      const end = endOfMonth(new Date())
+      return isWithinInterval(dueDate, { start, end })
+    })
+    const listOfPossibleFeatures = [...dueThisMonth, ...onlyIntercalCourses]
+    const setOfPublicationEnrolmentUids = new Set(
+      listOfPossibleFeatures?.slice(0, 5)?.map((e) => e.uid)
+    )
+    return enrolmentDetails
+      ?.filter((detail) => setOfPublicationEnrolmentUids.has(detail.data?.uid))
+      .map((detail) => detail.data)
+  }, [enrolments?.data?.enrolments, enrolmentDetails])
+
+  const palettes = useQueries({
+    queries: featuredEnrolments
+      ?.filter(
+        (f) =>
+          f?.publication?.featureImageUrl &&
+          f?.publication?.featureImageUrl !== ""
+      )
+      ?.map((detail) =>
+        trpc.palette.get.queryOptions({
+          url: detail?.publication?.featureImageUrl!,
+        })
+      ),
+  })
+
+  useEffect(() => {
+    if (!api) {
+      return
+    }
+
+    setCount(api.scrollSnapList().length)
+    setCurrent(api.selectedScrollSnap() + 1)
+
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap() + 1)
+    })
+  }, [api])
+
   return (
     <>
-      <Section className="flex flex-col gap-8">
-        <header className="mx-auto flex w-full max-w-screen-lg flex-col gap-4">
-          <div className="flex items-center gap-3">
-            <AvatarGroupCompact.Root className="bg-bg-weak-50">
-              <AvatarGroupCompact.Stack>
-                <Avatar.Root>
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/illustration/emma.png" />
-                </Avatar.Root>
-                <Avatar.Root>
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/illustration/james.png" />
-                </Avatar.Root>
-                <Avatar.Root>
-                  <Avatar.Image src="https://www.alignui.com/images/avatar/illustration/sophia.png" />
-                </Avatar.Root>
-              </AvatarGroupCompact.Stack>
-              <AvatarGroupCompact.Overflow>+9</AvatarGroupCompact.Overflow>
-            </AvatarGroupCompact.Root>
-            <div className="flex flex-col gap-2">
-              <StarRating rating={0.5} />
-              <div className="flex gap-1">
-                <span className="text-paragraph-sm text-text-strong-950">
-                  0.5 ∙ 5.2K Ratings
-                </span>
-                <LinkButton.Root size="medium" variant="gray" underline>
-                  18 reviews
-                </LinkButton.Root>
-              </div>
-            </div>
-          </div>
-          <h1 className="w-full text-pretty text-title-h2 lg:w-3/4">
-            Revolutionizing Rooms, Elevating Luxury Interiors
-          </h1>
-        </header>
-        <Grid className="gap-3 px-4" gap="none">
-          <div className="col-span-12 aspect-video rounded-10 bg-bg-soft-200 lg:col-span-7"></div>
-          <div className="col-span-12 flex flex-1 flex-col gap-4 lg:col-span-5">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <div className="aspect-square w-1/3 rounded-10 bg-bg-soft-200"></div>
-                <div className="aspect-square w-1/3 rounded-10 bg-bg-soft-200"></div>
-                <div className="aspect-square w-1/3 rounded-10 bg-bg-soft-200"></div>
-              </div>
-              <p className="line-clamp-4 text-paragraph-sm text-text-soft-400">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                Consequatur commodi, sit animi, similique nobis saepe autem
-                veritatis illum obcaecati eius nesciunt repellat nihil
-                blanditiis quidem omnis sint soluta cum maiores.
-              </p>
-            </div>
-            <div className="w-full grow rounded-10 bg-blue-50"></div>
-          </div>
-        </Grid>
-      </Section>
+      <Carousel
+        opts={{
+          loop: true,
+        }}
+        setApi={setApi}
+        // plugins={[
+        //   Autoplay({
+        //     delay: 3000,
+        //   }),
+        // ]}
+      >
+        <CarouselContent>
+          {featuredEnrolments?.map((detail, detailIndex) => {
+            const palette = palettes.find(
+              (p) => p.data?.url === detail?.publication?.featureImageUrl
+            )
+            const progress = progressMapPerDetail.get(detail.uid) || 0
+            return (
+              <CarouselItem className="relative" key={detail.uid + "-feature"}>
+                <header className="relative z-10 h-[calc(50vh-44px)] w-screen bg-bg-weak-50 pb-5 pt-8">
+                  {palette?.data && (
+                    <div
+                      style={{
+                        background: `linear-gradient(0deg, rgba(${palette?.data?.LightMuted?.rgb?.join(",")}, 1) 0%, rgba(255,255,255,0) 100%)`,
+                      }}
+                      className="absolute inset-x-0 bottom-0 z-[1] h-[65%]"
+                    >
+                      <div className="gradient-blur">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                      </div>
+                    </div>
+                  )}
+                  {detail?.publication?.featureImageUrl && (
+                    <img
+                      src={detail?.publication?.featureImageUrl}
+                      alt={detail.publication.title + " feature image"}
+                      className="absolute inset-0 z-0 h-full w-full object-cover"
+                    />
+                  )}
+                  <Grid
+                    style={{
+                      color: palette?.data?.LightMuted?.titleTextColor,
+                    }}
+                    className="gutter relative z-10 mx-auto h-full w-full max-w-screen-xl pb-6"
+                    gap="xs"
+                  >
+                    <div className="col-span-7 flex flex-col justify-end gap-2">
+                      {detail?.publication?.publishedBy && (
+                        <Tooltip.Root>
+                          <Tooltip.Trigger asChild>
+                            <div className="flex w-fit items-center gap-2 rounded-full bg-bg-white-0/70 p-0.5 pr-3 ring-1 ring-bg-white-0/70 backdrop-blur">
+                              <Avatar.Root size="20">
+                                <Avatar.Image
+                                  src={
+                                    detail?.publication?.publishedBy?.imageUrl
+                                  }
+                                />
+                              </Avatar.Root>
+                              <h2 className="text-label-sm font-light text-text-strong-950">
+                                {detail?.publication?.publishedBy?.name}
+                              </h2>
+                            </div>
+                          </Tooltip.Trigger>
+                          <Tooltip.Content>Publisher</Tooltip.Content>
+                        </Tooltip.Root>
+                      )}
+                      <h1 className="text-title-h4">
+                        {detail.publication.title}
+                      </h1>
+                      <p>
+                        {/* @ts-ignore */}
+                        {detail.publication.summary ||
+                          detail?.publication?.translations?.["1"]?.summary}
+                      </p>
+                      <Button.Root
+                        variant="neutral"
+                        mode="lighter"
+                        size="xsmall"
+                        className="w-fit"
+                      >
+                        <span>{detail?.continue ? "Continue" : "Start"}</span>
+                        <Button.Icon as={RiArrowRightLine} />
+                      </Button.Root>
+                    </div>
+                    <div className="col-span-5 w-full">
+                      <Tabs.Root
+                        defaultValue="progress"
+                        className="flex flex-col gap-3"
+                      >
+                        <Tabs.List className="flex w-full justify-end gap-3">
+                          <Tabs.Trigger asChild value="progress">
+                            <Button.Root
+                              size="xxsmall"
+                              variant="neutral"
+                              mode="stroke"
+                              className="rounded-full"
+                            >
+                              Progress
+                            </Button.Root>
+                          </Tabs.Trigger>
+                          <Tabs.Trigger value="test">Test</Tabs.Trigger>
+                        </Tabs.List>
+                        <Tabs.Content
+                          // style={{
+                          //   background: `rgba(${palette?.data?.LightMuted?.rgb?.join(",")}, 0.5)`,
+                          //   border: `1px solid rgba(${palette?.data?.LightMuted?.rgb?.join(",")}, 0.6)`,
+                          // }}
+                          value="progress"
+                          className="flex flex-col justify-between gap-4 rounded-[22px] border border-bg-white-0/25 bg-bg-white-0/20 p-3 backdrop-blur-lg"
+                        >
+                          <div className=""></div>
+                          {progress > 0 && (
+                            <article className="relative flex w-full flex-col justify-between gap-6 overflow-hidden rounded-10 bg-bg-white-0 p-4 shadow-regular-sm *:text-static-black lg:col-span-5">
+                              <header className="flex flex-col gap-1">
+                                <h2 className="capitalize">
+                                  {detail?.publication?.type} Progress
+                                </h2>
+                                <p className="text-label-xs text-text-soft-400">
+                                  {progress === 0 && (
+                                    <>
+                                      Start learning and watch your progress
+                                      grow.
+                                    </>
+                                  )}
+                                  {progress < 25 && progress > 0 && (
+                                    <>
+                                      You're just getting started! Keep going to
+                                      build momentum.
+                                    </>
+                                  )}
 
-      <Section side="b" className="flex flex-col gap-6">
-        <Breadcrumb.Root className="px-8">
-          <Breadcrumb.Item>
-            <Avatar.Root size="20">
-              {me?.data?.imageUrl ? (
-                <Avatar.Image src={me?.data?.imageUrl} />
-              ) : (
-                me?.data?.firstName?.[0]
-              )}
-            </Avatar.Root>
-            <span>Learning</span>
-          </Breadcrumb.Item>
-          <Breadcrumb.ArrowIcon as={RiArrowRightSLine} />
-          <Breadcrumb.Item>Courses</Breadcrumb.Item>
-          <Breadcrumb.ArrowIcon as={RiArrowRightSLine} />
-          <Breadcrumb.Item active>
-            The Power of Minimalism in Design
-          </Breadcrumb.Item>
-        </Breadcrumb.Root>
-        <div className="flex items-center gap-2 px-8">
-          <Input.Root className="max-w-[400px]" size="xsmall">
-            <Input.Wrapper>
-              <Input.Icon as={RiSearchLine} />
-              <Input.Field
-                value={search.q}
-                onChange={(e) => {
-                  updateTableFilters("q", e.target.value)
-                }}
-                type="text"
-                placeholder="Search"
-              />
-            </Input.Wrapper>
-          </Input.Root>
-          <Button.Root size="xsmall" variant="neutral" mode="stroke">
-            <Button.Icon as={RiFilterLine} />
-            Filters
-          </Button.Root>
-          <Button.Root size="xsmall" variant="neutral" mode="stroke">
-            <Button.Icon as={RiSortDesc} />
-            Sort by
-          </Button.Root>
+                                  {progress >= 25 && progress < 50 && (
+                                    <>
+                                      You're making good progress! You've
+                                      completed a quarter of the course.
+                                    </>
+                                  )}
+
+                                  {progress >= 50 && progress < 75 && (
+                                    <>
+                                      Excellent work! You're more than halfway
+                                      through your learning journey.
+                                    </>
+                                  )}
+
+                                  {progress >= 75 && progress < 100 && (
+                                    <>
+                                      Almost there! Just a few more activities
+                                      to complete your course.
+                                    </>
+                                  )}
+
+                                  {progress === 100 && (
+                                    <>
+                                      Congratulations! You've completed all
+                                      activities in this course.
+                                    </>
+                                  )}
+                                </p>
+                              </header>
+                              <footer className="flex flex-col gap-1.5">
+                                <h3 className="text-title-h4">{progress}%</h3>
+                                <ul className="flex h-12 w-full items-center gap-1 overflow-hidden">
+                                  {Array.from({ length: 50 }).map((_, i) => {
+                                    const value = progress // 25% progress
+                                    const totalBars = 50
+                                    const barIndex = i + 1
+
+                                    // Calculate exact number of bars that should be filled
+                                    const exactBarsToFill =
+                                      (value / 100) * totalBars
+
+                                    // For full bars
+                                    const shouldFillCompletely =
+                                      barIndex <= Math.floor(exactBarsToFill)
+
+                                    // For partial fill (the transitioning bar)
+                                    const isTransitionBar =
+                                      barIndex === Math.ceil(exactBarsToFill)
+                                    const partialFillPercentage =
+                                      isTransitionBar
+                                        ? (exactBarsToFill % 1) * 100
+                                        : 0
+
+                                    // Final height calculation
+                                    const fillHeight = shouldFillCompletely
+                                      ? "100%"
+                                      : isTransitionBar
+                                        ? `${partialFillPercentage}%`
+                                        : "0%"
+
+                                    return (
+                                      <li
+                                        key={`progress-${i}-${detail?.uid}`}
+                                        className="relative h-full w-full bg-bg-white-0/10"
+                                      >
+                                        <motion.div
+                                          className="absolute inset-x-0 bottom-0 bg-success-base"
+                                          initial={{ height: "0%" }}
+                                          viewport={{
+                                            once: true,
+                                          }}
+                                          animate={{
+                                            height:
+                                              detailIndex + 1 === current
+                                                ? fillHeight
+                                                : "0%",
+                                          }}
+                                          transition={{
+                                            duration: 0.5,
+                                            delay: i * 0.02, // Stagger the animations
+                                            ease: "easeOut",
+                                          }}
+                                        />
+                                      </li>
+                                    )
+                                  })}
+                                </ul>
+                              </footer>
+                            </article>
+                          )}
+                        </Tabs.Content>
+                        <Tabs.Content value="test">Test</Tabs.Content>
+                      </Tabs.Root>
+                    </div>
+                  </Grid>
+                </header>
+              </CarouselItem>
+            )
+          })}
+        </CarouselContent>
+      </Carousel>
+      <div className="absolute inset-x-0 top-[calc(50vh-20px)] z-0 h-24 w-full rounded-t-20 bg-bg-white-0 drop-shadow-2xl"></div>
+      <Section
+        size="sm"
+        spacer="p"
+        className="relative z-10 -mt-5 rounded-t-20 bg-bg-white-0"
+      >
+        <div className="gutter z-10 mx-auto flex w-full max-w-screen-xl flex-col">
+          <section className="flex flex-col gap-6">
+            <Breadcrumb.Root>
+              <Breadcrumb.Item>
+                <Avatar.Root size="20">
+                  {me?.data?.imageUrl ? (
+                    <Avatar.Image src={me?.data?.imageUrl} />
+                  ) : (
+                    me?.data?.firstName?.[0]
+                  )}
+                </Avatar.Root>
+                <span>Learning</span>
+              </Breadcrumb.Item>
+              <Breadcrumb.ArrowIcon as={RiArrowRightSLine} />
+              <Breadcrumb.Item>Courses</Breadcrumb.Item>
+              <Breadcrumb.ArrowIcon as={RiArrowRightSLine} />
+              <Breadcrumb.Item active>
+                The Power of Minimalism in Design
+              </Breadcrumb.Item>
+            </Breadcrumb.Root>
+            <div className="flex items-center gap-2">
+              <Input.Root className="max-w-[400px]" size="xsmall">
+                <Input.Wrapper>
+                  <Input.Icon as={RiSearchLine} />
+                  <Input.Field
+                    value={search.q}
+                    onChange={(e) => {
+                      updateTableFilters("q", e.target.value)
+                    }}
+                    type="text"
+                    placeholder="Search"
+                  />
+                </Input.Wrapper>
+              </Input.Root>
+              <Button.Root size="xsmall" variant="neutral" mode="stroke">
+                <Button.Icon as={RiFilterLine} />
+                Filters
+              </Button.Root>
+              <Button.Root size="xsmall" variant="neutral" mode="stroke">
+                <Button.Icon as={RiSortDesc} />
+                Sort by
+              </Button.Root>
+            </div>
+            <EnrolmentTable
+              getSubRows={(row) => row.subRows}
+              getRowCanExpand={(row) => row.subRows !== undefined}
+              columns={columns}
+              data={data}
+            />
+          </section>
         </div>
-        <EnrolmentTable
-          getSubRows={(row) => row.subRows}
-          getRowCanExpand={(row) => row.subRows !== undefined}
-          columns={columns}
-          data={data}
-        />
       </Section>
     </>
   )
@@ -492,7 +759,6 @@ function EnrolmentTable<TData, TValue>({
   return (
     <div className="no-scrollbar w-full max-w-full overflow-x-auto">
       <Table.Root
-        className="mx-auto px-8"
         {...{
           style: {
             width: table.getCenterTotalSize(),
