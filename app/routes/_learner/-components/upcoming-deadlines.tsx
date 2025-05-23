@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import type { EnrolmentsDetailSchema } from "@/integrations/trpc/routers/enrolments/schemas/enrolments-detail-schema"
+import { cn } from "@/utils/cn"
 import { RiCalendarLine } from "@remixicon/react"
 import { useNavigate, useSearch } from "@tanstack/react-router"
 import {
@@ -103,7 +104,7 @@ const UpcomingDeadlines: React.FC<Props> = ({ enrolments }) => {
   }, [])
 
   return (
-    <div className="col-span-12 flex flex-col gap-3 xl:col-span-7">
+    <div className="col-span-12 flex flex-col gap-3 xl:col-span-4">
       <header className="flex items-center justify-between">
         <h3 className="text-title-h6">Upcoming Deadlines</h3>
         <Popover.Root open={open} onOpenChange={setOpen}>
@@ -198,12 +199,17 @@ const UpcomingDeadlines: React.FC<Props> = ({ enrolments }) => {
         </Popover.Root>
       </header>
       {sortedEnrolments && sortedEnrolments?.length ? (
-        <Grid gap="none" className="w-full gap-2">
-          {sortedEnrolments?.slice(0, 5).map((enrolment) => {
+        <Grid gap="none" className="h-[38vh] w-full gap-2">
+          {sortedEnrolments?.slice(0, 3).map((enrolment) => {
             return (
               <div
                 key={`upcoming-${enrolment?.uid}`}
-                className="col-span-4 flex aspect-[1/1.05] flex-col overflow-hidden rounded-10 bg-bg-weak-50 ring-[1px] ring-stroke-sub-300/65 drop-shadow-xl"
+                className={cn(
+                  "col-span-6 flex flex-col overflow-hidden rounded-10 bg-bg-weak-50 ring-[1px] ring-stroke-sub-300/65 drop-shadow-xl",
+                  {
+                    "h-1/2": sortedEnrolments?.length <= 2,
+                  }
+                )}
               >
                 <div className="relative h-[85%] w-full bg-pink-50">
                   <Badge.Root
@@ -240,18 +246,18 @@ const UpcomingDeadlines: React.FC<Props> = ({ enrolments }) => {
             )
           })}
 
-          {sortedEnrolments?.length > 5 && (
-            <div className="col-span-4 flex aspect-[1/1.05] items-center justify-center rounded-10 bg-primary-base text-center text-static-white">
-              <span className="text-paragraph-sm font-normal">
-                +{sortedEnrolments?.length - 5} more
+          {sortedEnrolments?.length > 3 && (
+            <div className="col-span-6 flex aspect-[1/1.05] items-center justify-center rounded-10 bg-gradient-to-tr from-primary-base via-primary-dark to-primary-darker text-center text-static-white">
+              <span className="text-title-h4 font-black opacity-35">
+                +{sortedEnrolments?.length - 3} more
               </span>
             </div>
           )}
         </Grid>
       ) : (
-        <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-10 bg-bg-weak-50 text-center">
+        <div className="flex aspect-video h-[38vh] w-full flex-col items-center justify-center gap-2 rounded-10 bg-bg-weak-50 text-center">
           <span className="text-title-h4">🎉</span>
-          <h3 className="font-mono text-title-h4">No upcoming deadlines</h3>
+          <h3 className="font-mono text-title-h6">No upcoming deadlines</h3>
           <p className="text-pretty text-paragraph-sm font-normal">
             No deadlines for this range. Feel free to learn at your own pace.
           </p>

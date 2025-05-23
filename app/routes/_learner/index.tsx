@@ -90,6 +90,8 @@ import { Table } from "@/components/ui/table"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Grid } from "@/components/grid"
 
+import RecentLearning from "./-components/recent-learning"
+import TodaysSchedule from "./-components/todays-schedule"
 import UpcomingDeadlines from "./-components/upcoming-deadlines"
 
 const dr = {
@@ -639,10 +641,17 @@ function RouteComponent() {
       </Carousel>
       <div className="absolute inset-x-0 top-[calc(50vh-20px)] z-0 h-24 w-full rounded-t-20 bg-bg-white-0 drop-shadow-2xl"></div>
       <div className="relative z-10 -mt-5 rounded-t-20 bg-bg-white-0 py-10">
-        <div className="gutter z-10 mx-auto flex w-full max-w-screen-xl flex-col gap-12">
-          <Grid gap="xs">
+        <div className="gutter z-10 mx-auto flex w-full max-w-screen-2xl flex-col gap-12">
+          <Grid>
             <UpcomingDeadlines enrolments={flatEnrolmentDetails} />
-            <div className="col-span-12 bg-red-50 xl:col-span-5">x</div>
+            <TodaysSchedule
+              enrolment={featuredEnrolments?.[3]}
+              activityMap={flatActivityMap}
+            />
+            <RecentLearning
+              enrolment={featuredEnrolments?.[0]}
+              activityMap={flatActivityMap}
+            />
           </Grid>
           <section className="flex flex-col gap-6">
             <Breadcrumb.Root>
