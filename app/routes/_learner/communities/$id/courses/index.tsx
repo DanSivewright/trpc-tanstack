@@ -1,21 +1,32 @@
 import { Suspense, useMemo } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
+import type { EnrolmentActivityType } from "@/integrations/trpc/routers/enrolments/schemas/enrolment-activity-schema"
+import { getTotalTrackableActivity } from "@/utils/get-total-trackable-activity"
+import { groupBy } from "@/utils/group-by"
+import { faker } from "@faker-js/faker"
 import {
   RiAddLine,
+  RiArrowDownSLine,
   RiEyeLine,
   RiLoopLeftLine,
   RiMessageLine,
   RiUserLine,
 } from "@remixicon/react"
-import { useSuspenseQuery } from "@tanstack/react-query"
+import {
+  useQuery,
+  useSuspenseQueries,
+  useSuspenseQuery,
+} from "@tanstack/react-query"
 import {
   createFileRoute,
   Link,
   stripSearchParams,
 } from "@tanstack/react-router"
 import { differenceInHours, format, isBefore } from "date-fns"
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 import { z } from "zod"
 
+import { useElementSize } from "@/hooks/use-element-size"
 import { Avatar } from "@/components/ui/avatar"
 import { AvatarGroupCompact } from "@/components/ui/avatar-group-compact"
 import { Badge } from "@/components/ui/badge"
@@ -24,6 +35,13 @@ import { FancyButton } from "@/components/ui/fancy-button"
 import { Input } from "@/components/ui/input"
 import { StarRating } from "@/components/ui/svg-rating-icons"
 import { Tooltip } from "@/components/ui/tooltip"
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/chart"
+import { Grid } from "@/components/grid"
 import { Section } from "@/components/section"
 
 export const Route = createFileRoute("/_learner/communities/$id/courses/")({
@@ -43,37 +61,319 @@ export const Route = createFileRoute("/_learner/communities/$id/courses/")({
     ],
   },
   loader: async ({ params, context }) => {
-    context.queryClient.prefetchQuery(
-      context.trpc.communities.courses.all.queryOptions({
-        communityId: params.id,
-      })
-    )
-    context.queryClient.prefetchQuery(
-      context.trpc.communities.detail.queryOptions({
-        id: params.id,
-      })
-    )
-    context.queryClient.prefetchQuery(context.trpc.people.me.queryOptions())
+    await Promise.all([
+      context.queryClient.ensureQueryData(
+        context.trpc.communities.courses.all.queryOptions({
+          communityId: params.id,
+        })
+      ),
+      context.queryClient.ensureQueryData(
+        context.trpc.enrolments.all.queryOptions({
+          query: {
+            contentType: "digital,mixded",
+            include: "completed",
+            limit: 100,
+          },
+        })
+      ),
+      context.queryClient.ensureQueryData(
+        context.trpc.people.me.queryOptions()
+      ),
+    ])
+    // context.queryClient.prefetchQuery(
+    //   context.trpc.communities.courses.all.queryOptions({
+    //     communityId: params.id,
+    //   })
+    // )
+    // context.queryClient.prefetchQuery(
+    //   context.trpc.communities.detail.queryOptions({
+    //     id: params.id,
+    //   })
+    // )
+    // context.queryClient.prefetchQuery(context.trpc.people.me.queryOptions())
   },
   component: RouteComponent,
 })
 
 function RouteComponent() {
+  const trpc = useTRPC()
   const params = Route.useParams()
 
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
+  const courses = useSuspenseQuery(
+    trpc.communities.courses.all.queryOptions({
+      communityId: params.id,
+    })
+  )
+
+  const enrolmentsQuery = useSuspenseQuery(
+    trpc.enrolments.all.queryOptions({
+      query: {
+        contentType: "digital,mixded",
+        include: "completed",
+        limit: 100,
+      },
+    })
+  )
+  const enrolments = useMemo(
+    () =>
+      enrolmentsQuery.data?.enrolments?.filter((e) =>
+        courses?.data?.find((c) => c.publicationUid === e.publication?.uid)
+      ),
+    [enrolmentsQuery.data?.enrolments, courses?.data]
+  )
+
+  const enrolmentDetails = useSuspenseQueries({
+    queries: enrolments
+      .filter((x) => x.publication?.type === "course")
+      ?.map((e) => ({
+        ...trpc.enrolments.detail.queryOptions({
+          params: {
+            uid: e.uid,
+          },
+          query: {
+            excludeMaterial: true,
+          },
+          addOns: {
+            withActivity: true,
+          },
+        }),
+      })),
+  })
+
+  const flatEnrolmentDetails = useMemo(() => {
+    return enrolmentDetails?.flatMap((e) => e.data)
+  }, [enrolmentDetails])
+
+  const flatActivityMap = useMemo(() => {
+    const map: Map<string, EnrolmentActivityType> = new Map()
+    if (!enrolmentDetails || enrolmentDetails.length === 0) return map
+    enrolmentDetails
+      .filter((query) => !query?.isLoading)
+      .forEach((item) => {
+        if (
+          !item.data ||
+          !item.data.activity ||
+          item?.data?.activity?.length === 0
+        )
+          return
+        item.data.activity.forEach((activity) => {
+          map.set(activity.typeUid, activity)
+        })
+      })
+    return map
+  }, [enrolmentDetails])
+
+  const activityMapPerDetail = useMemo(() => {
+    const map: Map<string, EnrolmentActivityType[]> = new Map()
+    if (!enrolmentDetails || enrolmentDetails.length === 0) return map
+    enrolmentDetails
+      .filter((query) => !query?.isLoading)
+      .forEach((item) => {
+        if (
+          !item.data ||
+          !item.data.activity ||
+          item?.data?.activity?.length === 0
+        )
+          return
+        map.set(item.data.uid, item.data.activity)
+      })
+    return map
+  }, [enrolmentDetails])
+
+  const totalTrackableActivityMapPerDetail = useMemo(() => {
+    const map: Map<string, number> = new Map()
+    if (!enrolmentDetails || enrolmentDetails.length === 0) return map
+    enrolmentDetails.forEach((item) => {
+      if (item.data) {
+        map.set(item?.data?.uid, getTotalTrackableActivity(item?.data) || 0)
+      }
+    })
+    return map
+  }, [enrolmentDetails])
+
+  const totalCompletedActivityMapPerDetail = useMemo(() => {
+    const map: Map<string, number> = new Map()
+    if (!activityMapPerDetail || !totalTrackableActivityMapPerDetail) return map
+
+    activityMapPerDetail.forEach((activity, key) => {
+      map.set(
+        key,
+        activity.filter(
+          (activity) =>
+            (activity.type === "lesson" ||
+              activity.type === "assessment" ||
+              activity.type === "module" ||
+              activity.type === "assignment") &&
+            activity.status === "completed"
+        ).length || 0
+      )
+    })
+    return map
+  }, [activityMapPerDetail, totalTrackableActivityMapPerDetail])
+
+  const progressMapPerDetail = useMemo(() => {
+    const map: Map<string, number> = new Map()
+    if (
+      !totalCompletedActivityMapPerDetail ||
+      !totalTrackableActivityMapPerDetail
+    )
+      return map
+
+    totalTrackableActivityMapPerDetail.forEach((value, key) => {
+      const completed = totalCompletedActivityMapPerDetail.get(key) || 0
+      const total = completed > 0 ? (completed / value) * 100 : 0
+
+      map.set(key, total > 100 ? 100 : Math.round(total))
+    })
+    return map
+  }, [totalCompletedActivityMapPerDetail, totalTrackableActivityMapPerDetail])
+
+  console.log("acts:::", {
+    activityMapPerDetail,
+    grouped: Array.from(activityMapPerDetail.entries()).map(([key, value]) => {
+      return {
+        [key]: groupBy(value, (x) => x.type),
+      }
+    }),
+  })
+  // const allEnrolmentsForAllCourses = useSuspenseQueries({
+  //   queries: courses?.data?.map((c) =>
+  //     trpc.content.enrolments?.queryOptions({
+  //       params: {
+  //         type: c.typeAccessor,
+  //         typeUid: c.typeUid,
+  //       },
+  //       query: {
+  //         page: 1,
+  //         limit: 100,
+  //       },
+  //     })
+  //   ),
+  // })
+
+  // const onlyMemberEnrolments = useMemo(() => {
+  //   return allEnrolmentsForAllCourses?.filter((e) => {
+  //     return e.data?.filter((enrolment) =>
+  //       courses?.data?.find(
+  //         (c) =>
+  //           c.publicationUid === enrolment?.publicationUid &&
+  //           c.enrolments?.some((x) => x.enrolleeUid === enrolment?.person?.uid)
+  //       )
+  //     )
+  //   })
+  // }, [allEnrolmentsForAllCourses])
+
+  const chartData = useMemo(
+    () =>
+      courses?.data?.map((c) => ({
+        title: c?.content?.content?.title,
+        score: faker.number.int({ min: 0, max: 100 }),
+      })),
+    [courses?.data]
+  )
+  // const chartData = [
+  //   // { month: "January", mobile: 80 },
+  //   // { month: "February", mobile: 200 },
+  //   // { month: "March", mobile: 120 },
+  //   // { month: "April", mobile: 190 },
+  //   // { month: "May", mobile: 130 },
+  //   // { month: "June", mobile: 140 },
+  // ]
+  const chartConfig = {
+    score: {
+      label: "Score",
+      color: "rgb(var(--primary-dark))",
+    },
+  } satisfies ChartConfig
 
   return (
     <>
-      <Suspense
+      <header className="gutter h-[calc(50vh-92px)] bg-bg-soft-200">
+        <Grid className="h-full w-full py-6 pb-10">
+          <div className="col-span-12 flex h-full flex-col justify-between gap-8 xl:col-span-4">
+            <h1 className="text-pretty text-title-h2 font-normal">
+              Keep <span className="opacity-45">Your</span>
+              <br /> Learning Going
+            </h1>
+            <div className="flex w-full flex-col pb-5">
+              <p className="leading-none opacity-45">Learning Completed</p>
+              <p className="shrink-0 text-[10rem] leading-none">87%</p>
+            </div>
+          </div>
+          <div className="col-span-12 flex h-full flex-col xl:col-span-8">
+            <header className="flex items-center justify-between gap-3">
+              <h2 className="text-title-h5">Activity</h2>
+              <div className="flex items-center gap-3">
+                <Badge.Root
+                  size="small"
+                  color="gray"
+                  variant="stroke"
+                  className="ring-0"
+                >
+                  <Badge.Dot />
+                  <span>Community</span>
+                </Badge.Root>
+                <Badge.Root
+                  size="small"
+                  color="purple"
+                  variant="stroke"
+                  className="ring-0"
+                >
+                  <Badge.Dot />
+                  <span>Me</span>
+                </Badge.Root>
+                <Button.Root
+                  className="rounded-full"
+                  size="xxsmall"
+                  variant="neutral"
+                  mode="lighter"
+                >
+                  <Button.Icon as={RiArrowDownSLine} />
+                  All Time
+                </Button.Root>
+              </div>
+            </header>
+            <div className="w-full grow">
+              <ChartContainer
+                config={chartConfig}
+                className="max-h-[300px] min-h-[calc(50vh-184px)] w-full"
+              >
+                <BarChart accessibilityLayer data={chartData}>
+                  <XAxis
+                    dataKey="title"
+                    tickLine={false}
+                    tickMargin={10}
+                    axisLine={false}
+                    tickFormatter={(value) => value.slice(0, 3)}
+                  />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent />}
+                  />
+
+                  <Bar
+                    //
+                    dataKey="score"
+                    fill="var(--color-score)"
+                    radius={4}
+                  />
+                </BarChart>
+              </ChartContainer>
+            </div>
+          </div>
+        </Grid>
+      </header>
+      <pre>{JSON.stringify(enrolmentDetails, null, 2)}</pre>
+      {/* <Suspense
         fallback={
           <div className="h-[500px] w-full animate-pulse bg-bg-soft-200" />
         }
       >
         <FeaturedCourse communityId={params.id} />
-      </Suspense>
-      <Section
+      </Suspense> */}
+      {/* <Section
         size="sm"
         spacer="p"
         className="mx-auto flex max-w-screen-lg flex-col gap-8"
@@ -173,7 +473,7 @@ function RouteComponent() {
             <CourseList />
           </Suspense>
         </div>
-      </Section>
+      </Section> */}
     </>
   )
 }
