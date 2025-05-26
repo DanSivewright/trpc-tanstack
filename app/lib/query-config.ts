@@ -4,6 +4,7 @@ import { ContentEnrolmentsSchema } from "@/integrations/trpc/routers/content/sch
 import { ContentModulesSchema } from "@/integrations/trpc/routers/content/schemas/content-modules-schema"
 import { ContentModulesVersionSchema } from "@/integrations/trpc/routers/content/schemas/content-modules-version-schema"
 import { EnrolmentActivitySchema } from "@/integrations/trpc/routers/enrolments/schemas/enrolment-activity-schema"
+import { EnrolmentResourcesSchema } from "@/integrations/trpc/routers/enrolments/schemas/enrolment-resources-schema"
 import { EnrolmentsAllSchema } from "@/integrations/trpc/routers/enrolments/schemas/enrolments-all-schema"
 import { EnrolmentsDetailSchema } from "@/integrations/trpc/routers/enrolments/schemas/enrolments-detail-schema"
 import { PeopleAllSchema } from "@/integrations/trpc/routers/people/schemas/people-all-schema"
@@ -66,6 +67,16 @@ export const queryConfig = {
     as: EnrolmentsDetailSchema.extend({
       activity: z.array(EnrolmentActivitySchema).optional().nullable(),
     }),
+  },
+  "enrolments:resources": {
+    path: "/learn/:type/:typeUid/resources",
+    input: z.object({
+      params: z.object({
+        type: z.string(),
+        typeUid: z.string(),
+      }),
+    }),
+    as: EnrolmentResourcesSchema,
   },
   "enrolments:activity": {
     path: "/learn/enrolments/:uid/activity",

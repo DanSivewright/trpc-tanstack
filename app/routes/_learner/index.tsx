@@ -35,7 +35,11 @@ import {
   useSuspenseQueries,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { createFileRoute, stripSearchParams } from "@tanstack/react-router"
+import {
+  createFileRoute,
+  Link,
+  stripSearchParams,
+} from "@tanstack/react-router"
 import {
   flexRender,
   getCoreRowModel,
@@ -87,6 +91,8 @@ import { CompactButton } from "@/components/ui/compact-button"
 import { Input } from "@/components/ui/input"
 import { StarRating } from "@/components/ui/svg-rating-icons"
 import { Table } from "@/components/ui/table"
+import { toast } from "@/components/ui/toast"
+import * as AlertToast from "@/components/ui/toast-alert"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Grid } from "@/components/grid"
 
@@ -506,6 +512,15 @@ function RouteComponent() {
                             variant="neutral"
                             mode="lighter"
                             className="rounded-full p-0.5 pl-3"
+                            onClick={() => {
+                              toast.custom((t) => (
+                                <AlertToast.Root
+                                  t={t}
+                                  status="feature"
+                                  message="Comming soon..."
+                                />
+                              ))
+                            }}
                           >
                             <span>Continue Learning</span>
                             <div className="flex aspect-square h-full items-center justify-center rounded-full bg-bg-strong-950">
@@ -515,9 +530,22 @@ function RouteComponent() {
                               />
                             </div>
                           </Button.Root>
-                          <Button.Root className="gap-6 rounded-full bg-bg-white-0/20 backdrop-blur-xl">
-                            <span>More Info</span>
-                            <Button.Icon as={RiArrowRightSLine} />
+                          <Button.Root
+                            asChild
+                            className="gap-6 rounded-full bg-bg-white-0/20 backdrop-blur-xl"
+                          >
+                            <Link
+                              to="/enrolments/$uid"
+                              search={{
+                                // @ts-ignore
+                                type: detail?.publication?.type + "s",
+                                typeUid: detail?.publication?.typeUid!,
+                              }}
+                              params={{ uid: detail.uid }}
+                            >
+                              <span>More Info</span>
+                              <Button.Icon as={RiArrowRightSLine} />
+                            </Link>
                           </Button.Root>
                         </div>
                       </div>
@@ -1068,9 +1096,26 @@ const columns: ColumnDef<ColumnType>[] = [
               </>
             )}
           </Avatar.Root>
-          <span className="line-clamp-1 w-full max-w-56 text-paragraph-sm font-normal hover:text-primary-base hover:underline">
-            {highlightText(value, globalFilter)}
-          </span>
+          {row.depth === 0 ? (
+            <Link
+              to="/enrolments/$uid"
+              search={{
+                // @ts-ignore
+                type: row?.original?.enrolment?.publication?.type + "s",
+                typeUid: row?.original?.enrolment?.publication?.typeUid!,
+              }}
+              params={{
+                uid: row?.original?.uid,
+              }}
+              className="line-clamp-1 w-full max-w-56 text-paragraph-sm font-normal hover:text-primary-base hover:underline"
+            >
+              {highlightText(value, globalFilter)}
+            </Link>
+          ) : (
+            <span className="line-clamp-1 w-full max-w-56 text-paragraph-sm font-normal hover:text-primary-base hover:underline">
+              {highlightText(value, globalFilter)}
+            </span>
+          )}
         </div>
       )
     },

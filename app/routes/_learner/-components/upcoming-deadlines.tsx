@@ -255,7 +255,7 @@ const UpcomingDeadlines: React.FC<Props> = ({ enrolments }) => {
           )}
         </Grid>
       ) : (
-        <div className="flex aspect-video h-[38vh] w-full flex-col items-center justify-center gap-2 rounded-10 bg-bg-weak-50 text-center">
+        <div className="flex aspect-video h-[38vh] w-full flex-col items-center justify-center gap-2 rounded-10 bg-bg-weak-50 px-6 text-center">
           <span className="text-title-h4">🎉</span>
           <h3 className="font-mono text-title-h6">No upcoming deadlines</h3>
           <p className="text-pretty text-paragraph-sm font-normal">

@@ -88,3 +88,31 @@ export const getEnrolmentActivity = async (
 
   return cachedFetcher()
 }
+
+export const getEnrolmentResourcesSchema =
+  queryConfig["enrolments:resources"].input
+const getEnrolmentResourcesOptions = trpcQuerySchema.extend({
+  input: getEnrolmentResourcesSchema,
+})
+export const getEnrolmentResources = async (
+  options: z.infer<typeof getEnrolmentResourcesOptions>
+) => {
+  const cachedFetcher = cachedFunction(
+    () =>
+      fetcher({
+        key: "enrolments:resources",
+        ctx: options.ctx,
+        input: options.input,
+      }),
+    {
+      name: generateCacheKey({
+        type: options.type,
+        path: options.path,
+        input: options.input,
+      }),
+      maxAge: import.meta.env.VITE_CACHE_MAX_AGE,
+      group: options.cacheGroup,
+    }
+  )
+  return cachedFetcher()
+}

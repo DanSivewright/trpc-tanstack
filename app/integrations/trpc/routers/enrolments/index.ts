@@ -1,7 +1,3 @@
-import { cachedFunction, generateCacheKey } from "@/lib/cache"
-import { fetcher } from "@/lib/query"
-import { queryConfig } from "@/lib/query-config"
-
 import { protectedProcedure } from "../../init"
 import {
   getAllEnrolments,
@@ -10,6 +6,8 @@ import {
   getEnrolmentActivitySchema,
   getEnrolmentDetail,
   getEnrolmentDetailSchema,
+  getEnrolmentResources,
+  getEnrolmentResourcesSchema,
 } from "./queries"
 
 const CACHE_GROUP = "enrolments"
@@ -48,6 +46,12 @@ export const enrolmentsRouter = {
 
       return detail
     }),
+  resources: protectedProcedure
+    .input(getEnrolmentResourcesSchema)
+    // @ts-ignore
+    .query(async ({ ctx, input, type, path }) =>
+      getEnrolmentResources({ ctx, input, type, path, cacheGroup: CACHE_GROUP })
+    ),
   activity: protectedProcedure
     .input(getEnrolmentActivitySchema)
     // @ts-ignore
