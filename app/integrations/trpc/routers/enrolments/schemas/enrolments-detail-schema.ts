@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import { EnrolmentActivitySchema } from "./enrolment-activity-schema"
+
 // import { AssessmentSchema, BlocksUnion } from "./learning-detail-schema"
 
 // Common schemas used across different types
@@ -203,4 +205,5 @@ export const EnrolmentsDetailSchema = z.object({
   person: PersonSchema,
   isLocked: z.boolean(),
   continue: ContinueSchema.nullable(),
+  activity: z.array(EnrolmentActivitySchema).optional().nullable(),
 })

@@ -2,6 +2,7 @@ import { useMemo } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
 import type { EnrolmentActivityType } from "@/integrations/trpc/routers/enrolments/schemas/enrolment-activity-schema"
 import type { EnrolmentsDetailSchema } from "@/integrations/trpc/routers/enrolments/schemas/enrolments-detail-schema"
+import { getPathFromGoogleStorage } from "@/utils/get-path-from-google-storage"
 import { RiArrowRightSLine, RiCalendarLine } from "@remixicon/react"
 import { useQuery } from "@tanstack/react-query"
 import { format } from "date-fns"
@@ -27,10 +28,7 @@ const RecentLearning: React.FC<Props> = ({ enrolment, activityMap }) => {
   })
   const imagePath = useMemo(() => {
     if (!enrolment?.publication?.featureImageUrl) return null
-    const match = enrolment?.publication?.featureImageUrl.match(/\/o\/([^?]+)/)
-    if (!match) return null
-
-    return decodeURIComponent(match[1])
+    return getPathFromGoogleStorage(enrolment?.publication?.featureImageUrl)
   }, [enrolment?.publication?.featureImageUrl])
   if (!enrolment) return null
   return (

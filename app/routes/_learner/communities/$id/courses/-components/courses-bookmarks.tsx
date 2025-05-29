@@ -1,0 +1,204 @@
+import { useMemo } from "react"
+import { useTRPC } from "@/integrations/trpc/react"
+import type { EnrolmentsDetailSchema } from "@/integrations/trpc/routers/enrolments/schemas/enrolments-detail-schema"
+import { cn } from "@/utils/cn"
+import { useQueries } from "@tanstack/react-query"
+import { format } from "date-fns"
+import type { z } from "zod"
+
+import { useElementSize } from "@/hooks/use-element-size"
+
+const bookmarkColorMap = {
+  card: {
+    color: "text-purple-900",
+    bg: "bg-purple-200",
+    bar: "bg-purple-700",
+    date: "text-purple-600",
+    outline: "ring-purple-700",
+  },
+  page: {
+    color: "text-feature-dark",
+    bg: "bg-feature-base/25",
+    bar: "bg-feature-dark",
+    date: "text-feature-dark/80",
+    outline: "ring-feature-base",
+  },
+  module: {
+    color: "text-teal-900",
+    bg: "bg-teal-200",
+    bar: "bg-teal-700",
+    date: "text-teal-600",
+    outline: "ring-teal-700",
+  },
+  enrolment: {
+    color: "text-red-900",
+    bg: "bg-red-200",
+    bar: "bg-red-700",
+    date: "text-red-600",
+    outline: "ring-red-700",
+  },
+}
+type Props = {
+  enrolments: z.infer<typeof EnrolmentsDetailSchema>[]
+}
+const CoursesBookmarks: React.FC<Props> = ({ enrolments }) => {
+  const trpc = useTRPC()
+  const bookmarks = useQueries({
+    queries: enrolments?.map((detail) =>
+      trpc.enrolments.bookmarks.queryOptions({
+        identifierKey: "enrolmentUid",
+        identifier: detail?.uid,
+      })
+    ),
+  })
+  const flatBookmarks = useMemo(() => {
+    return bookmarks.flatMap((x) => x.data).filter((x) => x?.bookmarked)
+  }, [bookmarks])
+
+  const materialAndLessonsMap = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        uid: string
+        type: string
+        title: string
+        imageUrl?: string
+      }
+    >()
+
+    enrolments?.forEach((detail) => {
+      detail?.publication?.material?.forEach((material) => {
+        map.set(material.uid, {
+          uid: material.uid,
+          type: "module",
+          title: material.moduleVersion?.module?.translations["1"].title,
+          imageUrl:
+            material.moduleVersion?.module?.featureImageUrl ?? undefined,
+        })
+        material.learning.forEach((learning) => {
+          map.set(learning.uid, {
+            uid: learning.uid,
+            type: learning.type,
+            title: learning?.title || "",
+            imageUrl: undefined,
+          })
+        })
+      })
+    })
+
+    return map
+  }, [enrolments])
+
+  const { ref, width, height } = useElementSize()
+
+  const availableHeight = useMemo(() => {
+    return height - 85
+  }, [height])
+  const max = useMemo(() => {
+    return Math.floor(availableHeight / 44)
+  }, [availableHeight])
+  const extra = useMemo(() => {
+    if (!flatBookmarks || flatBookmarks.length === 0) return 0
+    return flatBookmarks.length - max
+  }, [flatBookmarks, max])
+
+  return (
+    <div
+      ref={ref}
+      className="group relative col-span-12 flex aspect-square h-full flex-col rounded-[22px] bg-bg-white-0 p-4 ring-1 ring-stroke-soft-200 xl:col-span-4"
+    >
+      <header className="flex gap-1.5">
+        <p className="text-paragraph-xl font-bold text-blue-500">Bookmarks</p>
+        <p className="text-paragraph-xl font-bold text-black">
+          {flatBookmarks.length ?? 0}
+        </p>
+      </header>
+      <div className="my-2 flex flex-1 flex-col gap-2">
+        {flatBookmarks?.slice(0, max).map((bookmark, index) => {
+          if (!bookmark) return null
+          const materialFromBookmark = materialAndLessonsMap.get(
+            (bookmark?.key === "card"
+              ? bookmark?.cardId
+              : bookmark?.key === "module"
+                ? bookmark?.moduleUid
+                : bookmark?.key === "lesson" || bookmark?.key === "page"
+                  ? bookmark?.lessonUid
+                  : bookmark?.enrolmentUid) ?? ""
+          )
+
+          return (
+            <button
+              key={bookmark.id}
+              className={cn(
+                "relative flex h-10 w-full items-center gap-2 overflow-hidden rounded-md pl-1 transition-all",
+                bookmarkColorMap[
+                  materialFromBookmark?.type as keyof typeof bookmarkColorMap
+                ].bg
+              )}
+            >
+              <div
+                className={cn(
+                  "h-8 w-1 rounded-sm",
+                  bookmarkColorMap[
+                    materialFromBookmark?.type as keyof typeof bookmarkColorMap
+                  ].bar
+                )}
+              ></div>
+              <div className="flex-col items-center justify-center text-left">
+                <h4
+                  className={cn(
+                    "line-clamp-1 text-label-sm font-bold",
+                    bookmarkColorMap[
+                      materialFromBookmark?.type as keyof typeof bookmarkColorMap
+                    ].color
+                  )}
+                >
+                  {materialFromBookmark?.title}
+                </h4>
+                <p
+                  className={cn(
+                    "whitespace-pre text-label-xs capitalize",
+                    bookmarkColorMap[
+                      materialFromBookmark?.type as keyof typeof bookmarkColorMap
+                    ].date
+                  )}
+                >
+                  {bookmark.key} - {format(bookmark.updatedAt, "MMM d, yyyy")}
+                </p>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      {extra ? (
+        <>
+          {flatBookmarks && flatBookmarks?.slice(max).length > 0 && (
+            <>
+              <div className="flex h-8 w-full items-center justify-between rounded-md bg-bg-weak-50 p-1 ring-1 ring-stroke-soft-200">
+                <p className="text-label-xs font-bold text-neutral-800">
+                  {flatBookmarks?.slice(max).length} more bookmarks
+                </p>
+              </div>
+              {flatBookmarks?.slice(max, max + 3).map((bookmark, index) => (
+                <div
+                  key={bookmark?.id}
+                  style={{
+                    paddingInline: `${(index + 1) * 6}px`,
+                  }}
+                >
+                  <div className="mt-[1px] h-[2px] w-full rounded-full bg-bg-weak-50" />
+                </div>
+              ))}
+            </>
+          )}
+        </>
+      ) : (
+        <div className="w-full text-center text-label-xs font-bold text-text-sub-600">
+          No bookmarks
+        </div>
+      )}
+    </div>
+  )
+}
+export default CoursesBookmarks

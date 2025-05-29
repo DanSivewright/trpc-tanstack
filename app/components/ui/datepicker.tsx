@@ -1,7 +1,5 @@
 // AlignUI Datepicker v0.0.0
 
-"use client"
-
 import * as React from "react"
 import { cn } from "@/utils/cn"
 import { RiArrowLeftSLine, RiArrowRightSLine } from "@remixicon/react"
@@ -94,3 +92,5 @@ function Calendar({
 }
 
 export { Calendar }
+
+export * as Datepicker from "./datepicker"

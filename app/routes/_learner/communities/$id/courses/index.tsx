@@ -1,39 +1,53 @@
-import { Suspense, useMemo } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import db from "@/integrations/firebase/client"
 import { useTRPC } from "@/integrations/trpc/react"
 import type { EnrolmentActivityType } from "@/integrations/trpc/routers/enrolments/schemas/enrolment-activity-schema"
+import { cn } from "@/utils/cn"
+import {
+  enrolmentColumns,
+  formatEnrolment,
+  formatModule,
+} from "@/utils/format-table-enrolments"
+import { getPathFromGoogleStorage } from "@/utils/get-path-from-google-storage"
 import { getTotalTrackableActivity } from "@/utils/get-total-trackable-activity"
 import { groupBy } from "@/utils/group-by"
-import { faker } from "@faker-js/faker"
 import {
-  RiAddLine,
   RiArrowDownSLine,
-  RiEyeLine,
-  RiLoopLeftLine,
-  RiMessageLine,
-  RiUserLine,
+  RiArrowRightSLine,
+  RiCalendarLine,
+  RiSearchLine,
 } from "@remixicon/react"
 import {
+  useQueries,
   useQuery,
   useSuspenseQueries,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import {
-  createFileRoute,
-  Link,
-  stripSearchParams,
-} from "@tanstack/react-router"
+import { createFileRoute, stripSearchParams } from "@tanstack/react-router"
+import type { ExpandedState } from "@tanstack/table-core"
 import { differenceInHours, format, isBefore } from "date-fns"
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import Autoplay from "embla-carousel-autoplay"
+import { collection, getDocs, query, where } from "firebase/firestore"
+import { Bar, BarChart, XAxis } from "recharts"
 import { z } from "zod"
 
 import { useElementSize } from "@/hooks/use-element-size"
+import { useLocalStorage } from "@/hooks/use-local-storage"
 import { Avatar } from "@/components/ui/avatar"
-import { AvatarGroupCompact } from "@/components/ui/avatar-group-compact"
 import { Badge } from "@/components/ui/badge"
+import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
-import { FancyButton } from "@/components/ui/fancy-button"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel"
+import { Datepicker } from "@/components/ui/datepicker"
+import { DotStepper } from "@/components/ui/dot-stepper"
 import { Input } from "@/components/ui/input"
-import { StarRating } from "@/components/ui/svg-rating-icons"
+import { Kbd } from "@/components/ui/kbd"
+import { Popover } from "@/components/ui/popover"
 import { Tooltip } from "@/components/ui/tooltip"
 import {
   ChartContainer,
@@ -42,21 +56,45 @@ import {
   type ChartConfig,
 } from "@/components/chart"
 import { Grid } from "@/components/grid"
+import Image from "@/components/image"
+import { NumberTicker } from "@/components/number-ticker"
 import { Section } from "@/components/section"
+
+import CoursesBookmarks from "./-components/courses-bookmarks"
+import CoursesEnrolmentsTable from "./-components/courses-enrolments-table"
+import CoursesHeader from "./-components/courses-header"
+import CoursesLastActive from "./-components/courses-last-active"
+import CoursesSchedule from "./-components/courses-schedule"
+
+const presets = [
+  {
+    label: "Today",
+    shortcut: "d",
+  },
+  {
+    label: "This Week",
+    shortcut: "w",
+  },
+  {
+    label: "This Month",
+    shortcut: "m",
+  },
+  {
+    label: "This Year",
+    shortcut: "y",
+  },
+] as const
 
 export const Route = createFileRoute("/_learner/communities/$id/courses/")({
   validateSearch: z.object({
     q: z.string().default(""),
-    type: z
-      .enum(["all", "enrolled", "not-enrolled"])
-      .catch("all")
-      .default("all"),
+    expanded: z.custom<ExpandedState>().default({}),
   }),
   search: {
     middlewares: [
       stripSearchParams({
         q: "",
-        type: "all",
+        expanded: {},
       }),
     ],
   },
@@ -80,17 +118,6 @@ export const Route = createFileRoute("/_learner/communities/$id/courses/")({
         context.trpc.people.me.queryOptions()
       ),
     ])
-    // context.queryClient.prefetchQuery(
-    //   context.trpc.communities.courses.all.queryOptions({
-    //     communityId: params.id,
-    //   })
-    // )
-    // context.queryClient.prefetchQuery(
-    //   context.trpc.communities.detail.queryOptions({
-    //     id: params.id,
-    //   })
-    // )
-    // context.queryClient.prefetchQuery(context.trpc.people.me.queryOptions())
   },
   component: RouteComponent,
 })
@@ -98,16 +125,37 @@ export const Route = createFileRoute("/_learner/communities/$id/courses/")({
 function RouteComponent() {
   const trpc = useTRPC()
   const params = Route.useParams()
-
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
+
+  const [api, setApi] = useState<CarouselApi>()
+  const [current, setCurrent] = useState(0)
+  const [count, setCount] = useState(0)
+  const [range, setRange] = useLocalStorage<"d" | "w" | "m" | "y" | string[]>({
+    key: "learner-communities-courses-range",
+    defaultValue: "m",
+  })
+
+  useEffect(() => {
+    if (!api) {
+      return
+    }
+
+    setCount(api.scrollSnapList().length)
+    setCurrent(api.selectedScrollSnap() + 1)
+
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap() + 1)
+    })
+  }, [api])
+
   const courses = useSuspenseQuery(
     trpc.communities.courses.all.queryOptions({
       communityId: params.id,
     })
   )
 
-  const enrolmentsQuery = useSuspenseQuery(
+  const enrolments = useSuspenseQuery(
     trpc.enrolments.all.queryOptions({
       query: {
         contentType: "digital,mixded",
@@ -116,17 +164,15 @@ function RouteComponent() {
       },
     })
   )
-  const enrolments = useMemo(
-    () =>
-      enrolmentsQuery.data?.enrolments?.filter((e) =>
-        courses?.data?.find((c) => c.publicationUid === e.publication?.uid)
-      ),
-    [enrolmentsQuery.data?.enrolments, courses?.data]
-  )
 
   const enrolmentDetails = useSuspenseQueries({
-    queries: enrolments
-      .filter((x) => x.publication?.type === "course")
+    queries: enrolments?.data?.enrolments
+      .filter((x) => {
+        if (x.publication?.type !== "course") return false
+        if (courses?.data?.find((c) => c.publicationUid === x.publication?.uid))
+          return true
+        return false
+      })
       ?.map((e) => ({
         ...trpc.enrolments.detail.queryOptions({
           params: {
@@ -143,64 +189,28 @@ function RouteComponent() {
   })
 
   const flatEnrolmentDetails = useMemo(() => {
-    return enrolmentDetails?.flatMap((e) => e.data)
+    return enrolmentDetails?.map((e) => e.data)
   }, [enrolmentDetails])
 
-  const flatActivityMap = useMemo(() => {
-    const map: Map<string, EnrolmentActivityType> = new Map()
-    if (!enrolmentDetails || enrolmentDetails.length === 0) return map
-    enrolmentDetails
-      .filter((query) => !query?.isLoading)
-      .forEach((item) => {
-        if (
-          !item.data ||
-          !item.data.activity ||
-          item?.data?.activity?.length === 0
-        )
-          return
-        item.data.activity.forEach((activity) => {
-          map.set(activity.typeUid, activity)
-        })
-      })
-    return map
-  }, [enrolmentDetails])
+  const activity = useMemo(() => {
+    const activityObj = {
+      flat: new Map<string, EnrolmentActivityType>(),
+      detail: new Map<string, EnrolmentActivityType[]>(),
+      progress: new Map<string, number>(),
+    }
 
-  const activityMapPerDetail = useMemo(() => {
-    const map: Map<string, EnrolmentActivityType[]> = new Map()
-    if (!enrolmentDetails || enrolmentDetails.length === 0) return map
-    enrolmentDetails
-      .filter((query) => !query?.isLoading)
-      .forEach((item) => {
-        if (
-          !item.data ||
-          !item.data.activity ||
-          item?.data?.activity?.length === 0
-        )
-          return
-        map.set(item.data.uid, item.data.activity)
-      })
-    return map
-  }, [enrolmentDetails])
+    if (
+      !enrolmentDetails ||
+      enrolmentDetails.length === 0 ||
+      enrolmentDetails.some((q) => q.isLoading)
+    )
+      return activityObj
 
-  const totalTrackableActivityMapPerDetail = useMemo(() => {
-    const map: Map<string, number> = new Map()
-    if (!enrolmentDetails || enrolmentDetails.length === 0) return map
-    enrolmentDetails.forEach((item) => {
-      if (item.data) {
-        map.set(item?.data?.uid, getTotalTrackableActivity(item?.data) || 0)
-      }
-    })
-    return map
-  }, [enrolmentDetails])
-
-  const totalCompletedActivityMapPerDetail = useMemo(() => {
-    const map: Map<string, number> = new Map()
-    if (!activityMapPerDetail || !totalTrackableActivityMapPerDetail) return map
-
-    activityMapPerDetail.forEach((activity, key) => {
-      map.set(
-        key,
-        activity.filter(
+    enrolmentDetails?.forEach((e) => {
+      activityObj.detail.set(e?.data?.uid, e?.data?.activity || [])
+      const totalTrackableActivity = getTotalTrackableActivity(e?.data)
+      const totalCompletedActivity =
+        (e?.data?.activity || []).filter(
           (activity) =>
             (activity.type === "lesson" ||
               activity.type === "assessment" ||
@@ -208,718 +218,240 @@ function RouteComponent() {
               activity.type === "assignment") &&
             activity.status === "completed"
         ).length || 0
+
+      const enrolmentProgress =
+        totalCompletedActivity > 0
+          ? Math.round((totalCompletedActivity / totalTrackableActivity) * 100)
+          : 0
+
+      activityObj.progress.set(
+        e?.data?.uid,
+        enrolmentProgress > 100 ? 100 : enrolmentProgress
       )
+
+      e?.data?.activity?.forEach((activity) => {
+        activityObj.flat.set(activity.typeUid, activity)
+      })
     })
-    return map
-  }, [activityMapPerDetail, totalTrackableActivityMapPerDetail])
-
-  const progressMapPerDetail = useMemo(() => {
-    const map: Map<string, number> = new Map()
-    if (
-      !totalCompletedActivityMapPerDetail ||
-      !totalTrackableActivityMapPerDetail
-    )
-      return map
-
-    totalTrackableActivityMapPerDetail.forEach((value, key) => {
-      const completed = totalCompletedActivityMapPerDetail.get(key) || 0
-      const total = completed > 0 ? (completed / value) * 100 : 0
-
-      map.set(key, total > 100 ? 100 : Math.round(total))
-    })
-    return map
-  }, [totalCompletedActivityMapPerDetail, totalTrackableActivityMapPerDetail])
-
-  console.log("acts:::", {
-    activityMapPerDetail,
-    grouped: Array.from(activityMapPerDetail.entries()).map(([key, value]) => {
-      return {
-        [key]: groupBy(value, (x) => x.type),
-      }
-    }),
-  })
-  // const allEnrolmentsForAllCourses = useSuspenseQueries({
-  //   queries: courses?.data?.map((c) =>
-  //     trpc.content.enrolments?.queryOptions({
-  //       params: {
-  //         type: c.typeAccessor,
-  //         typeUid: c.typeUid,
-  //       },
-  //       query: {
-  //         page: 1,
-  //         limit: 100,
-  //       },
-  //     })
-  //   ),
-  // })
-
-  // const onlyMemberEnrolments = useMemo(() => {
-  //   return allEnrolmentsForAllCourses?.filter((e) => {
-  //     return e.data?.filter((enrolment) =>
-  //       courses?.data?.find(
-  //         (c) =>
-  //           c.publicationUid === enrolment?.publicationUid &&
-  //           c.enrolments?.some((x) => x.enrolleeUid === enrolment?.person?.uid)
-  //       )
-  //     )
-  //   })
-  // }, [allEnrolmentsForAllCourses])
-
-  const chartData = useMemo(
-    () =>
-      courses?.data?.map((c) => ({
-        title: c?.content?.content?.title,
-        score: faker.number.int({ min: 0, max: 100 }),
-      })),
-    [courses?.data]
-  )
-  // const chartData = [
-  //   // { month: "January", mobile: 80 },
-  //   // { month: "February", mobile: 200 },
-  //   // { month: "March", mobile: 120 },
-  //   // { month: "April", mobile: 190 },
-  //   // { month: "May", mobile: 130 },
-  //   // { month: "June", mobile: 140 },
-  // ]
-  const chartConfig = {
-    score: {
-      label: "Score",
-      color: "rgb(var(--primary-dark))",
-    },
-  } satisfies ChartConfig
+    return activityObj
+  }, [enrolmentDetails])
 
   return (
     <>
-      <header className="gutter h-[calc(50vh-92px)] bg-bg-soft-200">
-        <Grid className="h-full w-full py-6 pb-10">
-          <div className="col-span-12 flex h-full flex-col justify-between gap-8 xl:col-span-4">
-            <h1 className="text-pretty text-title-h2 font-normal">
-              Keep <span className="opacity-45">Your</span>
-              <br /> Learning Going
-            </h1>
-            <div className="flex w-full flex-col pb-5">
-              <p className="leading-none opacity-45">Learning Completed</p>
-              <p className="shrink-0 text-[10rem] leading-none">87%</p>
-            </div>
-          </div>
-          <div className="col-span-12 flex h-full flex-col xl:col-span-8">
-            <header className="flex items-center justify-between gap-3">
-              <h2 className="text-title-h5">Activity</h2>
-              <div className="flex items-center gap-3">
-                <Badge.Root
-                  size="small"
-                  color="gray"
-                  variant="stroke"
-                  className="ring-0"
-                >
-                  <Badge.Dot />
-                  <span>Community</span>
-                </Badge.Root>
-                <Badge.Root
-                  size="small"
-                  color="purple"
-                  variant="stroke"
-                  className="ring-0"
-                >
-                  <Badge.Dot />
-                  <span>Me</span>
-                </Badge.Root>
-                <Button.Root
-                  className="rounded-full"
-                  size="xxsmall"
-                  variant="neutral"
-                  mode="lighter"
-                >
-                  <Button.Icon as={RiArrowDownSLine} />
-                  All Time
-                </Button.Root>
-              </div>
-            </header>
-            <div className="w-full grow">
-              <ChartContainer
-                config={chartConfig}
-                className="max-h-[300px] min-h-[calc(50vh-184px)] w-full"
-              >
-                <BarChart accessibilityLayer data={chartData}>
-                  <XAxis
-                    dataKey="title"
-                    tickLine={false}
-                    tickMargin={10}
-                    axisLine={false}
-                    tickFormatter={(value) => value.slice(0, 3)}
-                  />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent />}
-                  />
-
-                  <Bar
-                    //
-                    dataKey="score"
-                    fill="var(--color-score)"
-                    radius={4}
-                  />
-                </BarChart>
-              </ChartContainer>
-            </div>
-          </div>
-        </Grid>
-      </header>
-      <pre>{JSON.stringify(enrolmentDetails, null, 2)}</pre>
-      {/* <Suspense
-        fallback={
-          <div className="h-[500px] w-full animate-pulse bg-bg-soft-200" />
-        }
-      >
-        <FeaturedCourse communityId={params.id} />
-      </Suspense> */}
-      {/* <Section
+      <CoursesHeader activity={activity} />
+      <div className="absolute inset-x-0 top-[calc(50vh-20px)] z-0 h-24 w-full rounded-t-20 bg-bg-white-0 drop-shadow-2xl"></div>
+      <Section
         size="sm"
         spacer="p"
-        className="mx-auto flex max-w-screen-lg flex-col gap-8"
+        className="gutter relative z-10 -mt-5 w-full rounded-t-20 bg-bg-white-0"
       >
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <Button.Root
-              onClick={() => {
-                navigate({
-                  resetScroll: false,
-                  search: (old) => ({
-                    ...old,
-                    type: "all",
-                  }),
-                })
-              }}
-              {...(search.type === "all" || search.type === undefined
-                ? {
-                    variant: "primary",
-                    mode: "lighter",
-                  }
-                : {
-                    variant: "neutral",
-                    mode: "ghost",
-                  })}
-              size="xxsmall"
-            >
-              <Button.Icon as={RiLoopLeftLine} />
-              All
-            </Button.Root>
-            <Button.Root
-              onClick={() => {
-                navigate({
-                  resetScroll: false,
-                  search: (old) => ({ ...old, type: "enrolled" }),
-                })
-              }}
-              {...(search.type === "enrolled"
-                ? {
-                    variant: "primary",
-                    mode: "lighter",
-                  }
-                : {
-                    variant: "neutral",
-                    mode: "ghost",
-                  })}
-              size="xxsmall"
-            >
-              <Button.Icon as={RiUserLine} />
-              My Courses
-            </Button.Root>
-            <Button.Root
-              onClick={() => {
-                navigate({
-                  resetScroll: false,
-                  search: (old) => ({ ...old, type: "not-enrolled" }),
-                })
-              }}
-              {...(search.type === "not-enrolled"
-                ? {
-                    variant: "primary",
-                    mode: "lighter",
-                  }
-                : {
-                    variant: "neutral",
-                    mode: "ghost",
-                  })}
-              size="xxsmall"
-            >
-              <Button.Icon as={RiAddLine} />
-              Not Enrolled
-            </Button.Root>
-          </div>
-          <Input.Root size="medium">
-            <Input.Wrapper>
-              <Input.Field
-                value={search.q}
-                onChange={(e) =>
-                  navigate({
-                    resetScroll: false,
-                    search: (old) => ({
-                      ...old,
-                      q: e.target.value,
-                    }),
-                  })
-                }
-                type="text"
-                placeholder="Find a course..."
-              />
-            </Input.Wrapper>
-          </Input.Root>
-        </div>
-        <div className="flex flex-col">
-          <h2 className="text-label-md text-text-soft-400">Courses</h2>
-
-          <Suspense fallback={<CourseListSkeleton />}>
-            <CourseList />
-          </Suspense>
-        </div>
-      </Section> */}
-    </>
-  )
-}
-
-function FeaturedCourse({ communityId }: { communityId: string }) {
-  const trpc = useTRPC()
-  const coursesQuery = useSuspenseQuery(
-    trpc.communities.courses.all.queryOptions({
-      communityId,
-    })
-  )
-  const featured = coursesQuery.data?.find(
-    (course) => course.isFeatured && course.status === "published"
-  )
-
-  if (!featured) {
-    return null
-  }
-
-  return (
-    <header className="relative h-[500px] w-full">
-      <img
-        src={featured.content?.featureImageUrl || undefined}
-        className="absolute inset-0 z-0 h-full w-full object-cover"
-        alt={featured.title + " featured image"}
-      />
-      <div className="absolute bottom-0 left-1/2 top-0 z-10 flex w-full max-w-screen-lg -translate-x-1/2 items-end px-8 pb-12 xl:px-0">
-        <div className="flex w-full items-end justify-between">
-          <div className="flex w-3/4 flex-col gap-2">
-            <div className="flex items-center gap-5">
-              {featured?.enrolments && featured?.enrolments.length > 0 && (
-                <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    <AvatarGroupCompact.Root size="24">
-                      <AvatarGroupCompact.Stack>
-                        {featured?.enrolments
-                          ?.slice(0, 3)
-                          .map((enrolment) => (
-                            <Avatar.Root color="sky">
-                              {enrolment.enrollee.avatarUrl ? (
-                                <Avatar.Image
-                                  src={enrolment.enrollee.avatarUrl}
-                                />
-                              ) : (
-                                enrolment?.enrollee?.firstName?.[0]
-                              )}
-                            </Avatar.Root>
-                          ))}
-                      </AvatarGroupCompact.Stack>
-                      {featured?.enrolments.length > 3 && (
-                        <AvatarGroupCompact.Overflow>
-                          +{featured?.enrolments.length - 3}
-                        </AvatarGroupCompact.Overflow>
-                      )}
-                    </AvatarGroupCompact.Root>
-                  </Tooltip.Trigger>
-                  <Tooltip.Content>Community Enrolments</Tooltip.Content>
-                </Tooltip.Root>
-              )}
-              <div className="h-4 w-px rotate-12 bg-white opacity-45"></div>
-              <div className="flex items-center gap-2">
-                <StarRating rating={4.5} />
-                <span className="pt-1 text-paragraph-xs text-white">
-                  4.5 ∙ 5.2K Ratings
+        <Grid gap="none" className="w-full gap-6">
+          {/* <div className="relative col-span-12 flex aspect-video h-full w-full flex-1 grow flex-col rounded-[22px] bg-bg-weak-50 p-1 ring-1 ring-stroke-soft-200 xl:col-span-8 xl:aspect-auto">
+            <header className="flex h-12 grow items-center px-3 pb-1">
+              <h2 className="text-title-h6">
+                Recent Learning{" "}
+                <span className="text-label-sm text-text-soft-400">
+                  ({enrolmentDetails?.length})
                 </span>
-              </div>
-              <div className="h-4 w-px rotate-12 bg-white opacity-45"></div>
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <div className="flex w-fit items-center gap-3">
-                    <Avatar.Root color="sky" size="20">
-                      {featured?.content?.createdBy?.imageUrl ? (
-                        <Avatar.Image
-                          src={
-                            import.meta.env.DEV
-                              ? "https://www.alignui.com/images/avatar/illustration/wei.png"
-                              : featured?.content?.createdBy?.imageUrl
-                          }
-                        />
-                      ) : (
-                        featured?.content?.createdBy?.firstName?.[0]
-                      )}
-                    </Avatar.Root>
-                    <span className="text-label-sm text-white opacity-90">
-                      {featured?.content?.createdBy?.firstName}{" "}
-                      {featured?.content?.createdBy?.lastName}
-                    </span>
-                  </div>
-                </Tooltip.Trigger>
-                <Tooltip.Content>Publisher</Tooltip.Content>
-              </Tooltip.Root>
-            </div>
-            <h1 className="text-pretty text-title-h2 text-white">
-              {featured.title}
-            </h1>
-            <p className="text-label-md text-white opacity-70">
-              {featured.caption}
-            </p>
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              {featured?.tags?.map((tag) => (
-                <Badge.Root key={tag}>{tag}</Badge.Root>
-              ))}
-            </div>
-          </div>
-          <div className="flex w-1/4 items-center gap-2">
-            <Button.Root
-              size="medium"
-              variant="neutral"
-              mode="lighter"
-              className="rounded-full"
-              asChild
+              </h2>
+            </header>
+            <div
+              ref={carouselSize.ref}
+              className="relative h-full w-full grow overflow-hidden rounded-[18px] bg-pink-50"
             >
-              <Link
-                to="/communities/$id/courses/$courseId"
-                params={{
-                  id: communityId,
-                  courseId: featured.id,
+              <Carousel
+                opts={{
+                  loop: true,
                 }}
-                search={{
-                  type: featured.typeAccessor,
-                  typeUid: featured.typeUid,
-                }}
-                preload="intent"
+                // plugins={[
+                //   Autoplay({
+                //     delay: 2000,
+                //   }),
+                // ]}
+                setApi={setApi}
+                className="absolute inset-0 bg-blue-50"
               >
-                View Course
-              </Link>
-            </Button.Root>
-          </div>
-        </div>
-      </div>
-      <div className="absolute inset-x-0 bottom-0 z-0 h-[85%] bg-gradient-to-t from-black to-transparent"></div>
-    </header>
-  )
-}
-
-function CourseList() {
-  const trpc = useTRPC()
-  const params = Route.useParams()
-  const search = Route.useSearch()
-
-  const community = useSuspenseQuery(
-    trpc.communities.detail.queryOptions({
-      id: params.id,
-    })
-  )
-  const me = useSuspenseQuery(trpc.people.me.queryOptions())
-  const coursesQuery = useSuspenseQuery(
-    trpc.communities.courses.all.queryOptions({
-      communityId: params.id,
-    })
-  )
-
-  const courses = useMemo(() => {
-    let filteredCourses = coursesQuery.data
-
-    if (search.type === "enrolled") {
-      filteredCourses = filteredCourses?.filter((course) =>
-        course.enrolments?.some(
-          (enrolment) => enrolment.enrolleeUid === me.data?.uid
-        )
-      )
-    }
-    if (search.type === "not-enrolled") {
-      filteredCourses = filteredCourses?.filter(
-        (course) =>
-          !course.enrolments?.some(
-            (enrolment) => enrolment.enrolleeUid === me.data?.uid
-          )
-      )
-    }
-
-    if (search.q && search.q !== "") {
-      filteredCourses = filteredCourses?.filter((course) =>
-        course.title.toLowerCase().includes(search.q.toLowerCase())
-      )
-    }
-
-    return filteredCourses
-  }, [coursesQuery.data, search.type, search.q, me.data?.uid])
-  return (
-    <ul className="flex flex-col gap-1">
-      {courses && courses.length > 0 ? (
-        courses?.map((course) => {
-          if (
-            community?.data?.membership?.role === "member" &&
-            course.status === "draft"
-          ) {
-            return null
-          }
-          return (
-            <li key={course.id}>
-              <Link
-                to="/communities/$id/courses/$courseId"
-                params={{
-                  id: params.id,
-                  courseId: course.id,
-                }}
-                search={{
-                  type: course.typeAccessor,
-                  typeUid: course.typeUid,
-                }}
-                preload="intent"
-                className="flex cursor-pointer items-center justify-between rounded-10 py-4 transition-all"
-              >
-                <div className="flex w-full max-w-[66%] items-center gap-3">
-                  <Avatar.Root color="sky" size="32">
-                    {course.content?.featureImageUrl ? (
-                      <Avatar.Image src={course.content?.featureImageUrl} />
-                    ) : (
-                      course.title?.[0]
-                    )}
-                  </Avatar.Root>
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-label-md font-normal">
-                        {course.title}
-                      </h3>
-                      {course.createdAt &&
-                        differenceInHours(new Date(), course.createdAt) <=
-                          48 && (
-                          <Badge.Root
-                            size="small"
-                            color="green"
-                            className="capitalize"
+                <CarouselContent>
+                  {enrolmentDetails?.map((detail) => {
+                    const enrolment = detail.data
+                    const palette = palettes.find(
+                      (p) =>
+                        p.data?.url === enrolment?.publication?.featureImageUrl
+                    )
+                    const imagePath = getPathFromGoogleStorage(
+                      enrolment?.publication?.featureImageUrl ?? ""
+                    )
+                    return (
+                      <CarouselItem key={"recent-" + enrolment?.uid}>
+                        <div
+                          style={{
+                            height: `${height.current || 0 - 20}px`,
+                          }}
+                          className="relative h-full w-full overflow-hidden rounded-[18px]"
+                        >
+                          <div
+                            style={{
+                              background: palette?.data
+                                ? `linear-gradient(0deg, rgba(${palette?.data?.LightMuted?.rgb?.join(",")}, 1) 0%, rgba(255,255,255,0) 100%)`
+                                : "",
+                            }}
+                            className={cn(
+                              "absolute inset-x-0 bottom-0 z-[1] h-[65%]",
+                              {
+                                "bg-gradient-to-t from-primary-base/35 to-transparent":
+                                  !palette?.data,
+                              }
+                            )}
                           >
-                            <Badge.Dot />
-                            New
-                          </Badge.Root>
-                        )}
-
-                      {course.enrolments?.some(
-                        (enrolment) => enrolment.enrolleeUid === me.data?.uid
-                      ) && (
-                        <Badge.Root
-                          className="capitalize"
-                          size="small"
-                          variant="lighter"
-                          color="blue"
-                        >
-                          <Badge.Dot />
-                          Enrolled
-                        </Badge.Root>
-                      )}
-                      {course?.status === "draft" && (
-                        <Badge.Root
-                          className="capitalize"
-                          size="small"
-                          variant="light"
-                          color="gray"
-                        >
-                          Draft
-                        </Badge.Root>
-                      )}
-                      {course?.isFeatured && (
-                        <>
-                          {!course?.isFeaturedUntil && (
-                            <Badge.Root
-                              className="capitalize"
-                              size="small"
-                              color="purple"
-                            >
-                              Featured
-                            </Badge.Root>
+                            <div className="gradient-blur">
+                              <div></div>
+                              <div></div>
+                              <div></div>
+                              <div></div>
+                              <div></div>
+                              <div></div>
+                            </div>
+                          </div>
+                          {imagePath ? (
+                            <Image
+                              lqip={{
+                                active: true,
+                                quality: 1,
+                                blur: 50,
+                              }}
+                              sizes="(max-width: 1280px) 100vw, 66vw"
+                              className="absolute inset-0 h-full w-full object-cover"
+                              path={imagePath ?? ""}
+                            />
+                          ) : (
+                            <div className="absolute inset-0 overflow-hidden bg-primary-alpha-24">
+                              <p className="absolute -top-[3.75vw] left-1/4 text-wrap text-[15vw] font-black italic leading-none text-primary-base opacity-5">
+                                {enrolment?.publication?.title}
+                              </p>
+                            </div>
                           )}
-                          {course?.isFeaturedUntil &&
-                            isBefore(
-                              new Date(),
-                              new Date(course.isFeaturedUntil)
-                            ) && (
-                              <Badge.Root
-                                className="shrink-0 capitalize"
-                                size="small"
-                                color="purple"
-                              >
-                                Featured Until
-                                {course?.isFeaturedUntil && (
-                                  <span>
-                                    {format(
-                                      new Date(course.isFeaturedUntil),
-                                      "MMM d, yyyy"
-                                    )}
-                                  </span>
+                          <div
+                            style={{
+                              color:
+                                palette?.data?.LightMuted?.titleTextColor ||
+                                "#FFFFFF",
+                            }}
+                            className="absolute inset-0 z-10 flex flex-col justify-end gap-2 p-8"
+                          >
+                            {enrolment?.dueDate && (
+                              <Badge.Root className="w-fit">
+                                <Badge.Icon as={RiCalendarLine} />
+                                {format(
+                                  new Date(enrolment?.dueDate),
+                                  "MMM d, yyyy"
                                 )}
                               </Badge.Root>
                             )}
-                        </>
-                      )}
-                    </div>
-                    <p className="line-clamp-1 text-label-xs text-text-soft-400">
-                      {course.caption}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center">
-                    <Tooltip.Root>
-                      <Tooltip.Trigger asChild>
-                        <Button.Root
-                          variant="neutral"
-                          mode="ghost"
-                          size="xxsmall"
-                        >
-                          <Button.Icon as={RiMessageLine} />
-                          {course.commentsCount || 0}
-                        </Button.Root>
-                      </Tooltip.Trigger>
-                      <Tooltip.Content>Course Comments</Tooltip.Content>
-                    </Tooltip.Root>
-                    <Tooltip.Root>
-                      <Tooltip.Trigger asChild>
-                        <Button.Root
-                          variant="neutral"
-                          mode="ghost"
-                          size="xxsmall"
-                        >
-                          <Button.Icon as={RiEyeLine} />
-                          {course.views || 0}
-                        </Button.Root>
-                      </Tooltip.Trigger>
-                      <Tooltip.Content>Course Views</Tooltip.Content>
-                    </Tooltip.Root>
-                  </div>
+                            <h1 className="line-clamp-3 text-title-h5">
+                              {enrolment?.publication?.publishedBy && (
+                                <Tooltip.Root>
+                                  <Tooltip.Trigger asChild>
+                                    <Avatar.Root
+                                      className="mr-2 inline-flex"
+                                      size="20"
+                                    >
+                                      <Avatar.Image
+                                        src={
+                                          enrolment?.publication?.publishedBy
+                                            ?.imageUrl
+                                        }
+                                      />
+                                    </Avatar.Root>
+                                  </Tooltip.Trigger>
+                                  <Tooltip.Content>
+                                    Publisher:{" "}
+                                    {enrolment?.publication?.publishedBy?.name}
+                                  </Tooltip.Content>
+                                </Tooltip.Root>
+                              )}
 
-                  {course?.enrolments && course?.enrolments.length > 0 && (
-                    <Tooltip.Root>
-                      <Tooltip.Trigger asChild>
-                        <AvatarGroupCompact.Root
-                          className="bg-bg-weak-50"
-                          size="24"
-                        >
-                          <AvatarGroupCompact.Stack>
-                            {course?.enrolments
-                              ?.slice(0, 3)
-                              .map((enrolment) => (
-                                <Avatar.Root color="sky">
-                                  {enrolment.enrollee.avatarUrl ? (
-                                    <Avatar.Image
-                                      src={enrolment.enrollee.avatarUrl}
-                                    />
-                                  ) : (
-                                    enrolment?.enrollee?.firstName?.[0]
-                                  )}
-                                </Avatar.Root>
-                              ))}
-                          </AvatarGroupCompact.Stack>
-                          {course?.enrolments.length > 3 && (
-                            <AvatarGroupCompact.Overflow>
-                              +{course?.enrolments.length - 3}
-                            </AvatarGroupCompact.Overflow>
-                          )}
-                        </AvatarGroupCompact.Root>
-                      </Tooltip.Trigger>
-                      <Tooltip.Content>Community Enrolments</Tooltip.Content>
-                    </Tooltip.Root>
-                  )}
-                </div>
-              </Link>
-            </li>
-          )
-        })
-      ) : (
-        <div className="gutter relative mt-4 flex w-full flex-col gap-2 overflow-hidden rounded-xl bg-bg-weak-50 py-16">
-          <h1 className="relative z-10 text-title-h4">
-            {search.q && search.q !== "" ? (
-              <>
-                {search.type === "enrolled"
-                  ? "Couldn't find any courses you are enrolled in"
-                  : search.type === "not-enrolled"
-                    ? "Couldn't find any courses you are not enrolled in"
-                    : "Couldn't find any courses"}{" "}
-                with: <span className="font-bold italic">{search.q}</span>
-              </>
-            ) : (
-              <>
-                {search.type === "enrolled"
-                  ? "You are not enrolled in any courses"
-                  : search.type === "not-enrolled"
-                    ? "You are enrolled in all courses"
-                    : "Your community has no courses"}
-              </>
-            )}
-          </h1>
-          <p className="relative z-10 text-label-sm font-light text-text-soft-400">
-            {community?.data?.membership?.role === "admin" ? (
-              <>
-                {!search.q && search.type === "all"
-                  ? "Be the first to create a course in this community."
-                  : "Couldn't find any courses. Create a new course below."}
-              </>
-            ) : (
-              "Ask your community admin to create a new course."
-            )}
-          </p>
-          {community?.data?.membership?.role === "admin" ? (
-            <div className="flex items-center gap-3">
-              <FancyButton.Root
-                size="xsmall"
-                variant="basic"
-                className="relative z-10"
-              >
-                <FancyButton.Icon as={RiAddLine} />
-                Create a course
-              </FancyButton.Root>
+                              {enrolment.publication.title}
+                            </h1>
+                            <p className="line-clamp-2 text-label-sm opacity-70">
+                              {enrolment.publication.summary ||
+                                enrolment?.publication?.translations?.["1"]
+                                  ?.summary}
+                            </p>
+                            {enrolment?.publication?.topics && (
+                              <div className="flex flex-wrap gap-2">
+                                {enrolment?.publication?.topics?.map(
+                                  (topic) => (
+                                    <Badge.Root
+                                      {...(palette?.data?.LightMuted?.rgb
+                                        ? {
+                                            style: {
+                                              backgroundColor: `rgba(${palette?.data?.DarkVibrant?.rgb?.join(",")}, 1)`,
+                                            },
+                                          }
+                                        : {
+                                            color: "blue",
+                                          })}
+                                      key={topic}
+                                    >
+                                      {topic}
+                                    </Badge.Root>
+                                  )
+                                )}
+                              </div>
+                            )}
+                            <Button.Root
+                              variant="neutral"
+                              mode="lighter"
+                              className="mt-2 w-fit rounded-full p-0.5 pl-3"
+                            >
+                              <span>Continue Learning</span>
+                              <div className="flex aspect-square h-full items-center justify-center rounded-full bg-bg-strong-950">
+                                <Button.Icon
+                                  className="fill-bg-white-0"
+                                  as={RiArrowRightSLine}
+                                />
+                              </div>
+                            </Button.Root>
+                          </div>
+                        </div>
+                      </CarouselItem>
+                    )
+                  })}
+                </CarouselContent>
+              </Carousel>
             </div>
-          ) : null}
-
-          <RiAddLine
-            className="absolute -top-24 right-24 z-0 rotate-[-20deg] text-text-soft-400 opacity-10"
-            size={450}
+            <div
+              //
+              className="absolute bottom-3 left-1/2 z-50 w-fit -translate-x-1/2 rounded-full bg-white/20 px-1.5 py-1 backdrop-blur-md"
+            >
+              <DotStepper.Root>
+                {enrolmentDetails?.map((_, i) => (
+                  <DotStepper.Item
+                    key={"dot-" + i}
+                    aria-label={`Go to image ${i}`}
+                    active={i + 1 === current}
+                    onClick={() => {
+                      if (i + 1 !== current) {
+                        api?.scrollTo(i)
+                      }
+                    }}
+                  />
+                ))}
+              </DotStepper.Root>
+            </div>
+          </div> */}
+          <CoursesLastActive
+            enrolments={flatEnrolmentDetails}
+            activity={activity}
           />
-        </div>
-      )}
-    </ul>
-  )
-}
-
-function CourseListSkeleton() {
-  return (
-    <ul className="flex flex-col gap-1">
-      <li className="group flex cursor-pointer items-center justify-between rounded-10 py-4 transition-all hover:px-4">
-        <div className="flex w-full max-w-[66%] items-center gap-3">
-          <div className="size-8 animate-pulse rounded-full bg-bg-soft-200"></div>
-          <div className="flex flex-col gap-1">
-            <div className="h-3 w-48 animate-pulse rounded-10 bg-bg-soft-200"></div>
-            <div className="h-2 w-24 animate-pulse rounded-10 bg-bg-soft-200"></div>
-          </div>
-        </div>
-      </li>
-      <li className="group flex cursor-pointer items-center justify-between rounded-10 py-4 transition-all hover:px-4">
-        <div className="flex w-full max-w-[66%] items-center gap-3">
-          <div className="size-8 animate-pulse rounded-full bg-bg-soft-200"></div>
-          <div className="flex flex-col gap-1">
-            <div className="h-3 w-48 animate-pulse rounded-10 bg-bg-soft-200"></div>
-            <div className="h-2 w-24 animate-pulse rounded-10 bg-bg-soft-200"></div>
-          </div>
-        </div>
-      </li>
-      <li className="group flex cursor-pointer items-center justify-between rounded-10 py-4 transition-all hover:px-4">
-        <div className="flex w-full max-w-[66%] items-center gap-3">
-          <div className="size-8 animate-pulse rounded-full bg-bg-soft-200"></div>
-          <div className="flex flex-col gap-1">
-            <div className="h-3 w-48 animate-pulse rounded-10 bg-bg-soft-200"></div>
-            <div className="h-2 w-24 animate-pulse rounded-10 bg-bg-soft-200"></div>
-          </div>
-        </div>
-      </li>
-    </ul>
+          <CoursesBookmarks enrolments={flatEnrolmentDetails} />
+          <CoursesSchedule enrolments={flatEnrolmentDetails} />
+          <CoursesEnrolmentsTable
+            enrolments={flatEnrolmentDetails}
+            activity={activity}
+          />
+        </Grid>
+      </Section>
+    </>
   )
 }

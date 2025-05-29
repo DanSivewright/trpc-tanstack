@@ -64,9 +64,7 @@ export const queryConfig = {
         .optional()
         .nullable(),
     }),
-    as: EnrolmentsDetailSchema.extend({
-      activity: z.array(EnrolmentActivitySchema).optional().nullable(),
-    }),
+    as: EnrolmentsDetailSchema,
   },
   "enrolments:resources": {
     path: "/learn/:type/:typeUid/resources",

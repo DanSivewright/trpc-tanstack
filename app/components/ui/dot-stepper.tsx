@@ -100,3 +100,5 @@ const DotStepperItem = React.forwardRef<HTMLButtonElement, DotStepperItemProps>(
 DotStepperItem.displayName = DOT_STEPPER_ITEM_NAME
 
 export { DotStepperRoot as Root, DotStepperItem as Item }
+
+export * as DotStepper from "./dot-stepper"

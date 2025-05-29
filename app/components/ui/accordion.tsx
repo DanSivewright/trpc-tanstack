@@ -150,3 +150,5 @@ export {
   AccordionArrow as Arrow,
   AccordionContent as Content,
 }
+
+export * as Accordion from "./accordion"
