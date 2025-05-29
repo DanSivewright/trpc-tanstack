@@ -56,31 +56,31 @@ function RouteComponent() {
     },
     onSubmit: (data) => {
       const id = crypto.randomUUID()
-      switch (data.value.type) {
-        case "community":
-          navigate({
-            to: "/communities/create/$id/community",
-            params: {
-              id,
-            },
-          })
-          break
-        case "course":
-          navigate({
-            to: "/communities/create/course",
-            params: {
-              id,
-            },
-          })
-          break
-        default:
-          notification({
-            title: "Support coming soon",
-            description: "We are working on this feature.",
-            variant: "light",
-            status: "information",
-          })
-      }
+      // switch (data.value.type) {
+      //   case "community":
+      //     navigate({
+      //       to: "/communities/create/$id/community",
+      //       params: {
+      //         id,
+      //       },
+      //     })
+      //     break
+      //   case "course":
+      //     navigate({
+      //       to: "/communities/create/course",
+      //       params: {
+      //         id,
+      //       },
+      //     })
+      //     break
+      //   default:
+      //     notification({
+      //       title: "Support coming soon",
+      //       description: "We are working on this feature.",
+      //       variant: "light",
+      //       status: "information",
+      //     })
+      // }
     },
   })
   return (
@@ -150,74 +150,7 @@ function RouteComponent() {
                         </div>
                       </Label.Root>
                     </div>
-                    <div className="group/radio col-span-12 aspect-video md:col-span-6 xl:col-span-3 xl:aspect-square">
-                      <Radio.Item
-                        className="hidden"
-                        value="thread"
-                        id="thread"
-                      />
-                      <Label.Root
-                        htmlFor="thread"
-                        className={cn([
-                          "flex h-full w-full flex-col items-start justify-between rounded-20 border border-bg-soft-200 bg-bg-white-0 p-6 shadow-regular-md",
-                          "group-has-[[data-state=checked]]/radio:border-primary-base",
-                          "group-has-[[data-state=checked]]/radio:shadow-primary-alpha-24",
-                        ])}
-                      >
-                        <Avatar.Root className="hidden sm:flex sm:group-has-[[data-state=checked]]/radio:hidden">
-                          <RiHashtag className="size-12 opacity-50" />
-                        </Avatar.Root>
-                        <Avatar.Root
-                          className="hidden sm:hidden sm:group-has-[[data-state=checked]]/radio:flex"
-                          color="blue"
-                        >
-                          <RiHashtag className="size-12 opacity-50" />
-                        </Avatar.Root>
-                        <div className="flex flex-col gap-1">
-                          <p className="text-paragraph-lg font-light group-has-[[data-state=checked]]/radio:text-primary-base">
-                            Thread
-                          </p>
-                          <p className="text-paragraph-xs text-text-soft-400 group-has-[[data-state=checked]]/radio:border-primary-alpha-24">
-                            Create a thread to share your ideas, projects, and
-                            collaborate with others.
-                          </p>
-                        </div>
-                      </Label.Root>
-                    </div>
-                    <div className="group/radio col-span-12 aspect-video md:col-span-6 xl:col-span-3 xl:aspect-square">
-                      <Radio.Item
-                        className="hidden"
-                        value="article"
-                        id="article"
-                      />
-                      <Label.Root
-                        htmlFor="article"
-                        className={cn([
-                          "flex h-full w-full flex-col items-start justify-between rounded-20 border border-bg-soft-200 bg-bg-white-0 p-6 shadow-regular-md",
-                          "group-has-[[data-state=checked]]/radio:border-primary-base",
-                          "group-has-[[data-state=checked]]/radio:shadow-primary-alpha-24",
-                        ])}
-                      >
-                        <Avatar.Root className="hidden sm:flex sm:group-has-[[data-state=checked]]/radio:hidden">
-                          <RiNewsLine className="size-12 opacity-50" />
-                        </Avatar.Root>
-                        <Avatar.Root
-                          className="hidden sm:hidden sm:group-has-[[data-state=checked]]/radio:flex"
-                          color="blue"
-                        >
-                          <RiNewsLine className="size-12 opacity-50" />
-                        </Avatar.Root>
-                        <div className="flex flex-col gap-1">
-                          <p className="text-paragraph-lg font-light group-has-[[data-state=checked]]/radio:text-primary-base">
-                            Article
-                          </p>
-                          <p className="text-paragraph-xs text-text-soft-400 group-has-[[data-state=checked]]/radio:border-primary-alpha-24">
-                            Create an article to share your ideas, projects, and
-                            collaborate with others.
-                          </p>
-                        </div>
-                      </Label.Root>
-                    </div>
+
                     <div className="group/radio col-span-12 aspect-video md:col-span-6 xl:col-span-3 xl:aspect-square">
                       <Radio.Item
                         className="hidden"
@@ -263,7 +196,7 @@ function RouteComponent() {
             />
           </div>
         </div>
-        <footer className="dark:bg-gray-950/80 gutter fixed inset-x-0 bottom-0 border-t border-bg-soft-200 bg-white/80 backdrop-blur-sm 2xl:px-0">
+        <footer className="gutter fixed inset-x-0 bottom-0 border-t border-bg-soft-200 bg-bg-white-0/80 backdrop-blur-sm 2xl:px-0">
           <div className="mx-auto flex w-full max-w-screen-xl items-center justify-between py-3">
             <span></span>
             <div className="flex items-center gap-4">

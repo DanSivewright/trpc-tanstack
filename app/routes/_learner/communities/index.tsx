@@ -1,15 +1,24 @@
-import { Suspense, useEffect, useState } from "react"
+import { Suspense, useEffect, useMemo, useState } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
-import type { communitiesAllSchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
+import type {
+  communitiesAllSchema,
+  communityArticleSchema,
+  communityCourseSchema,
+  communitySchema,
+  communityThreadSchema,
+} from "@/integrations/trpc/routers/communities/schemas/communities-schema"
 import { cn } from "@/utils/cn"
+import { getPathFromGoogleStorage } from "@/utils/get-path-from-google-storage"
 import {
   RiArrowRightLine,
+  RiArrowRightSLine,
   RiAwardLine,
   RiBook2Line,
   RiBriefcaseLine,
   RiBuildingLine,
   RiCameraLine,
   RiChat1Line,
+  RiChat3Line,
   RiClockwiseLine,
   RiComputerLine,
   RiFireLine,
@@ -18,34 +27,53 @@ import {
   RiHeartLine,
   RiInfinityLine,
   RiKanbanView,
+  RiLayoutMasonryLine,
+  RiListCheck,
+  RiLoader3Line,
   RiMusic2Line,
   RiPaletteLine,
   RiPencilLine,
   RiSearchLine,
   RiSparkling2Line,
+  RiSunLine,
+  RiTimeLine,
   RiTranslate,
   RiUserLine,
+  RiUserSmileLine,
   RiUserStarLine,
   RiVideoLine,
   type RemixiconComponentType,
 } from "@remixicon/react"
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
-import { createFileRoute, Link } from "@tanstack/react-router"
+import {
+  useQueries,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query"
+import {
+  createFileRoute,
+  Link,
+  stripSearchParams,
+} from "@tanstack/react-router"
+import { format } from "date-fns"
 import { motion } from "motion/react"
-import type { z } from "zod"
+import { z } from "zod"
 
+import useDebouncedCallback from "@/hooks/use-debounced-callback"
 import { useElementSize } from "@/hooks/use-element-size"
 import { Avatar } from "@/components/ui/avatar"
 import * as AvatarGroupCompact from "@/components/ui/avatar-group-compact"
 import * as Badge from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel"
+import { CompactButton } from "@/components/ui/compact-button"
 import * as DotStepper from "@/components/ui/dot-stepper"
 import { Input } from "@/components/ui/input"
+import { Select } from "@/components/ui/select"
 import DraggableScrollContainer from "@/components/draggable-scroll-container"
 import { Grid } from "@/components/grid"
 import Image from "@/components/image"
@@ -98,171 +126,739 @@ const filters: {
 ]
 
 export const Route = createFileRoute("/_learner/communities/")({
+  validateSearch: z.object({
+    q: z.string().optional(),
+    scope: z
+      .array(
+        z.enum([
+          "communities",
+          "articles",
+          "members",
+          "events",
+          "threads",
+          "courses",
+        ])
+      )
+      .default(["communities"])
+      .optional(),
+  }),
+  search: {
+    middlewares: [
+      stripSearchParams({
+        q: "",
+        scope: ["communities"],
+      }),
+    ],
+  },
   component: RouteComponent,
   loader: async ({ context }) => {
-    context.queryClient.prefetchQuery({
-      ...context.trpc.communities.all.queryOptions(),
-      staleTime: 1000 * 60 * 2,
-    })
-    context.queryClient.prefetchQuery({
+    await Promise.all([
+      context.queryClient.ensureQueryData({
+        ...context.trpc.communities.all.queryOptions(),
+        staleTime: 1000 * 60 * 2,
+      }),
+      context.queryClient.ensureQueryData({
+        ...context.trpc.communities.joined.queryOptions(),
+        staleTime: 1000 * 60 * 2,
+      }),
+    ])
+    context.queryClient.ensureQueryData({
       ...context.trpc.communities.joined.queryOptions(),
       staleTime: 1000 * 60 * 2,
     })
   },
+  pendingComponent: () => {
+    return (
+      <>
+        <div className="h-[20vh] w-screen animate-pulse bg-bg-weak-50"></div>
+        <Section
+          spacer="p"
+          side="t"
+          className="relative z-10 rounded-t-20 border-t border-bg-weak-50 bg-white/80 shadow-regular-md backdrop-blur-lg"
+        >
+          <div className="mx-auto flex max-w-screen-lg flex-col gap-2 px-6 2xl:px-0">
+            <h1 className="text-title-h1 font-light">
+              <span className="text-text-sub-600">Discover</span> communities.
+            </h1>
+            <p className="text-pretty text-subheading-sm font-light text-text-soft-400">
+              Looking for a community? We have {100}+ communities.
+            </p>
+            <Input.Root>
+              <Input.Wrapper>
+                <Input.Field
+                  type="text"
+                  placeholder="Search for a community..."
+                />
+                <Input.Icon as={RiSearchLine} />
+              </Input.Wrapper>
+            </Input.Root>
+          </div>
+        </Section>
+        <Section
+          spacer="p"
+          size="sm"
+          className="relative z-10 bg-bg-white-0 px-6 2xl:px-0"
+        >
+          <Grid className="mx-auto max-w-screen-2xl">
+            <AllCommunitiesSkeleton />
+            <div className="col-span-12 flex flex-col gap-4 lg:col-span-3">
+              <h3 className="text-title-h6 font-light text-text-soft-400">
+                Your Communities
+              </h3>
+              <JoinedCommunitiesSkeleton />
+            </div>
+          </Grid>
+        </Section>
+      </>
+    )
+  },
 })
 
 function RouteComponent() {
-  const { ref, width } = useElementSize()
-  const header = useElementSize()
+  const trpc = useTRPC()
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const [q, setQ] = useState(search.q || "")
+
+  const me = useSuspenseQuery(trpc.people.me.queryOptions())
+  const communities = useSuspenseQuery(trpc.communities.all.queryOptions())
+  const joined = useSuspenseQuery(trpc.communities.joined.queryOptions())
+  const articles = useQueries({
+    queries: communities.data?.map((community) => {
+      return {
+        ...trpc.communities.articles.all.queryOptions({
+          communityId: community.id,
+        }),
+      }
+    }),
+  })
+  const threads = useQueries({
+    queries: communities.data?.map((community) => {
+      return {
+        ...trpc.communities.threads.all.queryOptions({
+          communityId: community.id,
+        }),
+      }
+    }),
+  })
+  const courses = useQueries({
+    queries: communities.data?.map((community) => {
+      return {
+        ...trpc.communities.courses.all.queryOptions({
+          communityId: community.id,
+        }),
+      }
+    }),
+  })
+
+  const handleSearch = useDebouncedCallback(async (query: string) => {
+    navigate({
+      search: (old) => ({
+        ...old,
+        q: query,
+      }),
+      replace: true,
+    })
+  }, 500)
+  const handleScope = (
+    scope:
+      | "communities"
+      | "articles"
+      | "members"
+      | "events"
+      | "threads"
+      | "courses"
+  ) => {
+    if (scope == "communities") {
+      navigate({
+        search: (old) => ({
+          ...old,
+          scope: ["communities"],
+        }),
+        replace: true,
+      })
+      return
+    }
+
+    if (search.scope?.includes(scope)) {
+      navigate({
+        search: (old) => ({
+          ...old,
+          scope: old.scope?.filter(
+            (x) => x !== "communities" && x !== scope
+          ) || ["communities"],
+        }),
+        replace: true,
+      })
+      return
+    }
+    navigate({
+      search: (old) => ({
+        ...old,
+        scope: [
+          ...(old.scope?.filter((x) => x !== "communities") || []),
+          scope,
+        ],
+      }),
+      replace: true,
+    })
+  }
+
+  const loading = useMemo(() => {
+    return (
+      articles?.some((x) => x?.isLoading) ||
+      threads?.some((x) => x?.isLoading) ||
+      courses?.some((x) => x?.isLoading)
+    )
+  }, [articles, threads, courses])
+
+  const map: {
+    communities: typeof communities.data
+    articles: z.infer<typeof communityArticleSchema>[]
+    threads: z.infer<typeof communityThreadSchema>[]
+    courses: z.infer<typeof communityCourseSchema>[]
+  } = useMemo(() => {
+    let map: {
+      communities: typeof communities.data
+      articles: z.infer<typeof communityArticleSchema>[]
+      threads: z.infer<typeof communityThreadSchema>[]
+      courses: z.infer<typeof communityCourseSchema>[]
+    } = {
+      communities: [
+        ...(joined.data || []),
+        ...(communities?.data?.filter(
+          (x) => !joined.data?.find((y) => y.id !== x.id)
+        ) || []),
+      ],
+      articles: [],
+      threads: [],
+      courses: [],
+    }
+
+    if (loading) return map
+
+    map.articles =
+      articles
+        ?.flatMap((x) => x?.data || [])
+        .filter((x): x is NonNullable<typeof x> => x !== undefined) || []
+    map.threads =
+      threads
+        ?.flatMap((x) => x?.data || [])
+        .filter((x): x is NonNullable<typeof x> => x !== undefined) || []
+    map.courses =
+      courses
+        ?.flatMap((x) => x?.data || [])
+        .filter((x): x is NonNullable<typeof x> => x !== undefined) || []
+
+    return map
+  }, [articles, threads, courses, joined, communities])
+
+  const smartJoin = (arr: string[]) => {
+    if (!arr?.length) return ""
+    if (arr.length === 1) return arr[0]
+    if (arr.length === 2) return `${arr[0]} & ${arr[1]}`
+    return `${arr.slice(0, -1).join(", ")} & ${arr[arr.length - 1]}`
+  }
 
   return (
     <>
-      <div className="h-fit w-screen overflow-hidden">
-        <header
-          ref={header.ref}
-          style={{
-            marginTop: `-${width / 4}px`,
-            width: `calc(100vw + ${width}px)`,
-            marginLeft: `-${width / 2}px`,
-          }}
-          className="relative mx-auto flex w-full gap-6"
-        >
-          {rows?.map((row, ri) => (
-            <ul
-              {...(ri === 0 ? { ref } : {})}
-              {...(ri < LENGTH / 2 - 1
-                ? {
-                    style: {
-                      marginTop: `-${Math.round(width / 2) * ri + 1}px`,
-                      // background: "brown",
-                    },
-                  }
-                : {})}
-              {...(ri > LENGTH / 2
-                ? {
-                    style: {
-                      marginTop: `-${Math.round(width / 2) * (LENGTH - ri - 1)}px`,
-                      // background: "red",
-                    },
-                  }
-                : {})}
-              {...(Math.ceil(LENGTH / 2) === ri + 1
-                ? {
-                    style: {
-                      marginTop: `-${Math.round(width / 2) * (LENGTH / 2 - 2)}px`,
-                      // background: "blue",
-                    },
-                  }
-                : {})}
-              className="flex grow flex-col gap-6"
-              key={"row" + ri}
-            >
-              {row.map((cell, ci) => (
-                <motion.div
-                  key={"row" + ri + "cell" + ci}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{
-                    duration: 0.5,
-                    delay: (ri + ci) * 0.1, // stagger based on row and column
-                    ease: "easeOut",
-                  }}
-                  className="relative aspect-square w-full overflow-hidden rounded-20 bg-bg-soft-200"
-                >
-                  <Image
-                    path={`${cell}.${cell == 26 || cell == 27 ? "png" : "webp"}`}
-                    lqip={{
-                      active: true,
-                      quality: 1,
-                      blur: 50,
-                    }}
-                    transformation={[
-                      {
-                        height: width,
-                        width,
-                      },
-                    ]}
-                    className="absolute inset-0 h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                </motion.div>
-              ))}
-            </ul>
-          ))}
-        </header>
-      </div>
       <Section
-        spacer="p"
         side="t"
-        style={{
-          marginTop: `-${header.height / 2}px`,
-        }}
-        className="relative z-10 rounded-t-20 border-t border-bg-weak-50 bg-white/80 shadow-regular-md backdrop-blur-lg"
+        className="mx-auto flex w-full max-w-screen-2xl flex-col gap-4 px-8 pb-8"
       >
-        <div className="mx-auto flex max-w-screen-lg flex-col gap-2 px-6 2xl:px-0">
-          <h1 className="text-title-h1 font-light">
-            <span className="text-text-sub-600">Discover</span> communities.
-          </h1>
-          {/* <p className="text-pretty text-subheading-sm font-light text-text-soft-400">
-            Looking for a community? We have {communities.data?.length}+
-            communities.
-          </p> */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-3">
+              <h1 className="text-title-h3 font-normal">
+                Howdy {me?.data?.firstName}!
+              </h1>
+              <RiUserSmileLine className="size-10 fill-warning-base" />
+            </div>
+            <div className="flex items-center gap-2">
+              <RiSunLine className="size-5 fill-warning-base" />
+              <p className="text-subheading-sm font-light text-text-soft-400">
+                {format(new Date(), "EEEE, MMMM d, yyyy")}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2 rounded-10 bg-bg-weak-50 p-2">
           <Input.Root>
             <Input.Wrapper>
               <Input.Field
+                value={q}
+                onInput={(e) => {
+                  const value = e.currentTarget.value
+                  setQ(value)
+                  handleSearch(value)
+                }}
                 type="text"
-                placeholder="Search for a community..."
+                placeholder="Search your communities..."
               />
               <Input.Icon as={RiSearchLine} />
             </Input.Wrapper>
           </Input.Root>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Button.Root
+                variant="neutral"
+                size="xxsmall"
+                className={cn("w-fit rounded-full", {
+                  "bg-neutral-200 text-text-strong-950 hover:bg-bg-sub-300 hover:text-text-sub-600":
+                    search.scope !== undefined,
+                })}
+                onClick={() => handleScope("communities")}
+              >
+                Communities
+                <Badge.Root square color="green">
+                  {joined.data?.length}
+                </Badge.Root>
+              </Button.Root>
+              <Button.Root
+                variant="neutral"
+                size="xxsmall"
+                className={cn("w-fit rounded-full", {
+                  "bg-neutral-200 text-text-strong-950 hover:bg-bg-sub-300 hover:text-text-sub-600":
+                    !search.scope?.includes("articles"),
+                })}
+                onClick={() => handleScope("articles")}
+              >
+                Articles
+                <Badge.Root
+                  square
+                  {...(articles?.some((x) => x?.isLoading) && {
+                    color: "gray",
+                  })}
+                  {...(articles?.flatMap((x) => x?.data).length > 0
+                    ? {
+                        color: "green",
+                      }
+                    : {
+                        color: "gray",
+                      })}
+                >
+                  {articles?.some((x) => x?.isLoading) ? (
+                    <Badge.Icon
+                      as={RiLoader3Line}
+                      className="size-3 animate-spin"
+                    />
+                  ) : (
+                    articles?.flatMap((x) => x?.data).length
+                  )}
+                </Badge.Root>
+              </Button.Root>
+              <Button.Root
+                variant="neutral"
+                size="xxsmall"
+                className={cn("w-fit rounded-full", {
+                  "bg-neutral-200 text-text-strong-950 hover:bg-bg-sub-300 hover:text-text-sub-600":
+                    !search.scope?.includes("threads"),
+                })}
+                onClick={() => handleScope("threads")}
+              >
+                Threads
+                <Badge.Root
+                  square
+                  {...(threads?.some((x) => x?.isLoading) && {
+                    color: "gray",
+                  })}
+                  {...(threads?.flatMap((x) => x?.data).length > 0
+                    ? {
+                        color: "green",
+                      }
+                    : {
+                        color: "gray",
+                      })}
+                >
+                  {threads?.some((x) => x?.isLoading) ? (
+                    <Badge.Icon
+                      as={RiLoader3Line}
+                      className="size-3 animate-spin"
+                    />
+                  ) : (
+                    threads?.flatMap((x) => x?.data).length
+                  )}
+                </Badge.Root>
+              </Button.Root>
+              <Button.Root
+                variant="neutral"
+                size="xxsmall"
+                className={cn("w-fit rounded-full", {
+                  "bg-neutral-200 text-text-strong-950 hover:bg-bg-sub-300 hover:text-text-sub-600":
+                    !search.scope?.includes("courses"),
+                })}
+                onClick={() => handleScope("courses")}
+              >
+                Courses
+                <Badge.Root
+                  square
+                  {...(courses?.some((x) => x?.isLoading) && {
+                    color: "gray",
+                  })}
+                  {...(courses?.flatMap((x) => x?.data).length > 0
+                    ? {
+                        color: "green",
+                      }
+                    : {
+                        color: "gray",
+                      })}
+                >
+                  {courses?.some((x) => x?.isLoading) ? (
+                    <Badge.Icon
+                      as={RiLoader3Line}
+                      className="size-3 animate-spin"
+                    />
+                  ) : (
+                    courses?.flatMap((x) => x?.data).length
+                  )}
+                </Badge.Root>
+              </Button.Root>
+            </div>
+            <span className="text-subheading-xs font-normal text-text-soft-400">
+              {search.scope === undefined ? (
+                "Searching your communities"
+              ) : (
+                <>
+                  Searching everywhere in:{" "}
+                  <strong>{smartJoin(search.scope)}</strong>
+                </>
+              )}
+            </span>
+          </div>
         </div>
       </Section>
-      <Section
-        spacer="p"
-        size="sm"
-        className="relative z-10 bg-bg-white-0 px-6 2xl:px-0"
-      >
-        <DraggableScrollContainer className="bg-background shadow sticky top-0 z-10 mb-4 bg-bg-white-0 px-6">
-          <ul className="flex w-max items-center gap-8">
-            {filters.map((filter, i) => {
-              const Icon = filter.icon
-              return (
-                <li
-                  key={filter.title}
-                  className={cn(
-                    "group relative flex flex-col items-center justify-center gap-2 py-4 text-center",
-                    {
-                      "text-text-soft-400": i !== 0,
-                    }
-                  )}
-                >
-                  <Icon className="size-6" />
-                  <span className="shrink-0 text-label-xs">{filter.title}</span>
-                  {i === 0 ? (
-                    <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-bg-strong-950"></span>
-                  ) : (
-                    <span className="bg-foreground/30 absolute inset-x-0 bottom-0 h-0.5 rounded-full opacity-0 transition-opacity group-hover:opacity-100"></span>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
-        </DraggableScrollContainer>
-        <Grid className="mx-auto max-w-screen-2xl">
-          <Suspense fallback={<AllCommunitiesSkeleton />}>
-            <AllCommunities />
-          </Suspense>
-          <div className="col-span-12 flex flex-col gap-4 lg:col-span-3">
-            <h3 className="text-title-h6 font-light text-text-soft-400">
-              Your Communities
-            </h3>
-            <Suspense fallback={<JoinedCommunitiesSkeleton />}>
-              <JoinedCommunities />
-            </Suspense>
-          </div>
-        </Grid>
-      </Section>
+      <div className="sticky top-0 z-20 flex items-center justify-between bg-bg-white-0 px-10 py-2">
+        <h2 className="text-title-h6 font-light text-text-soft-400">
+          <span className="text-text-strong-950">Your </span>
+          {search.scope === undefined ? (
+            "Communities"
+          ) : (
+            <strong className="capitalize">{smartJoin(search.scope)}</strong>
+          )}
+        </h2>
+        <div className="flex items-center gap-1.5">
+          <CompactButton.Root>
+            <CompactButton.Icon className="size-4" as={RiListCheck} />
+          </CompactButton.Root>
+          <CompactButton.Root>
+            <CompactButton.Icon className="size-4" as={RiLayoutMasonryLine} />
+          </CompactButton.Root>
+        </div>
+      </div>
+      <div className="columns-1 gap-1.5 md:columns-2 lg:columns-3 xl:columns-4">
+        {Object.entries(map).map(([key, value]) => {
+          if (search.scope === undefined && key !== "communities") return null
+
+          if (search.scope && !search.scope.includes(key as keyof typeof map))
+            return null
+
+          return (
+            <>
+              {value?.map((item) => {
+                if (key === "communities") {
+                  const community = item as z.infer<typeof communitySchema>
+                  const logo = community?.images?.find((x) => x.logo)
+                  const featured = community?.images?.find((x) => x.featured)
+                  if (
+                    search.q &&
+                    !community.name
+                      .toLowerCase()
+                      .includes(search.q.toLowerCase())
+                  )
+                    return null
+                  return (
+                    <Link
+                      to="/communities/$id"
+                      params={{ id: community.id }}
+                      preload="intent"
+                      className="relative mb-1.5 w-full break-inside-avoid"
+                      key={community.id + "today"}
+                    >
+                      <Image
+                        path={featured?.path!}
+                        lqip={{
+                          active: true,
+                          quality: 1,
+                          blur: 50,
+                        }}
+                        className="block rounded-sm"
+                        alt={`Community ${community.name} image`}
+                      />
+                      <div
+                        style={{
+                          background: `linear-gradient(0deg, rgba(${community?.meta?.colors?.LightMuted.rgb.join(",")}, 1) 0%, rgba(255,255,255,0) 100%)`,
+                        }}
+                        className="absolute inset-x-0 bottom-0 h-[65%]"
+                      >
+                        <div className="gradient-blur">
+                          <div></div>
+                          <div></div>
+                          <div></div>
+                          <div></div>
+                          <div></div>
+                          <div></div>
+                        </div>
+                      </div>
+                      <header className="absolute inset-x-0 top-0 z-10 p-3">
+                        <div className="flex w-fit items-center gap-1.5 rounded-full border-white/80 bg-white/70 p-1 pr-2.5 backdrop-blur">
+                          <Avatar.Root className="shadow-regular-md" size="20">
+                            <Avatar.Image src={logo?.url!} />
+                          </Avatar.Root>
+                          <span className="text-label-xs opacity-65">
+                            {community?.tags?.[0]}
+                          </span>
+                        </div>
+                      </header>
+                      <footer
+                        style={{
+                          color:
+                            community?.meta?.colors?.LightMuted.titleTextColor,
+                        }}
+                        className="absolute inset-x-0 bottom-0 z-10 flex flex-col p-6"
+                      >
+                        <h4 className="mb-1.5 text-pretty text-title-h5 font-light lg:mb-2 xl:mb-2.5">
+                          {community?.name}
+                        </h4>
+                        <div className="flex items-center gap-4 *:text-label-xs *:font-light *:opacity-75">
+                          <div className="flex items-center gap-2">
+                            <RiChat3Line className="size-4" />
+                            <span>25 Comments</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <RiTimeLine className="size-4" />
+                            <span>About 4 mins</span>
+                          </div>
+                        </div>
+                      </footer>
+                    </Link>
+                  )
+                }
+                if (key === "threads") {
+                  const thread = item as z.infer<typeof communityThreadSchema>
+                  const featured = thread?.images?.find((x) => x.featured)
+                  if (
+                    search.q &&
+                    !thread.title.toLowerCase().includes(search.q.toLowerCase())
+                  )
+                    return null
+                  return (
+                    <Link
+                      to="/communities/$id/threads/$threadId"
+                      params={{ id: thread.communityId, threadId: thread.id }}
+                      preload="intent"
+                      className="relative mb-1.5 w-full break-inside-avoid"
+                      key={thread.id + "today"}
+                    >
+                      <Image
+                        path={featured?.path!}
+                        lqip={{
+                          active: true,
+                          quality: 1,
+                          blur: 50,
+                        }}
+                        className="block rounded-sm"
+                        alt={`Thread ${thread.title} image`}
+                      />
+                      <div
+                        style={{
+                          background: `linear-gradient(0deg, rgba(${thread?.meta?.colors?.LightMuted.rgb.join(",")}, 1) 0%, rgba(255,255,255,0) 100%)`,
+                        }}
+                        className="absolute inset-x-0 bottom-0 h-[65%]"
+                      >
+                        <div className="gradient-blur">
+                          <div></div>
+                          <div></div>
+                          <div></div>
+                          <div></div>
+                          <div></div>
+                          <div></div>
+                        </div>
+                      </div>
+                      <header className="absolute inset-x-0 top-0 z-10 p-3">
+                        <div className="flex w-fit items-center gap-1.5 rounded-full border-white/80 bg-white/70 p-1 pr-2.5 backdrop-blur">
+                          <Avatar.Root className="shadow-regular-md" size="20">
+                            {thread?.author?.avatarUrl && (
+                              <Avatar.Image src={thread?.author?.avatarUrl} />
+                            )}
+                          </Avatar.Root>
+                          <span className="text-label-xs opacity-65">
+                            {thread?.tags?.[0]}
+                          </span>
+                        </div>
+                      </header>
+                      <footer
+                        style={{
+                          color:
+                            thread?.meta?.colors?.LightMuted.titleTextColor,
+                        }}
+                        className="absolute inset-x-0 bottom-0 z-10 flex flex-col p-6"
+                      >
+                        <h4 className="mb-1.5 text-pretty text-title-h5 font-light lg:mb-2 xl:mb-2.5">
+                          {thread?.title}
+                        </h4>
+                        <div className="flex items-center gap-4 *:text-label-xs *:font-light *:opacity-75">
+                          <div className="flex items-center gap-2">
+                            <RiChat3Line className="size-4" />
+                            <span>25 Comments</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <RiTimeLine className="size-4" />
+                            <span>About 4 mins</span>
+                          </div>
+                        </div>
+                      </footer>
+                    </Link>
+                  )
+                }
+                if (key === "courses") {
+                  const course = item as z.infer<typeof communityCourseSchema>
+                  const imagePath = getPathFromGoogleStorage(
+                    course?.content?.featureImageUrl || ""
+                  )
+
+                  if (
+                    search.q &&
+                    !course.title.toLowerCase().includes(search.q.toLowerCase())
+                  )
+                    return null
+                  return (
+                    <Link
+                      to="/communities/$id/courses/$courseId"
+                      params={{ id: course.communityId, courseId: course.id }}
+                      search={{
+                        type: course?.typeAccessor,
+                        typeUid: course?.typeUid,
+                      }}
+                      preload="intent"
+                      className={cn(
+                        "relative mb-1.5 min-h-[25vh] w-full break-inside-avoid",
+                        {
+                          "bg-primary-base *:text-static-white":
+                            !course?.content?.featureImageUrl || !imagePath,
+                        }
+                      )}
+                      key={course.id + "today"}
+                    >
+                      {/* {course?.content?.featureImageUrl && imagePath && (
+                        <Image
+                          path={imagePath}
+                          lqip={{
+                            active: true,
+                            quality: 1,
+                            blur: 50,
+                          }}
+                          className="block min-h-[25vh] rounded-sm object-cover"
+                          alt={`Course ${course.title} image`}
+                        />
+                      )}
+
+                      <header className="absolute inset-x-0 top-0 z-10 p-3">
+                        <div className="flex w-fit items-center gap-1.5 rounded-full border-white/80 bg-white/70 p-1 pr-2.5 backdrop-blur">
+                          <Avatar.Root className="shadow-regular-md" size="20">
+                            {course?.author?.avatarUrl && (
+                              <Avatar.Image src={course?.author?.avatarUrl} />
+                            )}
+                          </Avatar.Root>
+                          <span className="text-label-xs opacity-65">
+                            {course?.tags?.[0]}
+                          </span>
+                        </div>
+                      </header>
+                      <footer
+                        style={{
+                          color:
+                            course?.meta?.colors?.LightMuted.titleTextColor,
+                        }}
+                        className="absolute inset-x-0 bottom-0 z-10 flex flex-col p-6"
+                      >
+                        <h4 className="mb-1.5 text-pretty text-title-h5 font-light lg:mb-2 xl:mb-2.5">
+                          {course?.title}
+                        </h4>
+                        <div className="flex items-center gap-4 *:text-label-xs *:font-light *:opacity-75">
+                          <div className="flex items-center gap-2">
+                            <RiChat3Line className="size-4" />
+                            <span>25 Comments</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <RiTimeLine className="size-4" />
+                            <span>About 4 mins</span>
+                          </div>
+                        </div>
+                      </footer> */}
+                    </Link>
+                  )
+                }
+              })}
+            </>
+          )
+        })}
+        {/* {communities?.data?.map((community) => {
+          const logo = community.images?.find((x) => x.logo)
+          const featured = community.images?.find((x) => x.featured)
+          return (
+            <div
+              className="relative mb-1.5 w-full break-inside-avoid"
+              key={community.id + "today"}
+            >
+              <Image
+                path={featured?.path!}
+                lqip={{
+                  active: true,
+                  quality: 1,
+                  blur: 50,
+                }}
+                className="block rounded-sm"
+                alt={`Community ${community.name} image`}
+              />
+              <div
+                style={{
+                  background: `linear-gradient(0deg, rgba(${community?.meta?.colors?.LightMuted.rgb.join(",")}, 1) 0%, rgba(255,255,255,0) 100%)`,
+                }}
+                className="absolute inset-x-0 bottom-0 h-[65%]"
+              >
+                <div className="gradient-blur">
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                </div>
+              </div>
+              <header className="absolute inset-x-0 top-0 z-10 p-3">
+                <div className="flex w-fit items-center gap-1.5 rounded-full border-white/80 bg-white/70 p-1 pr-2.5 backdrop-blur">
+                  <Avatar.Root className="shadow-regular-md" size="20">
+                    <Avatar.Image src={logo?.url!} />
+                  </Avatar.Root>
+                  <span className="text-label-xs opacity-65">
+                    {community?.tags?.[0]}
+                  </span>
+                </div>
+              </header>
+              <footer
+                style={{
+                  color: community?.meta?.colors?.LightMuted.titleTextColor,
+                }}
+                className="absolute inset-x-0 bottom-0 z-10 flex flex-col p-6"
+              >
+                <h4 className="mb-1.5 text-pretty text-title-h5 font-light lg:mb-2 xl:mb-2.5">
+                  {community?.name}
+                </h4>
+                <div className="flex items-center gap-4 *:text-label-xs *:font-light *:opacity-75">
+                  <div className="flex items-center gap-2">
+                    <RiChat3Line className="size-4" />
+                    <span>25 Comments</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RiTimeLine className="size-4" />
+                    <span>About 4 mins</span>
+                  </div>
+                </div>
+              </footer>
+            </div>
+          )
+        })} */}
+      </div>
     </>
   )
 }

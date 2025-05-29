@@ -236,7 +236,7 @@ function RouteComponent() {
           </Table.Body>
         </Table.Root>
       </Section>
-      <footer className="dark:bg-gray-950/80 gutter fixed inset-x-0 bottom-0 border-t border-bg-soft-200 bg-white/80 backdrop-blur-sm 2xl:px-0">
+      <footer className="bg-bg-white-0/80backdrop-blur-sm gutter fixed inset-x-0 bottom-0 border-t border-bg-soft-200 2xl:px-0">
         <div className="mx-auto flex w-full max-w-screen-xl items-center justify-between py-3">
           <span></span>
           <form

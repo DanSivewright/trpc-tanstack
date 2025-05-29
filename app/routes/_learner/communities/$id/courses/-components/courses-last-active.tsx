@@ -7,6 +7,7 @@ import {
   RiCheckboxCircleFill,
   RiRecordCircleLine,
 } from "@remixicon/react"
+import { Link } from "@tanstack/react-router"
 import type { z } from "zod"
 
 import { Badge } from "@/components/ui/badge"
@@ -97,11 +98,21 @@ const CoursesLastActive: React.FC<Props> = ({ enrolments, activity }) => {
             mode="lighter"
             size="small"
             className="mt-2 w-fit rounded-full p-0.5 pl-3"
+            asChild
           >
-            <span>Continue</span>
-            <div className="flex aspect-square h-full items-center justify-center rounded-full bg-primary-base">
-              <Button.Icon className="fill-bg-white-0" as={RiArrowRightSLine} />
-            </div>
+            <a
+              href={`https://beta.i-win.io/enrolments/${enrolment?.uid}/modules/${enrolment?.continue?.moduleUid || enrolment?.publication?.material?.[0]?.uid}/learning/${enrolment?.continue?.lessonUid || enrolment?.publication?.material?.[0]?.learning?.[0]?.uid}/courses`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <span>Continue</span>
+              <div className="flex aspect-square h-full items-center justify-center rounded-full bg-primary-base">
+                <Button.Icon
+                  className="fill-bg-white-0"
+                  as={RiArrowRightSLine}
+                />
+              </div>
+            </a>
           </Button.Root>
         </div>
       </div>

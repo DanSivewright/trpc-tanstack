@@ -148,7 +148,7 @@ export const getCommunityDetail = async (
   const cachedFetcher = cachedFunction(
     async () => {
       const [comSnap, members] = await Promise.all([
-        db.collection("communities").doc(options.input.id).get(),
+        tryCatch(db.collection("communities").doc(options.input.id).get()),
         getMembersForCommunity({
           type: "query",
           path: "communities.members",
@@ -160,21 +160,21 @@ export const getCommunityDetail = async (
         }),
       ])
 
-      // if (comSnap.error || !comSnap.success) {
-      //   throw new TRPCError({
-      //     code: "INTERNAL_SERVER_ERROR",
-      //     message: comSnap.error?.message || "Community not found",
-      //   })
-      // }
+      if (comSnap.error || !comSnap.success) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: comSnap.error?.message || "Community not found",
+        })
+      }
 
-      // if (!comSnap.data.exists) return null
+      if (!comSnap.data.exists) return null
 
-      // if (!comSnap.data) {
-      //   return null
-      // }
+      if (!comSnap.data) {
+        return null
+      }
       return {
-        id: comSnap.id,
-        ...comSnap.data(),
+        id: comSnap.data.id,
+        ...comSnap.data.data(),
         membersCount: members.length,
         members: members,
         membership: members.find((m: any) => m.uid === options.ctx.uid) || null,

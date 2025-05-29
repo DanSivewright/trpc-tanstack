@@ -58,6 +58,7 @@ function RouteComponent() {
   const [uploadingImages, setUploadingImages] = useState(false)
 
   const trpc = useTRPC()
+  const navigate = Route.useNavigate()
 
   const community = useSuspenseQuery(
     trpc.communities.detail.queryOptions({
@@ -189,11 +190,16 @@ function RouteComponent() {
           },
         }),
       })
+      navigate({
+        to: "/communities/$id",
+        params: {
+          id,
+        },
+      })
     },
   })
 
   const files = useStore(form.store, (state) => state.values.files)
-  console.log("files:::", files)
 
   const onDrop = useCallback(
     (acceptedFiles: FileWithPath[]) => {
@@ -513,7 +519,7 @@ function RouteComponent() {
                         return (
                           <div
                             key={name + i}
-                            className="group flex w-full flex-row items-center justify-between rounded-lg border p-1 dark:border-neutral-700"
+                            className="group flex w-full flex-row items-center justify-between rounded-lg border p-1"
                           >
                             <div className="flex items-center gap-2">
                               <img
