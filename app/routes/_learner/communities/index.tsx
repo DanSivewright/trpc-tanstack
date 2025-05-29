@@ -739,7 +739,7 @@ function RouteComponent() {
                       )}
                       key={course.id + "today"}
                     >
-                      {/* {course?.content?.featureImageUrl && imagePath && (
+                      {course?.content?.featureImageUrl && imagePath && (
                         <Image
                           path={imagePath}
                           lqip={{
@@ -784,7 +784,7 @@ function RouteComponent() {
                             <span>About 4 mins</span>
                           </div>
                         </div>
-                      </footer> */}
+                      </footer>
                     </Link>
                   )
                 }

@@ -147,29 +147,6 @@ function RouteComponent() {
     })
   )
 
-  const picks = useMemo(
-    () =>
-      Array.from({ length: 2 }, () => ({
-        id: faker.string.uuid(),
-        author: {
-          name: faker.person.fullName(),
-          avatar: faker.image.avatar(),
-        },
-        category: faker.helpers.arrayElement([
-          "Technology",
-          "Science",
-          "Business",
-          "Health",
-          "Environment",
-        ]),
-        title: faker.lorem.sentence(),
-        date: faker.date.recent(),
-        readTime: faker.number.int({ min: 1, max: 10 }),
-        likes: faker.number.int({ min: 0, max: 1000 }),
-      })),
-    []
-  )
-
   const resources = useMemo(
     () =>
       Array.from({ length: 3 }, () => ({
@@ -354,53 +331,6 @@ function RouteComponent() {
           <Outlet />
         </div>
         <div className="col-span-3 flex flex-col gap-7">
-          <div className="flex flex-col gap-5">
-            <h2 className="text-title-h6 font-normal">Currated Picks</h2>
-
-            {picks.map((pick, i) => (
-              <article
-                key={pick.id}
-                className={cn("flex flex-col gap-1.5 pb-5", {
-                  "border-b border-stroke-soft-200": i < picks.length - 1,
-                })}
-              >
-                <div className="flex items-start gap-2">
-                  <Avatar.Root size="20">
-                    <Avatar.Image src={pick.author.avatar} />
-                  </Avatar.Root>
-                  <p className="pt-0.5 text-label-xs font-light text-text-soft-400">
-                    {pick.author.name} • {pick.category}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between gap-6">
-                  <p className="text-label-sm font-light text-text-strong-950">
-                    {pick.title}
-                  </p>
-                  <div className="aspect-video h-12 rounded-xl">
-                    <Image
-                      path={`${i + 1}.webp`}
-                      alt={pick.title}
-                      className="h-full w-full rounded-xl object-cover"
-                    />
-                  </div>
-                </div>
-                <div className="mt-1 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="flex items-center gap-1.5 text-label-xs font-light text-text-soft-400">
-                      <RiCalendarLine className="size-5" />
-                      {pick.date.toLocaleDateString()}
-                    </span>
-                    <span className="flex items-center gap-1.5 text-label-xs font-light text-text-soft-400">
-                      <RiEyeLine className="size-5" />
-                      {pick.readTime} Min Read
-                    </span>
-                  </div>
-                  <RiBookmarkLine className="size-5 text-text-soft-400" />
-                </div>
-              </article>
-            ))}
-          </div>
-
           <div className="flex flex-col gap-2">
             <h2 className="text-label-md font-normal">Enrolled Members</h2>
             <ul className="flex flex-wrap items-center gap-1">

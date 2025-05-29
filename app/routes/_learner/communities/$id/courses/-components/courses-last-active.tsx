@@ -116,7 +116,7 @@ const CoursesLastActive: React.FC<Props> = ({ enrolments, activity }) => {
           </Button.Root>
         </div>
       </div>
-      <Grid gap="none" className="w-full gap-4 bg-bg-weak-50 p-5">
+      <Grid gap="none" className="min-h-[50%] w-full gap-4 bg-bg-weak-50 p-5">
         {enrolment?.publication?.material?.slice(0, 8)?.map((material) => {
           const modImagePath = getPathFromGoogleStorage(
             material?.moduleVersion?.module?.featureImageUrl || ""
