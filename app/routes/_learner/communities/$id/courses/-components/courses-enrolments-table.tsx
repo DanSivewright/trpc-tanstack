@@ -13,16 +13,14 @@ import { cn } from "@/utils/cn"
 import {
   enrolmentColumns,
   formatEnrolment,
-  formatModule,
 } from "@/utils/format-table-enrolments"
-import { getTotalTrackableActivity } from "@/utils/get-total-trackable-activity"
 import {
   RiArrowRightSLine,
   RiFilterLine,
   RiSearchLine,
   RiSortDesc,
 } from "@remixicon/react"
-import { useSuspenseQueries, useSuspenseQuery } from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { useNavigate, useSearch } from "@tanstack/react-router"
 import {
   flexRender,
@@ -36,6 +34,7 @@ import {
   type Column,
   type ColumnDef,
   type ColumnFiltersState,
+  type ExpandedState,
   type Row,
   type RowSelectionState,
   type SortingState,
@@ -51,6 +50,9 @@ import { Input } from "@/components/ui/input"
 import { Table } from "@/components/ui/table"
 
 type Props = {
+  q: string
+  expanded: ExpandedState
+  updateTableFilters: (name: "q" | "expanded", value: unknown) => void
   enrolments: z.infer<typeof EnrolmentsDetailSchema>[]
   activity: {
     flat: Map<string, EnrolmentActivityType>
@@ -58,7 +60,13 @@ type Props = {
     progress: Map<string, number>
   }
 }
-const CoursesEnrolmentsTable: React.FC<Props> = ({ enrolments, activity }) => {
+const CoursesEnrolmentsTable: React.FC<Props> = ({
+  enrolments,
+  activity,
+  q,
+  expanded,
+  updateTableFilters,
+}) => {
   const trpc = useTRPC()
 
   const me = useSuspenseQuery(trpc.people.me.queryOptions())
@@ -93,6 +101,9 @@ const CoursesEnrolmentsTable: React.FC<Props> = ({ enrolments, activity }) => {
         data={data}
         getSubRows={(row) => row.subRows}
         getRowCanExpand={(row) => row.subRows !== undefined}
+        updateTableFilters={updateTableFilters}
+        q={q}
+        expanded={expanded}
       />
     </section>
   )
@@ -130,6 +141,9 @@ type EnrolmentTableProps<TData, TValue> = {
     | undefined
   getRowCanExpand?: ((row: Row<TData>) => boolean) | undefined
   setTable?: Dispatch<React.SetStateAction<TableType<TData> | undefined>>
+  q: string
+  expanded: ExpandedState
+  updateTableFilters: (name: "q" | "expanded", value: unknown) => void
 }
 function EnrolmentTable<TData, TValue>({
   columns,
@@ -137,30 +151,33 @@ function EnrolmentTable<TData, TValue>({
   getSubRows,
   getRowCanExpand,
   setTable,
+  q,
+  expanded,
+  updateTableFilters,
 }: EnrolmentTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [sorting, setSorting] = useState<SortingState>([])
 
-  const search = useSearch({
-    from: "/_learner/communities/$id/courses/",
-  })
-  const navigate = useNavigate({
-    from: "/communities/$id/courses",
-  })
+  //   const search = useSearch({
+  //     from: "/_learner/communities/$id/courses/",
+  //   })
+  //   const navigate = useNavigate({
+  //     from: "/communities/$id/courses",
+  //   })
 
-  const updateTableFilters = (name: keyof typeof search, value: unknown) => {
-    const newValue = typeof value === "function" ? value(search[name]) : value
-    navigate({
-      to: "/communities/$id/courses",
-      resetScroll: false,
-      search: (prev) => ({
-        ...prev,
-        [name]: newValue,
-      }),
-    })
-  }
+  //   const updateTableFilters = (name: keyof typeof search, value: unknown) => {
+  //     const newValue = typeof value === "function" ? value(search[name]) : value
+  //     navigate({
+  //       to: "/communities/$id/courses",
+  //       resetScroll: false,
+  //       search: (prev) => ({
+  //         ...prev,
+  //         [name]: newValue,
+  //       }),
+  //     })
+  //   }
 
   const table = useReactTable({
     columns,
@@ -184,10 +201,10 @@ function EnrolmentTable<TData, TValue>({
     state: {
       sorting,
       columnFilters,
-      globalFilter: search.q,
+      globalFilter: q,
       columnVisibility,
       rowSelection,
-      expanded: search.expanded,
+      expanded,
     },
     debugTable: true,
   })
@@ -205,7 +222,7 @@ function EnrolmentTable<TData, TValue>({
           <Input.Wrapper>
             <Input.Icon as={RiSearchLine} />
             <Input.Field
-              value={search.q}
+              value={q}
               onChange={(e) => {
                 updateTableFilters("q", e.target.value)
               }}

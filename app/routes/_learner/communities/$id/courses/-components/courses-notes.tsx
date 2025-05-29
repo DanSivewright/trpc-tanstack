@@ -41,79 +41,84 @@ const bookmarkColorMap = {
 type Props = {
   enrolments: z.infer<typeof EnrolmentsDetailSchema>[]
 }
-const CoursesBookmarks: React.FC<Props> = ({ enrolments }) => {
-  const trpc = useTRPC()
-  const bookmarks = useQueries({
-    queries: enrolments?.map((detail) =>
-      trpc.enrolments.bookmarks.queryOptions({
-        identifierKey: "enrolmentUid",
-        identifier: detail?.uid,
-      })
-    ),
-  })
-  const flatBookmarks = useMemo(() => {
-    return bookmarks.flatMap((x) => x.data).filter((x) => x?.bookmarked)
-  }, [bookmarks])
+const CoursesNotes: React.FC<Props> = ({ enrolments }) => {
+  // const trpc = useTRPC()
+  // const bookmarks = useQueries({
+  //   queries: enrolments?.map((detail) =>
+  //     trpc.enrolments.bookmarks.queryOptions({
+  //       identifierKey: "enrolmentUid",
+  //       identifier: detail?.uid,
+  //     })
+  //   ),
+  // })
+  // const flatBookmarks = useMemo(() => {
+  //   return bookmarks.flatMap((x) => x.data).filter((x) => x?.bookmarked)
+  // }, [bookmarks])
 
-  const materialAndLessonsMap = useMemo(() => {
-    const map = new Map<
-      string,
-      {
-        uid: string
-        type: string
-        title: string
-        imageUrl?: string
-      }
-    >()
+  // const materialAndLessonsMap = useMemo(() => {
+  //   const map = new Map<
+  //     string,
+  //     {
+  //       uid: string
+  //       type: string
+  //       title: string
+  //       imageUrl?: string
+  //     }
+  //   >()
 
-    enrolments?.forEach((detail) => {
-      detail?.publication?.material?.forEach((material) => {
-        map.set(material.uid, {
-          uid: material.uid,
-          type: "module",
-          title: material.moduleVersion?.module?.translations["1"].title,
-          imageUrl:
-            material.moduleVersion?.module?.featureImageUrl ?? undefined,
-        })
-        material.learning.forEach((learning) => {
-          map.set(learning.uid, {
-            uid: learning.uid,
-            type: learning.type,
-            title: learning?.title || "",
-            imageUrl: undefined,
-          })
-        })
-      })
-    })
+  //   enrolments?.forEach((detail) => {
+  //     detail?.publication?.material?.forEach((material) => {
+  //       map.set(material.uid, {
+  //         uid: material.uid,
+  //         type: "module",
+  //         title: material.moduleVersion?.module?.translations["1"].title,
+  //         imageUrl:
+  //           material.moduleVersion?.module?.featureImageUrl ?? undefined,
+  //       })
+  //       material.learning.forEach((learning) => {
+  //         map.set(learning.uid, {
+  //           uid: learning.uid,
+  //           type: learning.type,
+  //           title: learning?.title || "",
+  //           imageUrl: undefined,
+  //         })
+  //       })
+  //     })
+  //   })
 
-    return map
-  }, [enrolments])
+  //   return map
+  // }, [enrolments])
 
-  const { ref, width, height } = useElementSize()
+  // const { ref, width, height } = useElementSize()
 
-  const availableHeight = useMemo(() => {
-    return height - 85
-  }, [height])
-  const max = useMemo(() => {
-    return Math.floor(availableHeight / 44)
-  }, [availableHeight])
-  const extra = useMemo(() => {
-    if (!flatBookmarks || flatBookmarks.length === 0) return 0
-    return flatBookmarks.length - max
-  }, [flatBookmarks, max])
+  // const availableHeight = useMemo(() => {
+  //   return height - 85
+  // }, [height])
+  // const max = useMemo(() => {
+  //   return Math.floor(availableHeight / 44)
+  // }, [availableHeight])
+  // const extra = useMemo(() => {
+  //   if (!flatBookmarks || flatBookmarks.length === 0) return 0
+  //   return flatBookmarks.length - max
+  // }, [flatBookmarks, max])
 
   return (
     <div
-      ref={ref}
-      className="group relative flex h-1/2 flex-col rounded-[22px] bg-bg-white-0 p-4 ring-1 ring-stroke-soft-200"
+      // ref={ref}
+      className="group relative flex h-1/2 flex-col overflow-hidden rounded-[22px] bg-bg-white-0 ring-1 ring-stroke-soft-200"
     >
-      <header className="flex gap-1.5">
-        <p className="text-paragraph-xl font-bold text-blue-500">Bookmarks</p>
+      <header className="flex gap-1.5 p-4">
+        <p className="text-paragraph-xl font-bold text-yellow-500">Notes</p>
         <p className="text-paragraph-xl font-bold text-black">
-          {flatBookmarks.length ?? 0}
+          0{/* {flatBookmarks.length ?? 0} */}
         </p>
       </header>
-      <div className="my-2 flex flex-1 flex-col gap-2">
+      <div className="flex h-full w-full flex-col items-center justify-center rounded-t-[22px] border-t border-stroke-soft-200 bg-bg-weak-50 text-center drop-shadow-2xl">
+        <p className="text-label-xs font-bold text-text-sub-600">
+          No notes yet
+        </p>
+      </div>
+      {/* <div className="my-2 flex flex-1 flex-col gap-2">
         {flatBookmarks?.slice(0, max).map((bookmark, index) => {
           if (!bookmark) return null
           const materialFromBookmark = materialAndLessonsMap.get(
@@ -169,9 +174,9 @@ const CoursesBookmarks: React.FC<Props> = ({ enrolments }) => {
             </button>
           )
         })}
-      </div>
+      </div> */}
 
-      {extra ? (
+      {/* {extra ? (
         <>
           {flatBookmarks && flatBookmarks?.slice(max).length > 0 && (
             <>
@@ -197,8 +202,8 @@ const CoursesBookmarks: React.FC<Props> = ({ enrolments }) => {
         <div className="w-full text-center text-label-xs font-bold text-text-sub-600">
           No bookmarks
         </div>
-      )}
+      )} */}
     </div>
   )
 }
-export default CoursesBookmarks
+export default CoursesNotes

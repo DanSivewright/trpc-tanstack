@@ -1,40 +1,8 @@
-import React, {
-  useEffect,
-  useMemo,
-  useState,
-  type CSSProperties,
-  type Dispatch,
-} from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
 import type { EnrolmentActivityType } from "@/integrations/trpc/routers/enrolments/schemas/enrolment-activity-schema"
-import { EnrolmentSchema } from "@/integrations/trpc/routers/enrolments/schemas/enrolments-all-schema"
-import type { EnrolmentsDetailSchema } from "@/integrations/trpc/routers/enrolments/schemas/enrolments-detail-schema"
-import { cn } from "@/utils/cn"
-import { filterFn } from "@/utils/filters"
-import {
-  enrolmentColumns,
-  formatEnrolment,
-  formatModule,
-} from "@/utils/format-table-enrolments"
 import { getTotalTrackableActivity } from "@/utils/get-total-trackable-activity"
-import { highlightText } from "@/utils/highlight-text"
-import {
-  RiArrowDownSLine,
-  RiArrowRightSLine,
-  RiBook2Line,
-  RiCalendarLine,
-  RiCheckboxCircleFill,
-  RiCloseCircleFill,
-  RiErrorWarningFill,
-  RiExternalLinkLine,
-  RiFilterLine,
-  RiHeading,
-  RiLoaderLine,
-  RiRecordCircleLine,
-  RiSearchLine,
-  RiSortDesc,
-  RiTableLine,
-} from "@remixicon/react"
+import { RiArrowRightSLine, RiCalendarLine } from "@remixicon/react"
 import {
   useQueries,
   useSuspenseQueries,
@@ -45,35 +13,12 @@ import {
   Link,
   stripSearchParams,
 } from "@tanstack/react-router"
-import {
-  flexRender,
-  getCoreRowModel,
-  getExpandedRowModel,
-  getFacetedMinMaxValues,
-  getFacetedRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type Column,
-  type ColumnDef,
-  type ColumnFiltersState,
-  type ExpandedState,
-  type Row,
-  type RowSelectionState,
-  type SortingState,
-  type Table as TableType,
-  type VisibilityState,
-} from "@tanstack/react-table"
+import { type ExpandedState } from "@tanstack/react-table"
 import {
   addDays,
-  addMonths,
-  addYears,
   endOfDay,
   endOfMonth,
   format,
-  isBefore,
-  isThisYear,
-  isToday,
   isWithinInterval,
   startOfDay,
   startOfMonth,
@@ -84,7 +29,6 @@ import { z } from "zod"
 import { useElementSize } from "@/hooks/use-element-size"
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
 import {
   Carousel,
@@ -92,18 +36,17 @@ import {
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel"
-import { CompactButton } from "@/components/ui/compact-button"
-import { Input } from "@/components/ui/input"
-import { StarRating } from "@/components/ui/svg-rating-icons"
-import { Table } from "@/components/ui/table"
 import { toast } from "@/components/ui/toast"
 import * as AlertToast from "@/components/ui/toast-alert"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Grid } from "@/components/grid"
+import { Section } from "@/components/section"
 
-import RecentLearning from "./-components/recent-learning"
-import TodaysSchedule from "./-components/todays-schedule"
-import UpcomingDeadlines from "./-components/upcoming-deadlines"
+import CoursesBookmarks from "./communities/$id/courses/-components/courses-bookmarks"
+import CoursesEnrolmentsTable from "./communities/$id/courses/-components/courses-enrolments-table"
+import CoursesLastActive from "./communities/$id/courses/-components/courses-last-active"
+import CoursesNotes from "./communities/$id/courses/-components/courses-notes"
+import CoursesSchedule from "./communities/$id/courses/-components/courses-schedule"
 
 const dr = {
   mode: "m",
@@ -146,28 +89,6 @@ export const Route = createFileRoute("/_learner/")({
   pendingComponent: () => <div>Loading...</div>,
 })
 
-type Material = z.infer<
-  typeof EnrolmentsDetailSchema
->["publication"]["material"][number]
-
-type ColumnType = {
-  uid: string
-  title: string
-  status: string
-  dueDate: string | null
-  topics: string[]
-  enrolledAt: string
-  startedAt: string | null
-  completedAt: string | null
-  rating: number | null
-  type: string
-  createdAt: string
-  progress?: number
-  enrolment?: z.infer<typeof EnrolmentSchema>
-  material?: Material
-  subRows?: ColumnType[]
-}
-
 function RouteComponent() {
   const [api, setApi] = useState<CarouselApi>()
   const [current, setCurrent] = useState(0)
@@ -183,29 +104,6 @@ function RouteComponent() {
       },
     })
   )
-  const formattedEnrolments = useMemo(
-    () =>
-      enrolments.data?.enrolments?.map((enrolment) =>
-        formatEnrolment(enrolment)
-      ),
-    [enrolments.data?.enrolments]
-  )
-
-  const me = useSuspenseQuery(trpc.people.me.queryOptions())
-
-  const search = Route.useSearch()
-  const navigate = Route.useNavigate()
-
-  const updateTableFilters = (name: keyof typeof search, value: unknown) => {
-    const newValue = typeof value === "function" ? value(search[name]) : value
-    navigate({
-      resetScroll: false,
-      search: (prev) => ({
-        ...prev,
-        [name]: newValue,
-      }),
-    })
-  }
 
   const enrolmentDetails = useSuspenseQueries({
     queries: enrolments?.data?.enrolments
@@ -224,66 +122,29 @@ function RouteComponent() {
         }),
       })),
   })
-
   const flatEnrolmentDetails = useMemo(() => {
-    return enrolmentDetails?.flatMap((e) => e.data)
+    return enrolmentDetails?.map((e) => e.data)
   }, [enrolmentDetails])
 
-  const flatActivityMap = useMemo(() => {
-    const map: Map<string, EnrolmentActivityType> = new Map()
-    if (!enrolmentDetails || enrolmentDetails.length === 0) return map
-    enrolmentDetails
-      .filter((query) => !query?.isLoading)
-      .forEach((item) => {
-        if (
-          !item.data ||
-          !item.data.activity ||
-          item?.data?.activity?.length === 0
-        )
-          return
-        item.data.activity.forEach((activity) => {
-          map.set(activity.typeUid, activity)
-        })
-      })
-    return map
-  }, [enrolmentDetails])
+  const activity = useMemo(() => {
+    const activityObj = {
+      flat: new Map<string, EnrolmentActivityType>(),
+      detail: new Map<string, EnrolmentActivityType[]>(),
+      progress: new Map<string, number>(),
+    }
 
-  const activityMapPerDetail = useMemo(() => {
-    const map: Map<string, EnrolmentActivityType[]> = new Map()
-    if (!enrolmentDetails || enrolmentDetails.length === 0) return map
-    enrolmentDetails
-      .filter((query) => !query?.isLoading)
-      .forEach((item) => {
-        if (
-          !item.data ||
-          !item.data.activity ||
-          item?.data?.activity?.length === 0
-        )
-          return
-        map.set(item.data.uid, item.data.activity)
-      })
-    return map
-  }, [enrolmentDetails])
+    if (
+      !enrolmentDetails ||
+      enrolmentDetails.length === 0 ||
+      enrolmentDetails.some((q) => q.isLoading)
+    )
+      return activityObj
 
-  const totalTrackableActivityMapPerDetail = useMemo(() => {
-    const map: Map<string, number> = new Map()
-    if (!enrolmentDetails || enrolmentDetails.length === 0) return map
-    enrolmentDetails.forEach((item) => {
-      if (item.data) {
-        map.set(item?.data?.uid, getTotalTrackableActivity(item?.data) || 0)
-      }
-    })
-    return map
-  }, [enrolmentDetails])
-
-  const totalCompletedActivityMapPerDetail = useMemo(() => {
-    const map: Map<string, number> = new Map()
-    if (!activityMapPerDetail || !totalTrackableActivityMapPerDetail) return map
-
-    activityMapPerDetail.forEach((activity, key) => {
-      map.set(
-        key,
-        activity.filter(
+    enrolmentDetails?.forEach((e) => {
+      activityObj.detail.set(e?.data?.uid, e?.data?.activity || [])
+      const totalTrackableActivity = getTotalTrackableActivity(e?.data)
+      const totalCompletedActivity =
+        (e?.data?.activity || []).filter(
           (activity) =>
             (activity.type === "lesson" ||
               activity.type === "assessment" ||
@@ -291,48 +152,38 @@ function RouteComponent() {
               activity.type === "assignment") &&
             activity.status === "completed"
         ).length || 0
+
+      const enrolmentProgress =
+        totalCompletedActivity > 0
+          ? Math.round((totalCompletedActivity / totalTrackableActivity) * 100)
+          : 0
+
+      activityObj.progress.set(
+        e?.data?.uid,
+        enrolmentProgress > 100 ? 100 : enrolmentProgress
       )
+
+      e?.data?.activity?.forEach((activity) => {
+        activityObj.flat.set(activity.typeUid, activity)
+      })
     })
-    return map
-  }, [activityMapPerDetail, totalTrackableActivityMapPerDetail])
+    return activityObj
+  }, [enrolmentDetails])
 
-  const progressMapPerDetail = useMemo(() => {
-    const map: Map<string, number> = new Map()
-    if (
-      !totalCompletedActivityMapPerDetail ||
-      !totalTrackableActivityMapPerDetail
-    )
-      return map
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
 
-    totalTrackableActivityMapPerDetail.forEach((value, key) => {
-      const completed = totalCompletedActivityMapPerDetail.get(key) || 0
-      const total = completed > 0 ? (completed / value) * 100 : 0
-
-      map.set(key, total > 100 ? 100 : Math.round(total))
+  type tableParams = Pick<typeof search, "q" | "expanded">
+  const updateTableFilters = (name: keyof tableParams, value: unknown) => {
+    const newValue = typeof value === "function" ? value(search[name]) : value
+    navigate({
+      resetScroll: false,
+      search: (prev) => ({
+        ...prev,
+        [name]: newValue,
+      }),
     })
-    return map
-  }, [totalCompletedActivityMapPerDetail, totalTrackableActivityMapPerDetail])
-
-  const data = useMemo(() => {
-    if (!formattedEnrolments || formattedEnrolments.length === 0) return []
-    if (!enrolmentDetails || enrolmentDetails.length === 0)
-      return formattedEnrolments
-
-    return formattedEnrolments.map((e) => {
-      const detail = enrolmentDetails?.find(
-        (m) => m?.data?.uid === e?.uid
-      )?.data
-
-      if (!detail) return e
-      return {
-        ...e,
-        progress: progressMapPerDetail.get(e.uid) || 0,
-        subRows: detail?.publication?.material?.map((m) =>
-          formatModule(m, e, flatActivityMap)
-        ),
-      }
-    })
-  }, [formattedEnrolments, enrolmentDetails, progressMapPerDetail])
+  }
 
   const featuredEnrolments = useMemo(() => {
     const notCompleted = enrolments?.data?.enrolments?.filter(
@@ -403,17 +254,17 @@ function RouteComponent() {
             const palette = palettes.find(
               (p) => p.data?.url === detail?.publication?.featureImageUrl
             )
-            const progress = progressMapPerDetail.get(detail.uid) || 0
-            const flatLearning = detail?.publication?.material?.flatMap(
-              (m) => m.learning
-            )
-            const continueLessonUid =
-              detail?.continue?.lessonUid || flatLearning?.[0]?.uid
-            const continueLessonIndex = flatLearning?.findIndex(
-              (l) => l.uid === continueLessonUid
-            )
-            const allLearningAfterCurrentLesson =
-              flatLearning?.slice(continueLessonIndex)
+            const progress = activity.progress.get(detail.uid) || 0
+            // const flatLearning = detail?.publication?.material?.flatMap(
+            //   (m) => m.learning
+            // )
+            // const continueLessonUid =
+            //   detail?.continue?.lessonUid || flatLearning?.[0]?.uid
+            // const continueLessonIndex = flatLearning?.findIndex(
+            //   (l) => l.uid === continueLessonUid
+            // )
+            // const allLearningAfterCurrentLesson =
+            //   flatLearning?.slice(continueLessonIndex)
 
             return (
               <CarouselItem className="relative" key={detail.uid + "-feature"}>
@@ -487,6 +338,7 @@ function RouteComponent() {
                           {detail.publication.title}
                         </h1>
                         <p className="line-clamp-3 text-label-sm opacity-70">
+                          {/* @ts-ignore */}
                           {detail.publication.summary ||
                             detail?.publication?.translations?.["1"]?.summary}
                         </p>
@@ -671,264 +523,31 @@ function RouteComponent() {
         </CarouselContent>
       </Carousel>
       <div className="absolute inset-x-0 top-[calc(50vh-20px)] z-0 h-24 w-full rounded-t-20 bg-bg-white-0 drop-shadow-2xl"></div>
-      <div className="relative z-10 -mt-5 rounded-t-20 bg-bg-white-0 py-10">
-        <div className="gutter z-10 mx-auto flex w-full max-w-screen-2xl flex-col gap-12">
-          <Grid>
-            <UpcomingDeadlines enrolments={flatEnrolmentDetails} />
-            <TodaysSchedule
-              enrolment={featuredEnrolments?.[3]}
-              activityMap={flatActivityMap}
-            />
-            <RecentLearning
-              enrolment={featuredEnrolments?.[0]}
-              activityMap={flatActivityMap}
-            />
-          </Grid>
-          <section className="flex flex-col gap-6">
-            <Breadcrumb.Root>
-              <Breadcrumb.Item>
-                <Avatar.Root size="20">
-                  {me?.data?.imageUrl ? (
-                    <Avatar.Image src={me?.data?.imageUrl} />
-                  ) : (
-                    me?.data?.firstName?.[0]
-                  )}
-                </Avatar.Root>
-                <span>Learning</span>
-              </Breadcrumb.Item>
-              <Breadcrumb.ArrowIcon as={RiArrowRightSLine} />
-              <Breadcrumb.Item>Courses</Breadcrumb.Item>
-              <Breadcrumb.ArrowIcon as={RiArrowRightSLine} />
-              <Breadcrumb.Item active>
-                The Power of Minimalism in Design
-              </Breadcrumb.Item>
-            </Breadcrumb.Root>
-            <div className="flex items-center gap-2">
-              <Input.Root className="max-w-[400px]" size="xsmall">
-                <Input.Wrapper>
-                  <Input.Icon as={RiSearchLine} />
-                  <Input.Field
-                    value={search.q}
-                    onChange={(e) => {
-                      updateTableFilters("q", e.target.value)
-                    }}
-                    type="text"
-                    placeholder="Search"
-                  />
-                </Input.Wrapper>
-              </Input.Root>
-              <Button.Root size="xsmall" variant="neutral" mode="stroke">
-                <Button.Icon as={RiFilterLine} />
-                Filters
-              </Button.Root>
-              <Button.Root size="xsmall" variant="neutral" mode="stroke">
-                <Button.Icon as={RiSortDesc} />
-                Sort by
-              </Button.Root>
-            </div>
-            <EnrolmentTable
-              getSubRows={(row) => row.subRows}
-              getRowCanExpand={(row) => row.subRows !== undefined}
-              columns={enrolmentColumns}
-              data={data}
-            />
-          </section>
-        </div>
-      </div>
-    </>
-  )
-}
-
-const getCommonPinningStyles = (
-  column: Column<z.infer<typeof EnrolmentSchema>>
-): CSSProperties => {
-  const isPinned = column.getIsPinned()
-  const isLastLeftPinnedColumn =
-    isPinned === "left" && column.getIsLastColumn("left")
-  const isFirstRightPinnedColumn =
-    isPinned === "right" && column.getIsFirstColumn("right")
-
-  return {
-    boxShadow: isLastLeftPinnedColumn
-      ? "-4px 0 4px -4px gray inset"
-      : isFirstRightPinnedColumn
-        ? "4px 0 4px -4px gray inset"
-        : undefined,
-    left: isPinned === "left" ? `${column.getStart("left")}px` : undefined,
-    right: isPinned === "right" ? `${column.getAfter("right")}px` : undefined,
-    opacity: isPinned ? 0.95 : 1,
-    position: isPinned ? "sticky" : "relative",
-    width: column.getSize(),
-    zIndex: isPinned ? 1 : 0,
-  }
-}
-
-type EnrolmentTableProps<TData, TValue> = {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
-  getSubRows?:
-    | ((originalRow: TData, index: number) => TData[] | undefined)
-    | undefined
-  getRowCanExpand?: ((row: Row<TData>) => boolean) | undefined
-  setTable?: Dispatch<React.SetStateAction<TableType<TData> | undefined>>
-}
-function EnrolmentTable<TData, TValue>({
-  columns,
-  data,
-  getSubRows,
-  getRowCanExpand,
-  setTable,
-}: EnrolmentTableProps<TData, TValue>) {
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
-  const [sorting, setSorting] = useState<SortingState>([])
-
-  const search = Route.useSearch()
-  const navigate = Route.useNavigate()
-
-  const updateTableFilters = (name: keyof typeof search, value: unknown) => {
-    const newValue = typeof value === "function" ? value(search[name]) : value
-    navigate({
-      resetScroll: false,
-      search: (prev) => ({
-        ...prev,
-        [name]: newValue,
-      }),
-    })
-  }
-
-  const table = useReactTable({
-    columns,
-    data,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedMinMaxValues: getFacetedMinMaxValues(),
-    getExpandedRowModel: getExpandedRowModel(),
-    onSortingChange: setSorting,
-    getSubRows,
-    getRowCanExpand,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    onExpandedChange: (updaterOrValue) =>
-      updateTableFilters("expanded", updaterOrValue),
-    onGlobalFilterChange: (updaterOrValue) =>
-      updateTableFilters("q", updaterOrValue),
-    state: {
-      sorting,
-      columnFilters,
-      globalFilter: search.q,
-      columnVisibility,
-      rowSelection,
-      expanded: search.expanded,
-    },
-    debugTable: true,
-  })
-
-  useEffect(() => {
-    if (setTable) {
-      setTable(table)
-    }
-  }, [table, setTable])
-
-  return (
-    <div className="no-scrollbar w-full max-w-full overflow-x-auto">
-      <Table.Root
-        {...{
-          style: {
-            width: table.getCenterTotalSize(),
-          },
-        }}
+      <Section
+        size="sm"
+        spacer="p"
+        className="gutter relative z-10 -mt-5 w-full rounded-t-20 bg-bg-white-0"
       >
-        <Table.Header>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <Table.Row key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <Table.Head
-                    colSpan={header.colSpan}
-                    className="sticky left-0 z-10"
-                    key={header.id}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </Table.Head>
-                )
-              })}
-            </Table.Row>
-          ))}
-        </Table.Header>
-        <Table.Body>
-          {table.getRowModel().rows?.length > 0 ? (
-            table.getRowModel().rows.map((row, rowIndex, arr) => (
-              <React.Fragment key={row.id}>
-                <Table.Row data-state={row.getIsSelected() && "selected"}>
-                  {row.getVisibleCells().map((cell, cellIndex) => (
-                    <Table.Cell
-                      className={cn(
-                        "relative h-9 w-full items-center bg-bg-white-0 py-0",
-                        {
-                          "first:rounded-none first:border-l-4 first:border-primary-base last:rounded-none":
-                            row.getIsExpanded() || row?.depth > 0,
-                          "bg-bg-weak-50": row?.depth > 0,
-                          // "bg-bg-weak-50":
-                          //   row.getIsExpanded() && row?.depth === 0,
-                          // "bg-bg-soft-200/80 group-hover/row:bg-bg-soft-200":
-                          //   (row.getIsExpanded() && row?.depth === 1) ||
-                          //   row?.depth === 1,
-                          // "bg-bg-sub-300/60 group-hover/row:bg-bg-sub-300/70":
-                          //   row?.depth === 2,
-                        }
-                      )}
-                      style={{
-                        ...getCommonPinningStyles(cell.column as any),
-                      }}
-                      key={cell.id}
-                    >
-                      {cellIndex === 0 &&
-                        row.depth === 1 &&
-                        row?.getIsExpanded() && (
-                          <span className="absolute inset-y-0 left-0 w-1 bg-success-base"></span>
-                        )}
-                      {cellIndex === 0 && row?.depth === 2 && (
-                        <span className="absolute inset-y-0 left-0 w-1 bg-success-base"></span>
-                      )}
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </Table.Cell>
-                  ))}
-                </Table.Row>
-              </React.Fragment>
-            ))
-          ) : (
-            <Table.Row>
-              <Table.Cell colSpan={table.getAllColumns().length}>
-                <div className="gutter relative mt-4 flex w-full flex-col gap-2 overflow-hidden rounded-xl bg-bg-weak-50 py-16">
-                  <h1 className="relative z-10 text-title-h4">
-                    No learning found
-                  </h1>
-                  <p className="relative z-10 text-label-sm font-light text-text-soft-400">
-                    Can't find what you're looking for?
-                  </p>
-                  <RiSearchLine
-                    className="absolute -top-24 right-24 z-0 rotate-[-20deg] text-text-soft-400 opacity-10"
-                    size={450}
-                  />
-                </div>
-              </Table.Cell>
-            </Table.Row>
-          )}
-        </Table.Body>
-      </Table.Root>
-    </div>
+        <Grid gap="none" className="w-full gap-6">
+          <CoursesLastActive
+            enrolments={flatEnrolmentDetails}
+            activity={activity}
+          />
+          <div className="col-span-12 flex aspect-[1/2] flex-col gap-6 md:col-span-6 md:aspect-square xl:col-span-4">
+            <CoursesBookmarks enrolments={flatEnrolmentDetails} />
+            <CoursesNotes enrolments={flatEnrolmentDetails} />
+          </div>
+
+          <CoursesSchedule enrolments={flatEnrolmentDetails} />
+          <CoursesEnrolmentsTable
+            enrolments={flatEnrolmentDetails}
+            activity={activity}
+            q={search.q}
+            expanded={search.expanded}
+            updateTableFilters={updateTableFilters}
+          />
+        </Grid>
+      </Section>
+    </>
   )
 }

@@ -65,8 +65,8 @@ const CoursesLastActive: React.FC<Props> = ({ enrolments, activity }) => {
   )
   return (
     <div className="col-span-12 flex aspect-square h-full w-full flex-1 flex-col overflow-hidden rounded-[22px] ring-1 ring-stroke-soft-200 xl:col-span-4">
-      <div className="relative flex w-full grow items-end gap-7 border-b border-stroke-soft-200 bg-bg-white-0 p-7 shadow-regular-md">
-        <div className="relative aspect-square h-full overflow-hidden rounded-lg bg-primary-base">
+      <div className="relative flex w-full grow items-end gap-7 border-b border-stroke-soft-200 bg-bg-white-0 p-5 shadow-regular-md">
+        <div className="relative aspect-square h-full overflow-hidden rounded-xl bg-primary-base">
           {imagePath ? (
             <Image
               className="absolute inset-0 h-full w-full object-cover"
@@ -87,7 +87,6 @@ const CoursesLastActive: React.FC<Props> = ({ enrolments, activity }) => {
             />
           ) : null}
         </div>
-
         <div className="flex flex-col">
           <p className="text-label-xs text-text-soft-400">RECENTLY ACTIVE</p>
           <p className="line-clamp-2 text-pretty text-title-h5">
@@ -106,7 +105,7 @@ const CoursesLastActive: React.FC<Props> = ({ enrolments, activity }) => {
           </Button.Root>
         </div>
       </div>
-      <Grid gap="none" className="w-full gap-5 bg-bg-weak-50 p-7">
+      <Grid gap="none" className="w-full gap-4 bg-bg-weak-50 p-5">
         {enrolment?.publication?.material?.slice(0, 8)?.map((material) => {
           const modImagePath = getPathFromGoogleStorage(
             material?.moduleVersion?.module?.featureImageUrl || ""
@@ -115,7 +114,7 @@ const CoursesLastActive: React.FC<Props> = ({ enrolments, activity }) => {
           return (
             <Tooltip.Root key={material.uid}>
               <Tooltip.Trigger asChild>
-                <div className="relative col-span-3 aspect-square overflow-hidden rounded-lg bg-primary-base p-2">
+                <div className="relative col-span-3 aspect-square overflow-hidden rounded-xl bg-primary-base p-2">
                   <Badge.Root
                     square
                     className="absolute left-1.5 top-1.5 z-10 aspect-square p-0.5"

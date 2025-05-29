@@ -30,7 +30,7 @@ interface CompactCalendarProps {
   enrolments: z.infer<typeof EnrolmentsDetailSchema>[]
 }
 
-const CompactCalendar = ({
+const CoursesSchedule = ({
   className,
   onDateSelect,
   enrolments,
@@ -131,7 +131,7 @@ const CompactCalendar = ({
   return (
     <div
       className={cn(
-        "col-span-12 flex aspect-square h-full w-full flex-col gap-4 xl:col-span-4",
+        "col-span-12 flex aspect-square h-full w-full flex-col gap-4 md:col-span-6 xl:col-span-4",
         className
       )}
     >
@@ -323,4 +323,4 @@ const CompactCalendar = ({
   )
 }
 
-export default CompactCalendar
+export default CoursesSchedule
