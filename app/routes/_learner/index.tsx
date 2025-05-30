@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
 import type { EnrolmentActivityType } from "@/integrations/trpc/routers/enrolments/schemas/enrolment-activity-schema"
+import { getPathFromGoogleStorage } from "@/utils/get-path-from-google-storage"
 import { getTotalTrackableActivity } from "@/utils/get-total-trackable-activity"
 import { RiArrowRightSLine, RiCalendarLine } from "@remixicon/react"
 import {
@@ -40,6 +41,7 @@ import { toast } from "@/components/ui/toast"
 import * as AlertToast from "@/components/ui/toast-alert"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Grid } from "@/components/grid"
+import Image from "@/components/image"
 import { Section } from "@/components/section"
 
 import CoursesBookmarks from "./communities/$id/courses/-components/courses-bookmarks"
@@ -226,8 +228,6 @@ function RouteComponent() {
       ),
   })
 
-  const heroSize = useElementSize()
-
   useEffect(() => {
     if (!api) {
       return
@@ -265,6 +265,9 @@ function RouteComponent() {
             // )
             // const allLearningAfterCurrentLesson =
             //   flatLearning?.slice(continueLessonIndex)
+            const imagePath = getPathFromGoogleStorage(
+              detail?.publication?.featureImageUrl || ""
+            )
 
             return (
               <CarouselItem className="relative" key={detail.uid + "-feature"}>
@@ -286,10 +289,11 @@ function RouteComponent() {
                       </div>
                     </div>
                   )}
-                  {detail?.publication?.featureImageUrl && (
-                    <img
-                      src={detail?.publication?.featureImageUrl}
+                  {detail?.publication?.featureImageUrl && imagePath && (
+                    <Image
+                      path={imagePath || ""}
                       alt={detail.publication.title + " feature image"}
+                      sizes="100vw"
                       className="absolute inset-0 z-0 h-full w-full object-cover"
                     />
                   )}
@@ -301,10 +305,7 @@ function RouteComponent() {
                       className="gutter relative z-10 mx-auto w-full max-w-screen-xl"
                       gap="xs"
                     >
-                      <div
-                        ref={heroSize.ref}
-                        className="col-span-7 flex flex-col justify-end gap-2"
-                      >
+                      <div className="col-span-7 flex flex-col justify-end gap-2">
                         <div className="flex flex-wrap items-center gap-3">
                           {detail?.dueDate && (
                             <Badge.Root>

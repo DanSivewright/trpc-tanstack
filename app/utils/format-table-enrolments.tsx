@@ -60,6 +60,34 @@ type ColumnType = {
   material?: Material
   subRows?: ColumnType[]
 }
+export function getModuleDueDate(
+  dueDate: Material["dueDate"],
+  enrolledAt?: string
+) {
+  if (!dueDate) return ""
+  if ("fixed" in dueDate) return dueDate.fixed
+  if ("dueDuration" in dueDate && "dueMeasurement" in dueDate) {
+    if (!enrolledAt) return ""
+    switch (dueDate.dueMeasurement) {
+      case "days":
+        return endOfDay(
+          addDays(new Date(enrolledAt), parseInt(dueDate?.dueDuration))
+        ).toISOString()
+      case "months":
+        return endOfDay(
+          addMonths(new Date(enrolledAt), parseInt(dueDate?.dueDuration))
+        ).toISOString()
+      case "years":
+        return endOfDay(
+          addYears(new Date(enrolledAt), parseInt(dueDate?.dueDuration))
+        ).toISOString()
+
+      default:
+        break
+    }
+  }
+  return ""
+}
 
 export function formatModule(
   m: Material,
@@ -70,47 +98,11 @@ export function formatModule(
     progress: Map<string, number>
   }
 ): ColumnType {
-  function getDueDate(dueDate: Material["dueDate"]) {
-    if (!dueDate) return ""
-    if ("fixed" in dueDate) return dueDate.fixed
-    if ("dueDuration" in dueDate && "dueMeasurement" in dueDate) {
-      switch (dueDate.dueMeasurement) {
-        case "days":
-          if (!parent?.enrolledAt) return ""
-          return endOfDay(
-            addDays(
-              new Date(parent?.enrolledAt),
-              parseInt(dueDate?.dueDuration)
-            )
-          ).toISOString()
-        case "months":
-          if (!parent?.enrolledAt) return ""
-          return endOfDay(
-            addMonths(
-              new Date(parent?.enrolledAt),
-              parseInt(dueDate?.dueDuration)
-            )
-          ).toISOString()
-        case "years":
-          if (!parent?.enrolledAt) return ""
-          return endOfDay(
-            addYears(
-              new Date(parent?.enrolledAt),
-              parseInt(dueDate?.dueDuration)
-            )
-          ).toISOString()
-
-        default:
-          break
-      }
-    }
-    return ""
-  }
   return {
     uid: m?.uid,
     title: m?.moduleVersion?.module?.translations?.["1"]?.title,
     status: activity.flat.get(m.uid)?.status || "not-started",
-    dueDate: getDueDate(m?.dueDate),
+    dueDate: getModuleDueDate(m?.dueDate, parent?.enrolledAt),
     topics: [],
     enrolledAt: "",
     startedAt: activity.flat.get(m.uid)?.context?.startedAt || "",

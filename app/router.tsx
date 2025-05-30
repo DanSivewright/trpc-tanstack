@@ -7,6 +7,10 @@ import { routeTree } from "./routeTree.gen"
 export const createRouter = () => {
   const router = routerWithQueryClient(
     createTanstackRouter({
+      scrollRestoration: true,
+      defaultHashScrollIntoView: {
+        behavior: "smooth",
+      },
       routeTree,
       context: {
         ...TanstackQuery.getContext(),

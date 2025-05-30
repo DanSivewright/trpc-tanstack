@@ -11,6 +11,7 @@ type Props = {
   hideBreadcrumbs?: boolean
   mode?: "light" | "default"
   className?: string
+  overrideChildren?: boolean
 }
 
 const NavigationLearnerSubHeader: React.FC<Props> = ({
@@ -18,6 +19,7 @@ const NavigationLearnerSubHeader: React.FC<Props> = ({
   hideBreadcrumbs,
   mode = "default",
   className,
+  overrideChildren = false,
 }) => {
   const matches = useMatches()
   const matchesWithCrumbs = matches.filter((match) =>
@@ -58,36 +60,48 @@ const NavigationLearnerSubHeader: React.FC<Props> = ({
   )
   return (
     <motion.div
-      style={{
-        backgroundColor,
-        backdropFilter: backdropBlur,
-        boxShadow,
-      }}
+      style={
+        overrideChildren
+          ? {}
+          : {
+              backgroundColor,
+              backdropFilter: backdropBlur,
+              boxShadow,
+            }
+      }
       className={cn("sticky inset-x-0 top-0 z-50 px-8 xl:px-0", className)}
     >
-      <div className="mx-auto flex w-full max-w-screen-lg items-center justify-between">
-        {!hideBreadcrumbs && (
-          <Breadcrumb.Root>
-            {items?.map((crumb, i) => {
-              const isLast = items?.length - 1 === i
-              return (
-                <React.Fragment key={crumb.href + crumb.label}>
-                  <Breadcrumb.Item
-                    key={crumb.href + crumb.label}
-                    active={isLast}
-                    asChild
-                  >
-                    <Link to={crumb.href}>{crumb.label}</Link>
-                  </Breadcrumb.Item>
-                  {!isLast && <Breadcrumb.ArrowIcon as={RiArrowRightSLine} />}
-                </React.Fragment>
-              )
-            })}
-          </Breadcrumb.Root>
-        )}
+      {overrideChildren ? (
+        children
+      ) : (
+        <>
+          <div className="mx-auto flex w-full max-w-screen-lg items-center justify-between">
+            {!hideBreadcrumbs && (
+              <Breadcrumb.Root>
+                {items?.map((crumb, i) => {
+                  const isLast = items?.length - 1 === i
+                  return (
+                    <React.Fragment key={crumb.href + crumb.label}>
+                      <Breadcrumb.Item
+                        key={crumb.href + crumb.label}
+                        active={isLast}
+                        asChild
+                      >
+                        <Link to={crumb.href}>{crumb.label}</Link>
+                      </Breadcrumb.Item>
+                      {!isLast && (
+                        <Breadcrumb.ArrowIcon as={RiArrowRightSLine} />
+                      )}
+                    </React.Fragment>
+                  )
+                })}
+              </Breadcrumb.Root>
+            )}
 
-        <div className="flex items-center gap-5">{children}</div>
-      </div>
+            <div className="flex items-center gap-5">{children}</div>
+          </div>
+        </>
+      )}
     </motion.div>
   )
 }

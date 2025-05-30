@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
-import { useTRPC } from "@/integrations/trpc/react"
 import type { EnrolmentActivityType } from "@/integrations/trpc/routers/enrolments/schemas/enrolment-activity-schema"
-import { getTotalTrackableActivity } from "@/utils/get-total-trackable-activity"
 import { groupBy } from "@/utils/group-by"
 import { RiArrowDownSLine } from "@remixicon/react"
-import { useSuspenseQueries, useSuspenseQuery } from "@tanstack/react-query"
 import { differenceInHours, format, isBefore } from "date-fns"
 import { Bar, BarChart, XAxis } from "recharts"
 
