@@ -5,36 +5,34 @@ import { cn } from "@/utils/cn"
 import { getPathFromGoogleStorage } from "@/utils/get-path-from-google-storage"
 import { getTotalTrackableActivity } from "@/utils/get-total-trackable-activity"
 import {
-  RiAddCircleLine,
   RiArrowRightSLine,
   RiBarChartLine,
   RiCalendarLine,
   RiCheckboxCircleFill,
   RiCloseCircleFill,
   RiCompassLine,
-  RiExternalLinkLine,
-  RiFileCopyLine,
-  RiHashtag,
   RiInformationLine,
-  RiLayoutMasonryLine,
   RiLockLine,
-  RiMore2Line,
   RiPlayCircleLine,
   RiPlayList2Line,
   RiRecordCircleLine,
   RiStarLine,
 } from "@remixicon/react"
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
+import {
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query"
 import {
   createFileRoute,
   Link,
   retainSearchParams,
+  stripSearchParams,
   useLocation,
 } from "@tanstack/react-router"
 import { format } from "date-fns"
 import {
   AnimatePresence,
-  clamp,
   motion,
   useInView,
   useScroll,
@@ -45,11 +43,7 @@ import { z } from "zod"
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Dropdown } from "@/components/ui/dropdown"
-import { FileFormatIcon } from "@/components/ui/file-format-icon"
-import { StatusBadge } from "@/components/ui/status-badge"
 import { TabMenuHorizontal } from "@/components/ui/tab-menu-horizontal"
-import { Tag } from "@/components/ui/tag"
 import { toast } from "@/components/ui/toast"
 import * as AlertToast from "@/components/ui/toast-alert"
 import { Tooltip } from "@/components/ui/tooltip"
@@ -57,19 +51,28 @@ import { Grid } from "@/components/grid"
 import Image from "@/components/image"
 import NavigationLearnerSubHeader from "@/components/navigation/navigation-learner/navigation-learner-sub-header"
 import { Section } from "@/components/section"
+import Bookmarks from "@/components/widgets/bookmarks"
 
 import CoursesBookmarks from "../communities/$id/courses/-components/courses-bookmarks"
-import CoursesLastActive from "../communities/$id/courses/-components/courses-last-active"
 import CoursesNotes from "../communities/$id/courses/-components/courses-notes"
 import CoursesSchedule from "../communities/$id/courses/-components/courses-schedule"
+import EnrolmentsModuleDrawer from "./-components/enrolments-module-drawer"
 
 export const Route = createFileRoute("/_learner/enrolments/$uid/")({
   validateSearch: z.object({
     type: z.enum(["courses", "programs", "externals"]),
     typeUid: z.string(),
+    moduleUid: z.string().optional(),
+    highlightUid: z.string().optional(),
   }),
   search: {
-    middlewares: [retainSearchParams(["type", "typeUid"])],
+    middlewares: [
+      retainSearchParams(["type", "typeUid"]),
+      stripSearchParams({
+        moduleUid: "",
+        highlightUid: "",
+      }),
+    ],
   },
   loaderDeps: ({ search }) => {
     return {
@@ -145,6 +148,8 @@ function RouteComponent() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
   const location = useLocation()
+  const queryClient = useQueryClient()
+
   const { scrollY } = useScroll()
 
   const [hash, setHash] = useState(location.hash)
@@ -321,6 +326,7 @@ function RouteComponent() {
 
   return (
     <>
+      <EnrolmentsModuleDrawer activity={activity} enrolment={detail} />
       {detail?.publication?.featureImageUrl && imagePath && (
         <motion.div
           style={{
@@ -790,7 +796,10 @@ function RouteComponent() {
               </Grid>
             </div>
             <div className="col-span-12 flex aspect-[1/2] flex-col gap-6 md:col-span-6 md:aspect-square xl:col-span-4">
-              <CoursesBookmarks enrolments={[detail]} />
+              <Bookmarks
+                identifierKey="enrolmentUid"
+                identifiers={[detail?.uid]}
+              />
               <CoursesNotes enrolments={[detail]} />
             </div>
 
@@ -811,6 +820,26 @@ function RouteComponent() {
                 const act = activity.flat.get(material.uid)
                 return (
                   <button
+                    onClick={() => {
+                      navigate({
+                        resetScroll: false,
+                        search: (prev) => ({
+                          ...prev,
+                          moduleUid: material.uid,
+                        }),
+                      })
+                    }}
+                    onMouseOver={() => {
+                      if (!material?.moduleVersion?.module?.featureImageUrl)
+                        return null
+                      queryClient.prefetchQuery(
+                        trpc.palette.get.queryOptions({
+                          url:
+                            material?.moduleVersion?.module?.featureImageUrl ||
+                            "",
+                        })
+                      )
+                    }}
                     className={cn(
                       "col-span-12 flex cursor-pointer items-center gap-8 border-b px-4 py-3 transition-colors hover:bg-bg-weak-50 xl:col-span-6",
                       {

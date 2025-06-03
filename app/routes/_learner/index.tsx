@@ -27,7 +27,6 @@ import {
 import { motion } from "motion/react"
 import { z } from "zod"
 
-import { useElementSize } from "@/hooks/use-element-size"
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -43,8 +42,8 @@ import { Tooltip } from "@/components/ui/tooltip"
 import { Grid } from "@/components/grid"
 import Image from "@/components/image"
 import { Section } from "@/components/section"
+import Bookmarks from "@/components/widgets/bookmarks"
 
-import CoursesBookmarks from "./communities/$id/courses/-components/courses-bookmarks"
 import CoursesEnrolmentsTable from "./communities/$id/courses/-components/courses-enrolments-table"
 import CoursesLastActive from "./communities/$id/courses/-components/courses-last-active"
 import CoursesNotes from "./communities/$id/courses/-components/courses-notes"
@@ -535,7 +534,10 @@ function RouteComponent() {
             activity={activity}
           />
           <div className="col-span-12 flex aspect-[1/2] flex-col gap-6 md:col-span-6 md:aspect-square xl:col-span-4">
-            <CoursesBookmarks enrolments={flatEnrolmentDetails} />
+            <Bookmarks
+              identifierKey="enrolmentUid"
+              identifiers={flatEnrolmentDetails?.map((e) => e?.uid)}
+            />
             <CoursesNotes enrolments={flatEnrolmentDetails} />
           </div>
 

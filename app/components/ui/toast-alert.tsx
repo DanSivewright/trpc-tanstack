@@ -83,3 +83,5 @@ const AlertToast = React.forwardRef<
 AlertToast.displayName = "AlertToast"
 
 export { AlertToast as Root }
+
+export * as AlertToast from "./toast-alert"

@@ -65,10 +65,10 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <AuthProvider>
           <TooltipProvider>{children}</TooltipProvider>
         </AuthProvider>
-        <CacheBuster />
+        {/* <CacheBuster />
         <TanStackRouterDevtools position="bottom-right" />
         <ReactQueryDevtools buttonPosition="bottom-left" />
-        <TailwindIndicator />
+        <TailwindIndicator /> */}
         <NotificationProvider />
         <Toaster />
 

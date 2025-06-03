@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useTRPC } from "@/integrations/trpc/react"
 import type {
   communitiesAllSchema,
@@ -11,7 +11,6 @@ import { cn } from "@/utils/cn"
 import { getPathFromGoogleStorage } from "@/utils/get-path-from-google-storage"
 import {
   RiArrowRightLine,
-  RiArrowRightSLine,
   RiAwardLine,
   RiBook2Line,
   RiBriefcaseLine,
@@ -55,11 +54,9 @@ import {
   stripSearchParams,
 } from "@tanstack/react-router"
 import { format } from "date-fns"
-import { motion } from "motion/react"
 import { z } from "zod"
 
 import useDebouncedCallback from "@/hooks/use-debounced-callback"
-import { useElementSize } from "@/hooks/use-element-size"
 import { Avatar } from "@/components/ui/avatar"
 import * as AvatarGroupCompact from "@/components/ui/avatar-group-compact"
 import * as Badge from "@/components/ui/badge"
@@ -73,8 +70,6 @@ import {
 import { CompactButton } from "@/components/ui/compact-button"
 import * as DotStepper from "@/components/ui/dot-stepper"
 import { Input } from "@/components/ui/input"
-import { Select } from "@/components/ui/select"
-import DraggableScrollContainer from "@/components/draggable-scroll-container"
 import { Grid } from "@/components/grid"
 import Image from "@/components/image"
 import { Section } from "@/components/section"

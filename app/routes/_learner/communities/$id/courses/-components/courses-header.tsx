@@ -41,13 +41,19 @@ const presets = [
     shortcut: "m",
   },
   {
+    label: "Last 90 Days",
+    shortcut: "l",
+  },
+  {
     label: "This Year",
     shortcut: "y",
   },
 ] as const
 
 const CoursesHeader: React.FC<Props> = ({ activity }) => {
-  const [range, setRange] = useLocalStorage<"d" | "w" | "m" | "y" | string[]>({
+  const [range, setRange] = useLocalStorage<
+    "d" | "w" | "m" | "l" | "y" | string[]
+  >({
     key: "learner-communities-courses-range",
     defaultValue: "m",
   })
@@ -119,6 +125,13 @@ const CoursesHeader: React.FC<Props> = ({ activity }) => {
           endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
           groupingFormat = "week" // Changed to group by weeks
           break
+        case "l":
+          // Last 90 days
+          startDate = new Date(now)
+          startDate.setDate(startDate.getDate() - 90)
+          endDate = new Date(now)
+          groupingFormat = "week" // Use weekly grouping for 90 days
+          break
         case "y":
         default:
           startDate = new Date(now.getFullYear(), 0, 1)
@@ -134,29 +147,21 @@ const CoursesHeader: React.FC<Props> = ({ activity }) => {
     let currentDate = new Date(startDate)
 
     if (groupingFormat === "week") {
-      // For weekly grouping in a month, start from the 1st of the month
-      const firstDayOfMonth = new Date(
-        startDate.getFullYear(),
-        startDate.getMonth(),
-        1
-      )
-      const lastDayOfMonth = new Date(
-        startDate.getFullYear(),
-        startDate.getMonth() + 1,
-        0
-      )
+      // For weekly grouping in a month or 90 days, start from the appropriate start date
+      const firstDay = new Date(startDate)
+      const lastDay = new Date(endDate)
 
       // Set currentDate to the start of the first week
-      currentDate = new Date(firstDayOfMonth)
+      currentDate = new Date(firstDay)
 
-      while (currentDate.getTime() <= lastDayOfMonth.getTime()) {
+      while (currentDate.getTime() <= lastDay.getTime()) {
         const weekStart = format(currentDate, "d")
         const weekEndDate = new Date(currentDate)
         weekEndDate.setDate(weekEndDate.getDate() + 6)
 
-        // Ensure we don't go beyond the month
+        // Ensure we don't go beyond the end date
         const actualEndDate = new Date(
-          Math.min(weekEndDate.getTime(), lastDayOfMonth.getTime())
+          Math.min(weekEndDate.getTime(), lastDay.getTime())
         )
 
         const weekEnd = format(actualEndDate, "d")

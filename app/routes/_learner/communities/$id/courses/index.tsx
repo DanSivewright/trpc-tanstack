@@ -9,8 +9,8 @@ import { z } from "zod"
 
 import { Grid } from "@/components/grid"
 import { Section } from "@/components/section"
+import Bookmarks from "@/components/widgets/bookmarks"
 
-import CoursesBookmarks from "./-components/courses-bookmarks"
 import CoursesEnrolmentsTable from "./-components/courses-enrolments-table"
 import CoursesHeader from "./-components/courses-header"
 import CoursesLastActive from "./-components/courses-last-active"
@@ -174,7 +174,10 @@ function RouteComponent() {
             activity={activity}
           />
           <div className="col-span-12 flex aspect-[1/2] flex-col gap-6 md:col-span-6 md:aspect-square xl:col-span-4">
-            <CoursesBookmarks enrolments={flatEnrolmentDetails} />
+            <Bookmarks
+              identifierKey="enrolmentUid"
+              identifiers={flatEnrolmentDetails?.map((e) => e?.uid)}
+            />
             <CoursesNotes enrolments={flatEnrolmentDetails} />
           </div>
 
