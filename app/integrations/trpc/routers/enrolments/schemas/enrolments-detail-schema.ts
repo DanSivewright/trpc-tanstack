@@ -42,7 +42,7 @@ const TranslationSchema = z.object({
 })
 
 // Learning schemas for course/program types
-const LearningSchema = z.object({
+export const LearningSchema = z.object({
   uid: z.string(),
   kind: z.string(),
   type: z.string(),

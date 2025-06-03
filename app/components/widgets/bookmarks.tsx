@@ -41,10 +41,17 @@ const bookmarkColorMap = {
 const schema = z.object({
   identifierKey: z.enum(["enrolmentUid", "moduleUid", "lessonUid", "cardId"]),
   identifiers: z.array(z.string()),
+  forceEnrolmentUid: z.string().optional(),
+  className: z.string().optional(),
 })
 
 type Props = z.infer<typeof schema>
-const Bookmarks: React.FC<Props> = ({ identifierKey, identifiers }) => {
+const Bookmarks: React.FC<Props> = ({
+  identifierKey,
+  identifiers,
+  className = "",
+  forceEnrolmentUid,
+}) => {
   const trpc = useTRPC()
   const bookmarks = useQueries({
     queries: identifiers?.map((identifier) =>
@@ -57,25 +64,28 @@ const Bookmarks: React.FC<Props> = ({ identifierKey, identifiers }) => {
   const flatBookmarks = useMemo(() => {
     return bookmarks.flatMap((x) => x.data).filter((x) => x?.bookmarked)
   }, [bookmarks])
+  const uniqueEnrolmentUids = useMemo(() => {
+    return [...new Set(flatBookmarks?.map((x) => x?.enrolmentUid))]
+  }, [flatBookmarks])
 
   const enrolments = useQueries({
-    queries: flatBookmarks
-      ?.filter((en) => en?.enrolmentUid)
-      ?.map((bm) => {
-        return {
-          ...trpc.enrolments.detail.queryOptions({
-            params: {
-              uid: bm?.enrolmentUid!,
-            },
-            addOns: {
-              withActivity: true,
-            },
-            query: {
-              excludeMaterial: true,
-            },
-          }),
-        }
-      }),
+    queries: [
+      ...(forceEnrolmentUid ? [forceEnrolmentUid] : uniqueEnrolmentUids),
+    ]?.map((enrolmentUid) => {
+      return {
+        ...trpc.enrolments.detail.queryOptions({
+          params: {
+            uid: enrolmentUid!,
+          },
+          addOns: {
+            withActivity: true,
+          },
+          query: {
+            excludeMaterial: true,
+          },
+        }),
+      }
+    }),
   })
 
   const materialAndLessonsMap = useMemo(() => {
@@ -124,10 +134,14 @@ const Bookmarks: React.FC<Props> = ({ identifierKey, identifiers }) => {
     if (!flatBookmarks || flatBookmarks.length === 0) return 0
     return flatBookmarks.length - max
   }, [flatBookmarks, max])
+
   return (
     <div
       ref={ref}
-      className="group relative flex h-1/2 flex-col rounded-[22px] bg-bg-white-0 p-4 ring-1 ring-stroke-soft-200"
+      className={cn(
+        "group relative flex h-1/2 flex-col rounded-[22px] bg-bg-white-0 p-4 ring-1 ring-stroke-soft-200",
+        className
+      )}
     >
       <header className="flex gap-1.5">
         <p className="text-paragraph-xl font-bold text-blue-500">Bookmarks</p>

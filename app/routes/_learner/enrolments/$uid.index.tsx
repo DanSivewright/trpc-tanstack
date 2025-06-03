@@ -53,7 +53,6 @@ import NavigationLearnerSubHeader from "@/components/navigation/navigation-learn
 import { Section } from "@/components/section"
 import Bookmarks from "@/components/widgets/bookmarks"
 
-import CoursesBookmarks from "../communities/$id/courses/-components/courses-bookmarks"
 import CoursesNotes from "../communities/$id/courses/-components/courses-notes"
 import CoursesSchedule from "../communities/$id/courses/-components/courses-schedule"
 import EnrolmentsModuleDrawer from "./-components/enrolments-module-drawer"
@@ -62,6 +61,13 @@ export const Route = createFileRoute("/_learner/enrolments/$uid/")({
   validateSearch: z.object({
     type: z.enum(["courses", "programs", "externals"]),
     typeUid: z.string(),
+    q: z.string().optional(),
+    scope: z
+      .array(
+        z.enum(["all", "not-started", "in-progress", "completed", "failed"])
+      )
+      .default(["all"])
+      .optional(),
     moduleUid: z.string().optional(),
     highlightUid: z.string().optional(),
   }),
@@ -71,6 +77,8 @@ export const Route = createFileRoute("/_learner/enrolments/$uid/")({
       stripSearchParams({
         moduleUid: "",
         highlightUid: "",
+        q: "",
+        scope: ["all"],
       }),
     ],
   },

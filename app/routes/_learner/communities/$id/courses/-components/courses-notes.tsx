@@ -40,8 +40,9 @@ const bookmarkColorMap = {
 }
 type Props = {
   enrolments: z.infer<typeof EnrolmentsDetailSchema>[]
+  className?: string
 }
-const CoursesNotes: React.FC<Props> = ({ enrolments }) => {
+const CoursesNotes: React.FC<Props> = ({ enrolments, className = "" }) => {
   // const trpc = useTRPC()
   // const bookmarks = useQueries({
   //   queries: enrolments?.map((detail) =>
@@ -105,7 +106,10 @@ const CoursesNotes: React.FC<Props> = ({ enrolments }) => {
   return (
     <div
       // ref={ref}
-      className="group relative flex h-1/2 flex-col overflow-hidden rounded-[22px] bg-bg-white-0 ring-1 ring-stroke-soft-200"
+      className={cn(
+        "group relative flex h-1/2 flex-col overflow-hidden rounded-[22px] bg-bg-white-0 ring-1 ring-stroke-soft-200",
+        className
+      )}
     >
       <header className="flex gap-1.5 p-4">
         <p className="text-paragraph-xl font-bold text-yellow-500">Notes</p>
