@@ -1,3 +1,4 @@
+import { forwardRef } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
@@ -22,13 +23,15 @@ export interface IGridProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof gridVariants> {}
 
-const Grid: React.FC<IGridProps> = ({ className, children, gap, ...rest }) => {
-  return (
-    <div {...rest} className={cn(gridVariants({ gap, className }))}>
-      {children}
-    </div>
-  )
-}
+const Grid = forwardRef<HTMLDivElement, IGridProps>(
+  ({ className, children, gap, ...rest }, ref) => {
+    return (
+      <div ref={ref} {...rest} className={cn(gridVariants({ gap, className }))}>
+        {children}
+      </div>
+    )
+  }
+)
 Grid.displayName = "Grid"
 
 export { Grid, gridVariants }

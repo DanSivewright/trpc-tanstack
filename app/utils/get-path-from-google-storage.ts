@@ -15,3 +15,11 @@ export const getPathFromGoogleStorage = (url: string) => {
 
   return null
 }
+
+export function formatImagePath(path: string): string {
+  const parts = path.split("/")
+  const filename = parts.pop()
+  if (!filename) return path // fallback if path is malformed
+  const encodedFilename = encodeURIComponent(filename)
+  return [...parts, encodedFilename].join("/")
+}

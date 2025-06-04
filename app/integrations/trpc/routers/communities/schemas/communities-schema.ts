@@ -75,6 +75,7 @@ const communityCollectionGroupBaseSchema = z.object({
     name: z.string(),
     avatarUrl: z.string(),
   }),
+  duration: z.number().optional().nullable(),
   communityId: z.string(),
   images: z
     .array(

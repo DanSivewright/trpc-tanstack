@@ -540,7 +540,8 @@ function RouteComponent() {
           </CompactButton.Root>
         </div>
       </div>
-      <div className="columns-1 gap-1.5 md:columns-2 lg:columns-3 xl:columns-4">
+      {/* <div className="columns-1 gap-1.5 md:columns-2 lg:columns-3 xl:columns-4"> */}
+      <div className="columns-1 gap-1.5 px-1.5 md:columns-2 lg:columns-3 xl:columns-4">
         {Object.entries(map).map(([key, value]) => {
           if (search.scope === undefined && key !== "communities") return null
 
@@ -554,6 +555,7 @@ function RouteComponent() {
                   const community = item as z.infer<typeof communitySchema>
                   const logo = community?.images?.find((x) => x.logo)
                   const featured = community?.images?.find((x) => x.featured)
+
                   if (
                     search.q &&
                     !community.name
@@ -562,227 +564,235 @@ function RouteComponent() {
                   )
                     return null
                   return (
-                    <Link
-                      to="/communities/$id"
-                      params={{ id: community.id }}
-                      preload="intent"
+                    <div
                       className="relative mb-1.5 w-full break-inside-avoid"
                       key={community.id + "today"}
                     >
-                      <Image
-                        path={featured?.path!}
-                        lqip={{
-                          active: true,
-                          quality: 1,
-                          blur: 50,
-                        }}
-                        className="block rounded-sm"
-                        alt={`Community ${community.name} image`}
-                      />
-                      <div
-                        style={{
-                          background: `linear-gradient(0deg, rgba(${community?.meta?.colors?.LightMuted.rgb.join(",")}, 1) 0%, rgba(255,255,255,0) 100%)`,
-                        }}
-                        className="absolute inset-x-0 bottom-0 h-[65%]"
+                      <Link
+                        to="/communities/$id"
+                        params={{ id: community.id }}
+                        preload="intent"
+                        className="relative h-full w-full"
                       >
-                        <div className="gradient-blur">
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                        </div>
-                      </div>
-                      <header className="absolute inset-x-0 top-0 z-10 p-3">
-                        <div className="flex w-fit items-center gap-1.5 rounded-full border-white/80 bg-white/70 p-1 pr-2.5 backdrop-blur">
-                          <Avatar.Root className="shadow-regular-md" size="20">
-                            <Avatar.Image src={logo?.url!} />
-                          </Avatar.Root>
-                          <span className="text-label-xs opacity-65">
-                            {community?.tags?.[0]}
-                          </span>
-                        </div>
-                      </header>
-                      <footer
-                        style={{
-                          color:
-                            community?.meta?.colors?.LightMuted.titleTextColor,
-                        }}
-                        className="absolute inset-x-0 bottom-0 z-10 flex flex-col p-6"
-                      >
-                        <h4 className="mb-1.5 text-pretty text-title-h5 font-light lg:mb-2 xl:mb-2.5">
-                          {community?.name}
-                        </h4>
-                        <div className="flex items-center gap-4 *:text-label-xs *:font-light *:opacity-75">
-                          <div className="flex items-center gap-2">
-                            <RiChat3Line className="size-4" />
-                            <span>25 Comments</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <RiTimeLine className="size-4" />
-                            <span>About 4 mins</span>
-                          </div>
-                        </div>
-                      </footer>
-                    </Link>
-                  )
-                }
-                if (key === "threads") {
-                  const thread = item as z.infer<typeof communityThreadSchema>
-                  const featured = thread?.images?.find((x) => x.featured)
-                  if (
-                    search.q &&
-                    !thread.title.toLowerCase().includes(search.q.toLowerCase())
-                  )
-                    return null
-                  return (
-                    <Link
-                      to="/communities/$id/threads/$threadId"
-                      params={{ id: thread.communityId, threadId: thread.id }}
-                      preload="intent"
-                      className="relative mb-1.5 w-full break-inside-avoid"
-                      key={thread.id + "today"}
-                    >
-                      <Image
-                        path={featured?.path!}
-                        lqip={{
-                          active: true,
-                          quality: 1,
-                          blur: 50,
-                        }}
-                        className="block rounded-sm"
-                        alt={`Thread ${thread.title} image`}
-                      />
-                      <div
-                        style={{
-                          background: `linear-gradient(0deg, rgba(${thread?.meta?.colors?.LightMuted.rgb.join(",")}, 1) 0%, rgba(255,255,255,0) 100%)`,
-                        }}
-                        className="absolute inset-x-0 bottom-0 h-[65%]"
-                      >
-                        <div className="gradient-blur">
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                        </div>
-                      </div>
-                      <header className="absolute inset-x-0 top-0 z-10 p-3">
-                        <div className="flex w-fit items-center gap-1.5 rounded-full border-white/80 bg-white/70 p-1 pr-2.5 backdrop-blur">
-                          <Avatar.Root className="shadow-regular-md" size="20">
-                            {thread?.author?.avatarUrl && (
-                              <Avatar.Image src={thread?.author?.avatarUrl} />
-                            )}
-                          </Avatar.Root>
-                          <span className="text-label-xs opacity-65">
-                            {thread?.tags?.[0]}
-                          </span>
-                        </div>
-                      </header>
-                      <footer
-                        style={{
-                          color:
-                            thread?.meta?.colors?.LightMuted.titleTextColor,
-                        }}
-                        className="absolute inset-x-0 bottom-0 z-10 flex flex-col p-6"
-                      >
-                        <h4 className="mb-1.5 text-pretty text-title-h5 font-light lg:mb-2 xl:mb-2.5">
-                          {thread?.title}
-                        </h4>
-                        <div className="flex items-center gap-4 *:text-label-xs *:font-light *:opacity-75">
-                          <div className="flex items-center gap-2">
-                            <RiChat3Line className="size-4" />
-                            <span>25 Comments</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <RiTimeLine className="size-4" />
-                            <span>About 4 mins</span>
-                          </div>
-                        </div>
-                      </footer>
-                    </Link>
-                  )
-                }
-                if (key === "courses") {
-                  const course = item as z.infer<typeof communityCourseSchema>
-                  const imagePath = getPathFromGoogleStorage(
-                    course?.content?.featureImageUrl || ""
-                  )
-
-                  if (
-                    search.q &&
-                    !course.title.toLowerCase().includes(search.q.toLowerCase())
-                  )
-                    return null
-                  return (
-                    <Link
-                      to="/communities/$id/courses/$courseId"
-                      params={{ id: course.communityId, courseId: course.id }}
-                      search={{
-                        type: course?.typeAccessor,
-                        typeUid: course?.typeUid,
-                      }}
-                      preload="intent"
-                      className={cn(
-                        "relative mb-1.5 min-h-[25vh] w-full break-inside-avoid",
-                        {
-                          "bg-primary-base *:text-static-white":
-                            !course?.content?.featureImageUrl || !imagePath,
-                        }
-                      )}
-                      key={course.id + "today"}
-                    >
-                      {course?.content?.featureImageUrl && imagePath && (
                         <Image
-                          path={imagePath}
+                          path={featured?.path!}
                           lqip={{
                             active: true,
                             quality: 1,
                             blur: 50,
                           }}
-                          className="block min-h-[25vh] rounded-sm object-cover"
-                          alt={`Course ${course.title} image`}
+                          className="block rounded-sm object-cover"
+                          alt={`Community ${community.name} image`}
                         />
-                      )}
-
-                      <header className="absolute inset-x-0 top-0 z-10 p-3">
-                        <div className="flex w-fit items-center gap-1.5 rounded-full border-white/80 bg-white/70 p-1 pr-2.5 backdrop-blur">
-                          <Avatar.Root className="shadow-regular-md" size="20">
-                            {course?.author?.avatarUrl && (
-                              <Avatar.Image src={course?.author?.avatarUrl} />
-                            )}
-                          </Avatar.Root>
-                          <span className="text-label-xs opacity-65">
-                            {course?.tags?.[0]}
-                          </span>
-                        </div>
-                      </header>
-                      <footer
-                        style={{
-                          color:
-                            course?.meta?.colors?.LightMuted.titleTextColor,
-                        }}
-                        className="absolute inset-x-0 bottom-0 z-10 flex flex-col p-6"
-                      >
-                        <h4 className="mb-1.5 text-pretty text-title-h5 font-light lg:mb-2 xl:mb-2.5">
-                          {course?.title}
-                        </h4>
-                        <div className="flex items-center gap-4 *:text-label-xs *:font-light *:opacity-75">
-                          <div className="flex items-center gap-2">
-                            <RiChat3Line className="size-4" />
-                            <span>25 Comments</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <RiTimeLine className="size-4" />
-                            <span>About 4 mins</span>
+                        <div
+                          style={{
+                            background: `linear-gradient(0deg, rgba(${community?.meta?.colors?.LightMuted.rgb.join(",")}, 1) 0%, rgba(255,255,255,0) 100%)`,
+                          }}
+                          className="absolute inset-x-0 bottom-0 h-[65%]"
+                        >
+                          <div className="gradient-blur">
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
                           </div>
                         </div>
-                      </footer>
-                    </Link>
+                        <header className="absolute inset-x-0 top-0 z-10 p-3">
+                          <div className="flex w-fit items-center gap-1.5 rounded-full border-white/80 bg-white/70 p-1 pr-2.5 backdrop-blur">
+                            <Avatar.Root
+                              className="shadow-regular-md"
+                              size="20"
+                            >
+                              <Avatar.Image src={logo?.url!} />
+                            </Avatar.Root>
+                            <span className="text-label-xs opacity-65">
+                              {community?.tags?.[0]}
+                            </span>
+                          </div>
+                        </header>
+                        <footer
+                          style={{
+                            color:
+                              community?.meta?.colors?.LightMuted
+                                .titleTextColor,
+                          }}
+                          className="absolute inset-x-0 bottom-0 z-10 flex flex-col p-6"
+                        >
+                          {/* <h4 className="mb-1.5 text-pretty text-title-h5 font-light lg:mb-2 xl:mb-2.5">
+                          {community?.name}
+                        </h4> */}
+                          <div className="flex items-center gap-4 *:text-label-xs *:font-light *:opacity-75">
+                            <div className="flex items-center gap-2">
+                              <RiChat3Line className="size-4" />
+                              <span>25 Comments</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <RiTimeLine className="size-4" />
+                              <span>About 4 mins</span>
+                            </div>
+                          </div>
+                        </footer>
+                      </Link>
+                    </div>
                   )
                 }
+                // if (key === "threads") {
+                //   const thread = item as z.infer<typeof communityThreadSchema>
+                //   const featured = thread?.images?.find((x) => x.featured)
+                //   if (
+                //     search.q &&
+                //     !thread.title.toLowerCase().includes(search.q.toLowerCase())
+                //   )
+                //     return null
+                //   return (
+                //     <Link
+                //       to="/communities/$id/threads/$threadId"
+                //       params={{ id: thread.communityId, threadId: thread.id }}
+                //       preload="intent"
+                //       className="relative mb-1.5 w-full break-inside-avoid"
+                //       key={thread.id + "today"}
+                //     >
+                //       <Image
+                //         path={featured?.path!}
+                //         lqip={{
+                //           active: true,
+                //           quality: 1,
+                //           blur: 50,
+                //         }}
+                //         className="block rounded-sm"
+                //         alt={`Thread ${thread.title} image`}
+                //       />
+                //       <div
+                //         style={{
+                //           background: `linear-gradient(0deg, rgba(${thread?.meta?.colors?.LightMuted.rgb.join(",")}, 1) 0%, rgba(255,255,255,0) 100%)`,
+                //         }}
+                //         className="absolute inset-x-0 bottom-0 h-[65%]"
+                //       >
+                //         <div className="gradient-blur">
+                //           <div></div>
+                //           <div></div>
+                //           <div></div>
+                //           <div></div>
+                //           <div></div>
+                //           <div></div>
+                //         </div>
+                //       </div>
+                //       <header className="absolute inset-x-0 top-0 z-10 p-3">
+                //         <div className="flex w-fit items-center gap-1.5 rounded-full border-white/80 bg-white/70 p-1 pr-2.5 backdrop-blur">
+                //           <Avatar.Root className="shadow-regular-md" size="20">
+                //             {thread?.author?.avatarUrl && (
+                //               <Avatar.Image src={thread?.author?.avatarUrl} />
+                //             )}
+                //           </Avatar.Root>
+                //           <span className="text-label-xs opacity-65">
+                //             {thread?.tags?.[0]}
+                //           </span>
+                //         </div>
+                //       </header>
+                //       <footer
+                //         style={{
+                //           color:
+                //             thread?.meta?.colors?.LightMuted.titleTextColor,
+                //         }}
+                //         className="absolute inset-x-0 bottom-0 z-10 flex flex-col p-6"
+                //       >
+                //         <h4 className="mb-1.5 text-pretty text-title-h5 font-light lg:mb-2 xl:mb-2.5">
+                //           {thread?.title}
+                //         </h4>
+                //         <div className="flex items-center gap-4 *:text-label-xs *:font-light *:opacity-75">
+                //           <div className="flex items-center gap-2">
+                //             <RiChat3Line className="size-4" />
+                //             <span>25 Comments</span>
+                //           </div>
+                //           <div className="flex items-center gap-2">
+                //             <RiTimeLine className="size-4" />
+                //             <span>About 4 mins</span>
+                //           </div>
+                //         </div>
+                //       </footer>
+                //     </Link>
+                //   )
+                // }
+                // if (key === "courses") {
+                //   const course = item as z.infer<typeof communityCourseSchema>
+                //   const imagePath = getPathFromGoogleStorage(
+                //     course?.content?.featureImageUrl || ""
+                //   )
+
+                //   if (
+                //     search.q &&
+                //     !course.title.toLowerCase().includes(search.q.toLowerCase())
+                //   )
+                //     return null
+                //   return (
+                //     <Link
+                //       to="/communities/$id/courses/$courseId"
+                //       params={{ id: course.communityId, courseId: course.id }}
+                //       search={{
+                //         type: course?.typeAccessor,
+                //         typeUid: course?.typeUid,
+                //       }}
+                //       preload="intent"
+                //       className={cn(
+                //         "relative mb-1.5 min-h-[25vh] w-full break-inside-avoid",
+                //         {
+                //           "bg-primary-base *:text-static-white":
+                //             !course?.content?.featureImageUrl || !imagePath,
+                //         }
+                //       )}
+                //       key={course.id + "today"}
+                //     >
+                //       {course?.content?.featureImageUrl && imagePath && (
+                //         <Image
+                //           path={imagePath}
+                //           lqip={{
+                //             active: true,
+                //             quality: 1,
+                //             blur: 50,
+                //           }}
+                //           className="block min-h-[25vh] rounded-sm object-cover"
+                //           alt={`Course ${course.title} image`}
+                //         />
+                //       )}
+
+                //       <header className="absolute inset-x-0 top-0 z-10 p-3">
+                //         <div className="flex w-fit items-center gap-1.5 rounded-full border-white/80 bg-white/70 p-1 pr-2.5 backdrop-blur">
+                //           <Avatar.Root className="shadow-regular-md" size="20">
+                //             {course?.author?.avatarUrl && (
+                //               <Avatar.Image src={course?.author?.avatarUrl} />
+                //             )}
+                //           </Avatar.Root>
+                //           <span className="text-label-xs opacity-65">
+                //             {course?.tags?.[0]}
+                //           </span>
+                //         </div>
+                //       </header>
+                //       <footer
+                //         style={{
+                //           color:
+                //             course?.meta?.colors?.LightMuted.titleTextColor,
+                //         }}
+                //         className="absolute inset-x-0 bottom-0 z-10 flex flex-col p-6"
+                //       >
+                //         <h4 className="mb-1.5 text-pretty text-title-h5 font-light lg:mb-2 xl:mb-2.5">
+                //           {course?.title}
+                //         </h4>
+                //         <div className="flex items-center gap-4 *:text-label-xs *:font-light *:opacity-75">
+                //           <div className="flex items-center gap-2">
+                //             <RiChat3Line className="size-4" />
+                //             <span>25 Comments</span>
+                //           </div>
+                //           <div className="flex items-center gap-2">
+                //             <RiTimeLine className="size-4" />
+                //             <span>About 4 mins</span>
+                //           </div>
+                //         </div>
+                //       </footer>
+                //     </Link>
+                //   )
+                // }
               })}
             </>
           )

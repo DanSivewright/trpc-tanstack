@@ -19,6 +19,8 @@ type Props = z.infer<typeof interactionsCountForCollectionGroupSchema> &
     iconLine?: RemixiconComponentType
     iconFill?: RemixiconComponentType
     hideText?: boolean
+    className?: string
+    style?: React.CSSProperties
   }
 const LikesButton: React.FC<Omit<Props, "interactionType">> = ({
   collectionGroup,
@@ -30,6 +32,8 @@ const LikesButton: React.FC<Omit<Props, "interactionType">> = ({
   iconLine = RiHeartLine,
   iconFill = RiHeartFill,
   hideText = false,
+  className = "",
+  style = {},
 }) => {
   const interactionType = "likes"
   const trpc = useTRPC()
@@ -123,6 +127,8 @@ const LikesButton: React.FC<Omit<Props, "interactionType">> = ({
           variant={variant}
           mode={mode}
           size={size}
+          className={className}
+          style={style}
         >
           <Button.Icon
             className={cn(
