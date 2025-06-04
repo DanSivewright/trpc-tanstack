@@ -56,31 +56,31 @@ function RouteComponent() {
     },
     onSubmit: (data) => {
       const id = crypto.randomUUID()
-      // switch (data.value.type) {
-      //   case "community":
-      //     navigate({
-      //       to: "/communities/create/$id/community",
-      //       params: {
-      //         id,
-      //       },
-      //     })
-      //     break
-      //   case "course":
-      //     navigate({
-      //       to: "/communities/create/course",
-      //       params: {
-      //         id,
-      //       },
-      //     })
-      //     break
-      //   default:
-      //     notification({
-      //       title: "Support coming soon",
-      //       description: "We are working on this feature.",
-      //       variant: "light",
-      //       status: "information",
-      //     })
-      // }
+      switch (data.value.type) {
+        case "community":
+          navigate({
+            to: "/communities/create/$id/community",
+            params: {
+              id,
+            },
+          })
+          break
+        case "course":
+          navigate({
+            to: "/communities/create/course",
+            params: {
+              id,
+            },
+          })
+          break
+        default:
+          notification({
+            title: "Support coming soon",
+            description: "We are working on this feature.",
+            variant: "light",
+            status: "information",
+          })
+      }
     },
   })
   return (
