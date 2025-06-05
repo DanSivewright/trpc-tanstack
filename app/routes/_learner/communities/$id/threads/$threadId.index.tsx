@@ -670,7 +670,7 @@ function ThreadSettings() {
   const { notification } = useNotification()
 
   const MAX_FILES = 5
-  const MAX_SIZE = 5 * 1024 * 1024
+  const MAX_SIZE = 10 * 1024 * 1024
   const ACCEPTED_FILE_TYPES: FileTypeCategory[] = [
     "documents",
     "images",
@@ -750,6 +750,7 @@ function ThreadSettings() {
       accessibile: true,
       tags: true,
       isFeatured: true,
+      isFeaturedAt: true,
       isFeaturedUntil: true,
       updatedAt: true,
       attachments: true,
@@ -792,6 +793,7 @@ function ThreadSettings() {
       tags: thread.data?.tags,
       attachments: thread.data?.attachments,
       isFeatured: thread.data?.isFeatured || false,
+      isFeaturedAt: thread.data?.isFeaturedAt || null,
       isFeaturedUntil: thread.data?.isFeaturedUntil || null,
       isFeaturedFrom: thread.data?.isFeaturedFrom || null,
       updatedAt: thread.data?.updatedAt,
@@ -827,29 +829,30 @@ function ThreadSettings() {
       } as z.infer<typeof formSchema>
 
       if (formImages && formImages?.length > 0) {
-        const uploadedImages = await Promise.all(
-          formImages?.map(async (f) => {
-            if ("file" in f && f.file) {
-              const storageRef = ref(
-                storage,
-                `communities/${params.id}/${f.name}`
-              )
-              const uploadTask = await uploadBytes(storageRef, f.file)
-              const url = await getDownloadURL(uploadTask.ref)
+        const uploadedImages =
+          (await Promise.all(
+            formImages?.map(async (f) => {
+              if ("file" in f && f.file) {
+                const storageRef = ref(
+                  storage,
+                  `communities/${params.id}/${f.name}`
+                )
+                const uploadTask = await uploadBytes(storageRef, f.file)
+                const url = await getDownloadURL(uploadTask.ref)
+                return {
+                  ...f,
+                  url,
+                  path: `communities/${params.id}/${f.name}`,
+                  mimeType: f.file.type,
+                }
+              }
               return {
                 ...f,
-                url,
-                path: `communities/${params.id}/${f.name}`,
-                mimeType: f.file.type,
+                mimeType: f.mimeType || "unset",
               }
-            }
-            return {
-              ...f,
-              mimeType: f.mimeType || "unset",
-            }
-          })
-        )
-        const featureImage = uploadedImages.find((x) => x.featured)
+            })
+          )) || null
+        const featureImage = uploadedImages.find((x) => x.featured) || null
         let palette = thread.data?.meta?.colors
         if (
           featureImage &&
@@ -914,16 +917,18 @@ function ThreadSettings() {
           mimeType: f.mimeType || null,
         }))
 
-        const onlyImages = imagesWithoutFile.filter((f) =>
-          f.mimeType?.startsWith("image")
+        const onlyImages = imagesWithoutFile.filter(
+          (f) =>
+            f.mimeType?.startsWith("image") || f.mimeType?.startsWith("video")
         )
 
         const onlyAttachments = imagesWithoutFile.filter(
-          (f) => !f.mimeType?.startsWith("image")
+          (f) =>
+            !f.mimeType?.startsWith("image") && !f.mimeType?.startsWith("video")
         )
 
-        payload.images = onlyImages
-        payload.attachments = onlyAttachments
+        payload.images = onlyImages || null
+        payload.attachments = onlyAttachments || null
         if (palette) {
           payload.meta = {
             colors: palette,
@@ -934,12 +939,13 @@ function ThreadSettings() {
       // @ts-ignore
       await updateThread.mutateAsync({
         ...payload,
+        attachments: payload.attachments || null,
         isFeatured: data?.value?.isFeatured ? true : false,
         isFeaturedUntil: data?.value?.isFeaturedUntil
           ? endOfDay(new Date(data?.value?.isFeaturedUntil)).toISOString()
           : null,
         isFeaturedFrom: data?.value?.isFeatured
-          ? startOfDay(new Date()).toISOString()
+          ? new Date().toISOString()
           : null,
       })
 
@@ -1424,6 +1430,7 @@ function ThreadSettings() {
                                                         return
                                                       }
                                                       subField.handleChange(
+                                                        // @ts-ignore
                                                         checked
                                                       )
 

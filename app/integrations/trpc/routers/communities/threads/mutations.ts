@@ -167,6 +167,7 @@ export const createCommunityThreadSchema = communityThreadSchema
     tags: true,
     attachments: true,
     isFeatured: true,
+    isFeaturedAt: true,
     isFeaturedUntil: true,
     isFeaturedFrom: true,
   })

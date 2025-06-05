@@ -21,6 +21,7 @@ type Props = z.infer<typeof interactionsCountForCollectionGroupSchema> &
     hideText?: boolean
     className?: string
     style?: React.CSSProperties
+    onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
   }
 const LikesButton: React.FC<Omit<Props, "interactionType">> = ({
   collectionGroup,
@@ -34,6 +35,7 @@ const LikesButton: React.FC<Omit<Props, "interactionType">> = ({
   hideText = false,
   className = "",
   style = {},
+  onClick,
 }) => {
   const interactionType = "likes"
   const trpc = useTRPC()
@@ -108,7 +110,8 @@ const LikesButton: React.FC<Omit<Props, "interactionType">> = ({
       <Tooltip.Trigger asChild>
         <Button.Root
           disabled={me.isLoading || handleLikeMutation.isPending}
-          onClick={() => {
+          onClick={(e) => {
+            onClick ? onClick(e) : undefined
             handleLikeMutation.mutate({
               id: likesCount.data?.id || null,
               authorUid: me.data?.uid || "",

@@ -83,7 +83,7 @@ const FeedInput: React.FC<Props> = ({}) => {
   const queryClient = useQueryClient()
 
   const MAX_FILES = 5
-  const MAX_SIZE = 5 * 1024 * 1024
+  const MAX_SIZE = 10 * 1024 * 1024
   const ACCEPTED_FILE_TYPES: FileTypeCategory[] = [
     "documents",
     "images",
@@ -329,12 +329,14 @@ const FeedInput: React.FC<Props> = ({}) => {
           mimeType: f.mimeType,
         }))
 
-        const onlyImages = imagesWithoutFile.filter((f) =>
-          f.mimeType?.startsWith("image")
+        const onlyImages = imagesWithoutFile.filter(
+          (f) =>
+            f.mimeType?.startsWith("image") || f.mimeType?.startsWith("video")
         )
 
         const onlyAttachments = imagesWithoutFile.filter(
-          (f) => !f.mimeType?.startsWith("image")
+          (f) =>
+            !f.mimeType?.startsWith("image") && !f.mimeType?.startsWith("video")
         )
 
         payload.images = onlyImages
@@ -817,9 +819,12 @@ const FeedInput: React.FC<Props> = ({}) => {
                                               {name}
                                             </div>
                                             <div className="mt-1 flex items-center gap-2">
-                                              {fileField?.mimeType?.startsWith(
+                                              {(fileField?.mimeType?.startsWith(
                                                 "image"
-                                              ) && (
+                                              ) ||
+                                                fileField?.mimeType?.startsWith(
+                                                  "video"
+                                                )) && (
                                                 <form.Field
                                                   name={`images[${i}].featured`}
                                                 >
@@ -848,7 +853,7 @@ const FeedInput: React.FC<Props> = ({}) => {
                                                               return
                                                             }
                                                             subField.handleChange(
-                                                              checked
+                                                              checked as boolean
                                                             )
 
                                                             if (checked) {

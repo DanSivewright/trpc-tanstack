@@ -19,14 +19,9 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { useLocation, useNavigate } from "@tanstack/react-router"
+import { useLocation } from "@tanstack/react-router"
 import { format, formatDistance } from "date-fns"
-import {
-  motion,
-  useAnimation,
-  useMotionValue,
-  useMotionValueEvent,
-} from "motion/react"
+import { motion, useAnimation } from "motion/react"
 import type { z } from "zod"
 
 import { Avatar } from "@/components/ui/avatar"

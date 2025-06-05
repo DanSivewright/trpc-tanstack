@@ -662,9 +662,7 @@ function CourseSettings() {
         isFeaturedUntil: args.value.isFeaturedUntil
           ? endOfDay(new Date(args.value.isFeaturedUntil)).toISOString()
           : null,
-        isFeaturedFrom: args.value.isFeatured
-          ? startOfDay(new Date()).toISOString()
-          : null,
+        isFeaturedFrom: args.value.isFeatured ? new Date().toISOString() : null,
       })
       navigate({
         resetScroll: false,

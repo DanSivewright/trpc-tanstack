@@ -1,44 +1,51 @@
 import { useTRPC } from "@/integrations/trpc/react"
-import type { communityFeedSchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
+import type { communityItemSchema } from "@/integrations/trpc/routers/communities/schemas/communities-schema"
 import { RiAddLine } from "@remixicon/react"
-import { useSuspenseQuery } from "@tanstack/react-query"
-import { useParams } from "@tanstack/react-router"
+import { useSuspenseQueries } from "@tanstack/react-query"
 import type { z } from "zod"
 
 import { FancyButton } from "@/components/ui/fancy-button"
+import { toast } from "@/components/ui/toast"
+import { AlertToast } from "@/components/ui/toast-alert"
 import { Section } from "@/components/section"
 
-import FeedComment from "./feed-comment"
-import FeedCourse from "./feed-course"
-import FeedThread from "./feed-thread"
+import FeaturedThread from "./featured-thread"
 
-type Props = {}
-
-type communityFeedItem = z.infer<typeof communityFeedSchema>[number]
-const components: {
-  [K in communityFeedItem["type"]]?: React.ComponentType<
-    Extract<communityFeedItem, { type: K }>
-  >
-} = {
-  thread: FeedThread,
-  course: FeedCourse,
-  comment: FeedComment,
+type Props = {
+  communityId: string
 }
 
-const FeedList: React.FC<Props> = ({}) => {
-  const trpc = useTRPC()
-  const params = useParams({
-    from: "/_learner/communities/$id/",
-  })
-  const feed = useSuspenseQuery(
-    trpc.communities.feed.all.queryOptions({
-      communityId: params.id,
-    })
-  )
+type communityFeedItem = z.infer<typeof communityItemSchema>
+const components: {
+  [K in communityFeedItem["type"]]?: React.ComponentType<{
+    source: Extract<communityFeedItem, { type: K }>
+    size: "small" | "large"
+    className?: string
+  }>
+} = {
+  thread: FeaturedThread,
+}
 
-  if (!feed.data || !feed.data?.length) {
+const FeedList: React.FC<Props> = ({ communityId }) => {
+  const trpc = useTRPC()
+
+  const feed = useSuspenseQueries({
+    queries: [
+      trpc.communities.courses.all.queryOptions({
+        communityId,
+      }),
+      trpc.communities.threads.all.queryOptions({
+        communityId,
+      }),
+      trpc.communities.articles.all.queryOptions({
+        communityId,
+      }),
+    ],
+  })
+
+  if (!feed || !feed?.length || feed.every((x) => x?.data?.length === 0)) {
     return (
-      <Section className="gutter">
+      <Section>
         <div className="gutter relative mt-4 flex w-full flex-col gap-2 overflow-hidden rounded-xl bg-bg-weak-50 py-16">
           <h1 className="relative z-10 text-title-h4">
             Your community has no posts
@@ -51,6 +58,15 @@ const FeedList: React.FC<Props> = ({}) => {
               size="xsmall"
               variant="primary"
               className="relative z-10"
+              onClick={() => {
+                toast.custom((t) => (
+                  <AlertToast.Root
+                    t={t}
+                    status="success"
+                    message="Feature coming soon"
+                  />
+                ))
+              }}
             >
               <FancyButton.Icon as={RiAddLine} />
               Create a thread
@@ -59,6 +75,15 @@ const FeedList: React.FC<Props> = ({}) => {
               size="xsmall"
               variant="basic"
               className="relative z-10"
+              onClick={() => {
+                toast.custom((t) => (
+                  <AlertToast.Root
+                    t={t}
+                    status="success"
+                    message="Feature coming soon"
+                  />
+                ))
+              }}
             >
               <FancyButton.Icon as={RiAddLine} />
               Create a article
@@ -67,6 +92,15 @@ const FeedList: React.FC<Props> = ({}) => {
               size="xsmall"
               variant="basic"
               className="relative z-10"
+              onClick={() => {
+                toast.custom((t) => (
+                  <AlertToast.Root
+                    t={t}
+                    status="success"
+                    message="Feature coming soon"
+                  />
+                ))
+              }}
             >
               <FancyButton.Icon as={RiAddLine} />
               Create a course
@@ -83,11 +117,26 @@ const FeedList: React.FC<Props> = ({}) => {
   }
   return (
     <Section side="b" className="mt-6 flex flex-col gap-12">
-      {feed?.data?.map((item) => {
+      {feed?.flatMap((group) => {
+        return group?.data?.map((item) => {
+          const Block = components[item.type]
+          if (!Block) return null
+          return (
+            <Block
+              key={"featured-" + item.id}
+              // @ts-ignore
+              source={item}
+              // className="aspect-video"
+              size="large"
+            />
+          )
+        })
+      })}
+      {/* {feed?.data?.map((item) => {
         const Block = components[item.type]
         if (!Block) return null
         return <Block key={item.id} {...item} />
-      })}
+      })} */}
     </Section>
   )
 }

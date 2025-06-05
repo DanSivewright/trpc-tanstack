@@ -120,6 +120,7 @@ const communityCollectionGroupBaseSchema = z.object({
     .nullable()
     .optional(),
   isFeatured: z.boolean().optional().nullable(),
+  isFeaturedAt: z.string().optional().nullable(),
   isFeaturedFrom: z.string().optional().nullable(),
   isFeaturedUntil: z.string().optional().nullable(),
 })
@@ -160,6 +161,12 @@ const communityArticleSchema = communityCollectionGroupBaseSchema.extend({
 const communityThreadSchema = communityCollectionGroupBaseSchema.extend({
   type: z.literal("thread"),
 })
+
+export const communityItemSchema = z.discriminatedUnion("type", [
+  communityThreadSchema,
+  communityCourseSchema,
+  communityArticleSchema,
+])
 
 const communityCommentSchema = z.object({
   id: z.string(),
