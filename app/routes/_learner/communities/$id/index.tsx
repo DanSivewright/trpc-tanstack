@@ -96,40 +96,8 @@ export const Route = createFileRoute("/_learner/communities/$id/")({
 function RouteComponent() {
   const trpc = useTRPC()
   const params = Route.useParams()
-  const viewport = useViewportSize()
-  const content = useElementSize()
 
   const me = useSuspenseQuery(trpc.people.me.queryOptions())
-  const courses = useSuspenseQuery(
-    trpc.communities.courses.all.queryOptions({
-      communityId: params.id,
-    })
-  )
-  const threads = useSuspenseQuery(
-    trpc.communities.threads.all.queryOptions({
-      communityId: params.id,
-    })
-  )
-  const articles = useSuspenseQuery(
-    trpc.communities.articles.all.queryOptions({
-      communityId: params.id,
-    })
-  )
-
-  const featured = useMemo(() => {
-    return [...courses?.data, ...threads?.data, ...articles?.data]
-      .filter(
-        (x) =>
-          x.isFeatured &&
-          x.isFeaturedUntil &&
-          isAfter(new Date(x.isFeaturedUntil), new Date())
-      )
-      .sort((a, b) => {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      })
-  }, [courses?.data, threads?.data, articles?.data])
-
-  const first = featured[0] || null
 
   return (
     <>
@@ -154,11 +122,9 @@ function RouteComponent() {
           </div>
         </div>
       </Section>
-
-      <FeaturedGrid communityId={params.id} />
-      {/* <FeedInput /> */}
+      <FeedInput />
       {/* <div className="sticky top-12 z-20 bg-bg-white-0/70 backdrop-blur-md">
-        <div className="mx-auto flex max-w-screen-lg flex-1 items-center justify-between gap-4 px-8 xl:px-0">
+        <div className="mx-auto flex max-w-screen-lg flex-1 flex-col items-center justify-between gap-4 px-8 sm:flex-row xl:px-0">
           <div className="flex w-full grow items-center">
             <Input.Root className="relative z-[1]">
               <Input.Wrapper>
@@ -201,15 +167,12 @@ function RouteComponent() {
             </TabMenuHorizontal.List>
           </TabMenuHorizontal.Root>
         </div>
-      </div>
+      </div> */}
 
-      <Section
-        side="b"
-        className="mx-auto mt-6 flex max-w-screen-lg flex-col gap-2 px-8 xl:px-0"
-      >
-        <FeaturedGrid communityId={params.id} />
-      </Section>
-      <pre>{JSON.stringify(first, null, 2)}</pre> */}
+      <FeaturedGrid communityId={params.id} />
+      <div className="relative z-10 mx-auto flex w-full max-w-screen-lg flex-col gap-2 px-8 pt-6 xl:px-0">
+        <FeedList />
+      </div>
     </>
   )
 }

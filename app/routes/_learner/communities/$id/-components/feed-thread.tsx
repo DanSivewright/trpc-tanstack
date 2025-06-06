@@ -159,67 +159,20 @@ const FeedTread: React.FC<Props> = (feedThread) => {
             <RiDownloadLine className="size-4 text-text-soft-400" />
           </div>
         ) : null}
-        {thread?.images && thread?.images?.length > 0 ? (
+        {thread?.images?.filter((x) => !x.mimeType?.includes("video")) &&
+        thread?.images?.filter((x) => !x.mimeType?.includes("video"))?.length >
+          0 ? (
           <>
             {thread?.images.length < 3 ? (
               <Grid gap="none" className="mt-2 gap-1">
-                {thread?.images.map((g) => {
-                  const span = {
-                    1: "col-span-12",
-                    2: "col-span-6",
-                  }[thread.images!.length]
-                  return (
-                    <Image
-                      key={g.id}
-                      path={g.path!}
-                      lqip={{
-                        active: true,
-                        quality: 1,
-                        blur: 50,
-                      }}
-                      className={cn(
-                        "aspect-video w-full overflow-hidden rounded-[4px] object-cover",
-                        span
-                      )}
-                      // alt={`Community ${c.name} image`}
-                    />
-                  )
-                })}
-              </Grid>
-            ) : null}
-            {thread?.images.length >= 3 ? (
-              <Grid gap="none" className="mt-2 gap-1">
-                {thread?.images.slice(0, 4).map((g, gi) => {
-                  let span = ""
-                  if (gi === 0) {
-                    span = "col-span-12"
-                  } else {
-                    if (thread.images!.length - 1 === 2) {
-                      span = "col-span-6"
-                    } else {
-                      span = "col-span-4"
-                    }
-                  }
-
-                  const isLast = gi === 3
-                  const amountExtra = thread.images!.length - 4
-
-                  return (
-                    <div
-                      className={cn(
-                        "relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-[4px]",
-                        span
-                      )}
-                      key={g.id}
-                    >
-                      {g.path}
-                      {isLast && amountExtra > 0 && (
-                        <div className="absolute z-10 flex h-full w-full items-center justify-center bg-black/60">
-                          <span className="relative z-10 text-title-h4 text-bg-white-0">
-                            +{amountExtra}
-                          </span>
-                        </div>
-                      )}
+                {thread?.images
+                  ?.filter((x) => !x.mimeType?.includes("video"))
+                  .map((g) => {
+                    const span = {
+                      1: "col-span-12",
+                      2: "col-span-6",
+                    }[thread.images!.length]
+                    return (
                       <Image
                         key={g.id}
                         path={g.path!}
@@ -228,11 +181,66 @@ const FeedTread: React.FC<Props> = (feedThread) => {
                           quality: 1,
                           blur: 50,
                         }}
-                        className="absolute inset-0 z-0 h-full w-full object-cover"
+                        className={cn(
+                          "aspect-video w-full overflow-hidden rounded-[4px] object-cover",
+                          span
+                        )}
+                        // alt={`Community ${c.name} image`}
                       />
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+              </Grid>
+            ) : null}
+            {thread?.images?.filter((x) => !x.mimeType?.includes("video"))
+              .length >= 3 ? (
+              <Grid gap="none" className="mt-2 gap-1">
+                {thread?.images
+                  ?.filter((x) => !x.mimeType?.includes("video"))
+                  .slice(0, 4)
+                  .map((g, gi) => {
+                    let span = ""
+                    if (gi === 0) {
+                      span = "col-span-12"
+                    } else {
+                      if (thread.images!.length - 1 === 2) {
+                        span = "col-span-6"
+                      } else {
+                        span = "col-span-4"
+                      }
+                    }
+
+                    const isLast = gi === 3
+                    const amountExtra = thread.images!.length - 4
+
+                    return (
+                      <div
+                        className={cn(
+                          "relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-[4px]",
+                          span
+                        )}
+                        key={g.id}
+                      >
+                        {g.path}
+                        {isLast && amountExtra > 0 && (
+                          <div className="absolute z-10 flex h-full w-full items-center justify-center bg-black/60">
+                            <span className="relative z-10 text-title-h4 text-bg-white-0">
+                              +{amountExtra}
+                            </span>
+                          </div>
+                        )}
+                        <Image
+                          key={g.id}
+                          path={g.path!}
+                          lqip={{
+                            active: true,
+                            quality: 1,
+                            blur: 50,
+                          }}
+                          className="absolute inset-0 z-0 h-full w-full object-cover"
+                        />
+                      </div>
+                    )
+                  })}
               </Grid>
             ) : null}
           </>

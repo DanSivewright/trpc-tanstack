@@ -22,6 +22,7 @@ type Props = z.infer<typeof interactionsCountForCollectionGroupSchema> &
     className?: string
     style?: React.CSSProperties
     onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
+    hideWhenZero?: boolean
   }
 const LikesButton: React.FC<Omit<Props, "interactionType">> = ({
   collectionGroup,
@@ -36,6 +37,7 @@ const LikesButton: React.FC<Omit<Props, "interactionType">> = ({
   className = "",
   style = {},
   onClick,
+  hideWhenZero = false,
 }) => {
   const interactionType = "likes"
   const trpc = useTRPC()
@@ -135,7 +137,11 @@ const LikesButton: React.FC<Omit<Props, "interactionType">> = ({
         >
           <Button.Icon
             className={cn(
-              likesCount.data?.byMe && "fill-primary-base",
+              likesCount.data?.byMe &&
+                mode === "filled" &&
+                variant === "primary"
+                ? "fill-error-base"
+                : "fill-primary-base",
               handleLikeMutation.isPending && "animate-spin"
             )}
             as={
@@ -149,7 +155,9 @@ const LikesButton: React.FC<Omit<Props, "interactionType">> = ({
           {!hideText && <>Likes </>}
           {likesCount?.data?.total && likesCount?.data?.total > 0
             ? likesCount.data?.total
-            : 0}
+            : hideWhenZero
+              ? null
+              : 0}
         </Button.Root>
       </Tooltip.Trigger>
       <Tooltip.Content side="bottom">Likes</Tooltip.Content>
