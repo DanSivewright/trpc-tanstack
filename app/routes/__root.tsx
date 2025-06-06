@@ -68,7 +68,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <CacheBuster />
         {/* <TanStackRouterDevtools position="bottom-right" /> */}
         <ReactQueryDevtools buttonPosition="bottom-left" />
-        {/* <TailwindIndicator /> */}
+        <TailwindIndicator />
         <NotificationProvider />
         <Toaster />
 

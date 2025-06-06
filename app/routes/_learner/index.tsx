@@ -88,6 +88,7 @@ export const Route = createFileRoute("/_learner/")({
   },
   component: RouteComponent,
   pendingComponent: () => <div>Loading...</div>,
+  errorComponent: () => <div>Error</div>,
 })
 
 function RouteComponent() {

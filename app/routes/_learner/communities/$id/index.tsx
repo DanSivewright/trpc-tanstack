@@ -19,6 +19,7 @@ import { useViewportSize } from "@/hooks/use-viewport-size"
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Divider } from "@/components/ui/divider"
 import { FancyButton } from "@/components/ui/fancy-button"
 import { Input } from "@/components/ui/input"
 import { TabMenuHorizontal } from "@/components/ui/tab-menu-horizontal"
@@ -153,8 +154,10 @@ function RouteComponent() {
           </div>
         </div>
       </Section>
+
+      <FeaturedGrid communityId={params.id} />
       {/* <FeedInput /> */}
-      <div className="sticky top-12 z-20 bg-bg-white-0/70 backdrop-blur-md">
+      {/* <div className="sticky top-12 z-20 bg-bg-white-0/70 backdrop-blur-md">
         <div className="mx-auto flex max-w-screen-lg flex-1 items-center justify-between gap-4 px-8 xl:px-0">
           <div className="flex w-full grow items-center">
             <Input.Root className="relative z-[1]">
@@ -205,9 +208,8 @@ function RouteComponent() {
         className="mx-auto mt-6 flex max-w-screen-lg flex-col gap-2 px-8 xl:px-0"
       >
         <FeaturedGrid communityId={params.id} />
-        <FeedList communityId={params.id} />
       </Section>
-      <pre>{JSON.stringify(first, null, 2)}</pre>
+      <pre>{JSON.stringify(first, null, 2)}</pre> */}
     </>
   )
 }
